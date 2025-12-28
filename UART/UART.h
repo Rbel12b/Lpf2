@@ -19,10 +19,10 @@ public:
      * @brief Initialize the UART port with the specified baudrate and configuration.
      * @param baudrate The desired baudrate for communication (e.g., 9600, 115200).
      * @param config The UART configuration flags (data bits, parity, stop bits).
-     * @param rx_pin The RX (receive) pin number. Use -1 for default or auto-selection.
-     * @param tx_pin The TX (transmit) pin number. Use -1 for default or auto-selection.
-     * @param id1_pin The analog input connected to the TX pin, external 47k pull-up is required.
-     * @param id2_pin The analog input connected to the RX pin, external 47k pull-up is required.
+     * @param rx_pin The RX (receive) pin number. Use -1 for default.
+     * @param tx_pin The TX (transmit) pin number. Use -1 for default.
+     * @param id1_pin The analog input connected to the TX pin, external 47k pull-up is required. (Can be the same as tx_pin)
+     * @param id2_pin The analog input connected to the RX pin, external 47k pull-up is required. (Can be the same as rx_pin)
      * @return true if initialization was successful, false otherwise.
      * @note Must be called before any other UART operations.
      */

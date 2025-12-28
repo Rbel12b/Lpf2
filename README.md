@@ -17,7 +17,7 @@ Lpf2 is a LEGO PoweredUp Protocol 2 (LPF2) communication library for ESP32-S3 mi
 
 ```tree
 Lpf2/
-├── config.h              # Configuration settings
+├── config.h             # Configuration settings
 ├── Lpf2Const.h          # Protocol constants
 ├── Lpf2Device.h         # Base device interface
 ├── Lpf2Port.h/cpp       # Port management
