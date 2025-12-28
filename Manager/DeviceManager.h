@@ -10,9 +10,12 @@
 class Lpf2DeviceManager {
 public:
     explicit Lpf2DeviceManager(Lpf2IO* io)
-        : port_(io) {}
+        : port_(io), io(io) {}
 
     void update() {
+        if (!io->ready()) {
+            return;
+        }
         if (!inited)
         {
             port_.init(false);
@@ -52,6 +55,7 @@ private:
     }
 
     Lpf2Port port_;
+    Lpf2IO* io;
     bool inited = false;
     std::unique_ptr<Lpf2Device> device_;
 };

@@ -13,6 +13,7 @@ public:
     virtual ~Lpf2IO() = default;
     virtual Lpf2Uart* getUart() = 0;
     virtual Lpf2PWM* getPWM() = 0;
+    virtual bool ready() const = 0;
 };
 
 class Lpf2PWM

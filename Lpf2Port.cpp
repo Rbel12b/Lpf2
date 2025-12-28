@@ -11,6 +11,9 @@ void Lpf2Port::init(
 #endif
 )
 {
+    if (!m_IO->ready()) {
+        return;
+    }
     m_serial->uartPinsOn();
     resetDevice();
 #if defined(LPF2_USE_FREERTOS)
@@ -48,6 +51,9 @@ void Lpf2Port::taskEntryPoint(void *pvParameters)
 
 void Lpf2Port::uartTask()
 {
+    if (!m_IO->ready()) {
+        return;
+    }
     int baudRate = 2400;
 
     log_i("Initialization done.");
@@ -66,6 +72,9 @@ void Lpf2Port::uartTask()
 
 void Lpf2Port::update()
 {
+    if (!m_IO->ready()) {
+        return;
+    }
     auto messages = m_parser.update();
 
     for (const auto &msg : messages)
