@@ -6,13 +6,19 @@
 
 void Lpf2Port::init(
 #if defined(LPF2_USE_FREERTOS)
+    bool useFreeRTOSTask,
     std::string taskName
 #endif
 )
 {
     m_serial->uartPinsOn();
+    resetDevice();
 #if defined(LPF2_USE_FREERTOS)
     m_serialMutex = xSemaphoreCreateMutex();
+
+    if (!useFreeRTOSTask)
+        return;
+
     xTaskCreate(
         &Lpf2Port::taskEntryPoint, // Static entry point
         taskName.c_str(),          // Task name
@@ -21,7 +27,6 @@ void Lpf2Port::init(
         5,
         nullptr);
 #endif
-    resetDevice();
 }
 
 bool Lpf2Port::deviceConnected()
@@ -92,6 +97,11 @@ void Lpf2Port::update()
 end_loop:
 
     process(millis());
+
+    if (!deviceConnected())
+    {
+        resetDevice();
+    }
 }
 
 uint8_t Lpf2Port::process(unsigned long now)
@@ -224,6 +234,13 @@ bool Lpf2Port::deviceIsAbsMotor(DeviceType id)
 
 void Lpf2Port::setMode(uint8_t num)
 {
+    if (num >= modes)
+    {
+        LPF2_LOG_W("Tried to set invalid mode %i (max %i)", num, modes - 1);
+        return;
+    }
+
+    m_mode = num;
     uint8_t header = MESSAGE_CMD | CMD_SELECT;
     uint8_t checksum = header ^ 0xFF;
     checksum ^= (uint8_t)num;
@@ -238,6 +255,14 @@ void Lpf2Port::setMode(uint8_t num)
 #if defined(LPF2_USE_FREERTOS)
     xSemaphoreGive(m_serialMutex);
 #endif
+    if (modeData[num].flags.pin1())
+    {
+        m_pwm->out(255, 0);
+    }
+    if (modeData[num].flags.pin2())
+    {
+        m_pwm->out(0, 255);
+    }
 }
 
 void Lpf2Port::requestSpeedChange(uint32_t speed)
@@ -732,7 +757,7 @@ std::string Lpf2Port::convertValue(Mode modeData)
         msg_size = LENGTH_##length;          \
     }
 
-int Lpf2Port::writeData(uint8_t modeNum, std::vector<uint8_t> data)
+int Lpf2Port::writeData(uint8_t modeNum, const std::vector<uint8_t>& data)
 {
     if (modeNum >= modeData.size())
     {
@@ -791,6 +816,14 @@ int Lpf2Port::writeData(uint8_t modeNum, std::vector<uint8_t> data)
 #endif
 
     return 0;
+}
+
+void Lpf2Port::setPower(uint8_t pin1, uint8_t pin2)
+{
+    if ((modeData[m_mode].flags.power12() || m_dumb) && m_pwm)
+    {
+        m_pwm->out(pin1, pin2);
+    }
 }
 
 float Lpf2Port::parseData8(const uint8_t *ptr)

@@ -32,17 +32,7 @@ public:
 
 class BasicMotorFactory : public Lpf2DeviceFactory {
 public:
-    bool matches(Lpf2Port& port) const override {
-        switch (port.getDeviceType())
-        {
-        case DeviceType::SIMPLE_MEDIUM_LINEAR_MOTOR:
-        case DeviceType::TRAIN_MOTOR:
-            return true;
-        default:
-            break;
-        }
-        return false;
-    }
+    bool matches(Lpf2Port& port) const override;
 
     Lpf2Device* create(Lpf2Port& port) const override {
         return new BasicMotor(port);
