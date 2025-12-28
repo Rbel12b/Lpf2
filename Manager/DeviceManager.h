@@ -7,20 +7,23 @@
 #include "../Lpf2Port.h"
 #include <memory>
 
-#include "../Lpf2Devices/BasicMotor.h"
-
-class DeviceManager {
+class Lpf2DeviceManager {
 public:
-    explicit DeviceManager(Lpf2IO* io)
+    explicit Lpf2DeviceManager(Lpf2IO* io)
         : port_(io) {}
 
     void update() {
+        if (!inited)
+        {
+            port_.init(false);
+        }
+        port_.update();
         if (!port_.deviceConnected()) {
             device_.reset();
             return;
         }
 
-        if (!device_) {
+        if (!device_ && port_.deviceConnected()) {
             attachViaFactory();
         }
 
@@ -49,6 +52,7 @@ private:
     }
 
     Lpf2Port port_;
+    bool inited = false;
     std::unique_ptr<Lpf2Device> device_;
 };
 

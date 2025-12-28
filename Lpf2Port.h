@@ -17,6 +17,7 @@ public:
 
     void init(
 #if defined(LPF2_USE_FREERTOS)
+        bool useFreeRTOS = true,
         std::string taskName = "uartTask"
 #endif
     );
@@ -102,7 +103,9 @@ public:
         return convertValue(modeData[modeNum]);
     }
 
-    int writeData(uint8_t modeNum, std::vector<uint8_t> data);
+    int writeData(uint8_t modeNum, const std::vector<uint8_t>& data);
+
+    void setPower(uint8_t pin1, uint8_t pin2);
 
     DeviceType getDeviceType() const { return m_deviceType; }
     size_t getSpeed() const { return baud; }
@@ -121,16 +124,6 @@ public:
     bool deviceConnected();
 
     std::vector<Mode> modeData;
-
-private:
-    LPF2_STATUS m_status = LPF2_STATUS::STATUS_ERR;
-    LPF2_STATUS m_new_status = LPF2_STATUS::STATUS_ERR;
-    DeviceType m_deviceType = DeviceType::UNKNOWNDEVICE;
-    uint8_t modes, views;
-    uint32_t baud = 2400;
-    uint16_t modeCombos[16];
-    uint8_t comboNum = 0;
-    bool nextModeExt = false;
 
 private:
 #if defined(LPF2_USE_FREERTOS)
@@ -168,6 +161,15 @@ private:
     static float parseDataF(const uint8_t *ptr);
 
 private:
+    LPF2_STATUS m_status = LPF2_STATUS::STATUS_ERR;
+    LPF2_STATUS m_new_status = LPF2_STATUS::STATUS_ERR;
+    DeviceType m_deviceType = DeviceType::UNKNOWNDEVICE;
+    uint8_t modes, views;
+    uint32_t baud = 2400;
+    uint16_t modeCombos[16];
+    uint8_t comboNum = 0;
+    bool nextModeExt = false;
+    bool m_dumb = false;
     Lpf2IO *m_IO;
     Lpf2Uart *m_serial;
     Lpf2PWM *m_pwm;
@@ -186,6 +188,8 @@ private:
      * Time of the start of the current operation (millis since startup).
      */
     uint64_t m_start = 0;
+
+    uint8_t m_mode = 0;
 };
 
 #endif

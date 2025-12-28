@@ -25,7 +25,7 @@ public:
     // Return true if this factory recognizes the connected device
     virtual bool matches(Lpf2Port& port) const = 0;
 
-    // Create the device (DeviceManager takes ownership)
+    // Create the device (Lpf2DeviceManager takes ownership)
     virtual Lpf2Device* create(Lpf2Port& port) const = 0;
 };
 
@@ -49,7 +49,7 @@ public:
     }
 
 private:
-    static constexpr size_t MAX_FACTORIES = 8;
+    static constexpr size_t MAX_FACTORIES = 32;
 
     const Lpf2DeviceFactory* factories_[MAX_FACTORIES];
     size_t count_ = 0;
