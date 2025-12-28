@@ -11,7 +11,24 @@ public:
     virtual void setSpeed(int speed) = 0;
 };
 
-class BasicMotor;
+class BasicMotor : public Lpf2Device, public BasicMotorControl {
+public:
+    BasicMotor (Lpf2Port &port) : Lpf2Device(port) {}
+
+    bool init() override {
+        setSpeed(0);
+        return true;
+    }
+
+    void poll() override {
+    }
+
+    const char* name() const override {
+        return "DC Motor (dumb)";
+    }
+
+    void setSpeed(int speed) override;
+};
 
 class BasicMotorFactory : public Lpf2DeviceFactory {
 public:
@@ -30,25 +47,6 @@ public:
     Lpf2Device* create(Lpf2Port& port) const override {
         return new BasicMotor(port);
     }
-};
-
-class BasicMotor : public Lpf2Device, public BasicMotorControl {
-public:
-    BasicMotor (Lpf2Port &port) : Lpf2Device(port) {}
-
-    bool init() override {
-        setSpeed(0);
-        return true;
-    }
-
-    void poll() override {
-    }
-
-    const char* name() const override {
-        return "DC Motor (dumb)";
-    }
-
-    void setSpeed(int speed) override;
 };
 
 #endif
