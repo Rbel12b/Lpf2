@@ -12,14 +12,14 @@ void Lpf2Port::init(
 )
 {
 
-#if defined(LPF2_USE_FREERTOS)
-    if (m_serialMutex == nullptr) {
-        m_serialMutex = xSemaphoreCreateMutex();
-        configASSERT(m_serialMutex);
+    if (m_serialMutex == LPF2_MUTEX_INVALID)
+    {
+        m_serialMutex = LPF2_MUTEX_CREATE();
+        configASSERT(m_serialMutex != LPF2_MUTEX_INVALID);
     }
-#endif
 
-    if (!m_IO->ready()) {
+    if (!m_IO->ready())
+    {
         return;
     }
     m_serial->uartPinsOn();
@@ -70,7 +70,8 @@ void Lpf2Port::uartTask()
     while (1)
     {
         vTaskDelay(1);
-        if (!m_IO->ready()) {
+        if (!m_IO->ready())
+        {
             return;
         }
         update();
@@ -80,16 +81,16 @@ void Lpf2Port::uartTask()
 
 void Lpf2Port::update()
 {
-    if (!m_IO->ready()) {
+    if (!m_IO->ready())
+    {
         return;
     }
-    
-#if defined(LPF2_USE_FREERTOS)
-    if (m_serialMutex == nullptr) {
+
+    if (m_serialMutex == LPF2_MUTEX_INVALID)
+    {
         LPF2_LOG_E("Serial mutex not initialized!");
         return;
     }
-#endif
 
     auto messages = m_parser.update();
 
@@ -270,16 +271,14 @@ void Lpf2Port::setMode(uint8_t num)
     uint8_t checksum = header ^ 0xFF;
     checksum ^= (uint8_t)num;
 
-#if defined(LPF2_USE_FREERTOS)
-    xSemaphoreTake(m_serialMutex, portMAX_DELAY);
-#endif
-    m_serial->write(header);
-    m_serial->write((uint8_t)num);
-    m_serial->write(checksum);
-    m_serial->flush();
-#if defined(LPF2_USE_FREERTOS)
-    xSemaphoreGive(m_serialMutex);
-#endif
+    {
+        MutexLock lock(m_serialMutex);
+        m_serial->write(header);
+        m_serial->write((uint8_t)num);
+        m_serial->write(checksum);
+        m_serial->flush();
+    }
+
     if (modeData[num].flags.pin1())
     {
         m_pwm->out(255, 0);
@@ -296,10 +295,8 @@ void Lpf2Port::requestSpeedChange(uint32_t speed)
     uint8_t header = MESSAGE_CMD | CMD_SPEED | (2 << 3);
     uint8_t checksum = header ^ 0xFF;
     uint8_t b;
-#if defined(LPF2_USE_FREERTOS)
-    xSemaphoreTake(m_serialMutex, portMAX_DELAY);
-#endif
     {
+        MutexLock lock(m_serialMutex);
         m_serial->write(header);
         b = (speed & 0xFF) >> 0;
         checksum ^= b;
@@ -316,9 +313,6 @@ void Lpf2Port::requestSpeedChange(uint32_t speed)
         m_serial->write(checksum);
         m_serial->flush();
     }
-#if defined(LPF2_USE_FREERTOS)
-    xSemaphoreGive(m_serialMutex);
-#endif
     m_status = LPF2_STATUS::STATUS_ACK_WAIT;
     m_new_status = LPF2_STATUS::STATUS_SPEED;
     m_timeStart = millis();
@@ -661,14 +655,9 @@ void Lpf2Port::changeBaud(uint32_t baud)
 
 void Lpf2Port::sendACK(bool NACK)
 {
-#if defined(LPF2_USE_FREERTOS)
-    xSemaphoreTake(m_serialMutex, portMAX_DELAY);
-#endif
+    MutexLock lock(m_serialMutex);
     m_serial->write(NACK ? BYTE_NACK : BYTE_ACK);
     m_serial->flush();
-#if defined(LPF2_USE_FREERTOS)
-    xSemaphoreGive(m_serialMutex);
-#endif
 }
 
 float Lpf2Port::getValue(const Mode &modeData, uint8_t dataSet)
@@ -782,7 +771,7 @@ std::string Lpf2Port::convertValue(Mode modeData)
         msg_size = LENGTH_##length;          \
     }
 
-int Lpf2Port::writeData(uint8_t modeNum, const std::vector<uint8_t>& data)
+int Lpf2Port::writeData(uint8_t modeNum, const std::vector<uint8_t> &data)
 {
     if (modeNum >= modeData.size())
     {
@@ -813,10 +802,8 @@ int Lpf2Port::writeData(uint8_t modeNum, const std::vector<uint8_t>& data)
     uint8_t checksum = header ^ 0xFF;
     uint8_t b = (modeNum >= 8) ? 8 : 0;
 
-#if defined(LPF2_USE_FREERTOS)
-    xSemaphoreTake(m_serialMutex, portMAX_DELAY);
-#endif
     {
+        MutexLock lock(m_serialMutex);
         m_serial->write(header);
         checksum ^= b;
         m_serial->write(b);
@@ -836,9 +823,6 @@ int Lpf2Port::writeData(uint8_t modeNum, const std::vector<uint8_t>& data)
         m_serial->write(checksum);
         m_serial->flush();
     }
-#if defined(LPF2_USE_FREERTOS)
-    xSemaphoreGive(m_serialMutex);
-#endif
 
     return 0;
 }
