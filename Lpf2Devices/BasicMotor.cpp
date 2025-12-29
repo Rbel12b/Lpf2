@@ -1,13 +1,18 @@
 #include "BasicMotor.h"
 
-namespace {
-    BasicMotorFactory basicMotorFactory;
-}
+const CapabilityId BasicMotor::CAP =
+    CapabilityRegistry::instance().registerCapability("basic_motor");
 
-static bool dcMotorRegistered = [] {
-    Lpf2DeviceRegistry::instance().registerFactory(&basicMotorFactory);
-    return true;
-}();
+namespace
+{
+    BasicMotorFactory factory;
+
+    static bool registered = []
+    {
+        Lpf2DeviceRegistry::instance().registerFactory(&factory);
+        return true;
+    }();
+}
 
 void BasicMotor::setSpeed(int speed)
 {
@@ -22,6 +27,18 @@ void BasicMotor::setSpeed(int speed)
         std::swap(pwr1, pwr2);
 
     port_.setPower(pwr1, pwr2);
+}
+
+bool BasicMotor::hasCapability(CapabilityId id) const
+{
+    return id == CAP;
+}
+
+void *BasicMotor::getCapability(CapabilityId id)
+{
+    if (id == CAP)
+        return static_cast<BasicMotorControl *>(this);
+    return nullptr;
 }
 
 bool BasicMotorFactory::matches(Lpf2Port &port) const

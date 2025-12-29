@@ -5,9 +5,10 @@
 #include "../config.h"
 #include "../Lpf2Device.h"
 
-class DistanceSensorControl {
+class TechnicDistanceSensorControl
+{
 public:
-    virtual ~DistanceSensorControl() = default;
+    virtual ~TechnicDistanceSensorControl() = default;
     /**
      * @brief Set the light on the sensor, all values should be in the range 0-100.
      */
@@ -18,34 +19,50 @@ public:
     virtual float getDistance() = 0;
 };
 
-class DistanceSensor : public Lpf2Device, public DistanceSensorControl {
+class TechnicDistanceSensor : public Lpf2Device, public TechnicDistanceSensorControl
+{
 public:
-    DistanceSensor (Lpf2Port &port) : Lpf2Device(port) {}
+    TechnicDistanceSensor(Lpf2Port &port) : Lpf2Device(port) {}
 
-    bool init() override {
+    bool init() override
+    {
         setLight(0, 0, 0, 0);
         return true;
     }
 
-    void poll() override {
+    void poll() override
+    {
     }
 
-    const char* name() const override {
+    const char *name() const override
+    {
         return "Technic Distance Sensor";
     }
 
     void setLight(uint8_t l1, uint8_t l2, uint8_t l3, uint8_t l4);
     float getDistance();
 
-    const int LIGHT_MODE = 5;
+    const static int LIGHT_MODE;
+
+    bool hasCapability(CapabilityId id) const override;
+    void *getCapability(CapabilityId id) override;
+
+    const static CapabilityId CAP;
 };
 
-class DistanceSensorFactory : public Lpf2DeviceFactory {
+class TechnicDistanceSensorFactory : public Lpf2DeviceFactory
+{
 public:
-    bool matches(Lpf2Port& port) const override;
+    bool matches(Lpf2Port &port) const override;
 
-    Lpf2Device* create(Lpf2Port& port) const override {
-        return new DistanceSensor(port);
+    Lpf2Device *create(Lpf2Port &port) const override
+    {
+        return new TechnicDistanceSensor(port);
+    }
+
+    const char *name() const
+    {
+        return "Technic Distance Sensor Factory";
     }
 };
 
