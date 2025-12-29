@@ -1,6 +1,22 @@
 #include "DistanceSensor.h"
 
-void DistanceSensor::setLight(uint8_t l1, uint8_t l2, uint8_t l3, uint8_t l4)
+const int TechnicDistanceSensor::LIGHT_MODE = 5;
+
+const CapabilityId TechnicDistanceSensor::CAP =
+    CapabilityRegistry::instance().registerCapability("technic_distance_sensor");
+
+namespace
+{
+    TechnicDistanceSensorFactory factory;
+
+    const bool registered = []
+    {
+        Lpf2DeviceRegistry::instance().registerFactory(&factory);
+        return true;
+    }();
+}
+
+void TechnicDistanceSensor::setLight(uint8_t l1, uint8_t l2, uint8_t l3, uint8_t l4)
 {
     std::vector<uint8_t> data;
     if (l1 > 100)
@@ -20,7 +36,31 @@ void DistanceSensor::setLight(uint8_t l1, uint8_t l2, uint8_t l3, uint8_t l4)
     port_.writeData(LIGHT_MODE, data);
 }
 
-float DistanceSensor::getDistance()
+float TechnicDistanceSensor::getDistance()
 {
     return port_.getValue(0, 0);
+}
+
+bool TechnicDistanceSensor::hasCapability(CapabilityId id) const
+{
+    return id == CAP;
+}
+
+void *TechnicDistanceSensor::getCapability(CapabilityId id)
+{
+    if (id == CAP)
+        return static_cast<TechnicDistanceSensorControl *>(this);
+    return nullptr;
+}
+
+bool TechnicDistanceSensorFactory::matches(Lpf2Port &port) const
+{
+    switch (port.getDeviceType())
+    {
+    case DeviceType::TECHNIC_DISTANCE_SENSOR:
+        return true;
+    default:
+        break;
+    }
+    return false;
 }
