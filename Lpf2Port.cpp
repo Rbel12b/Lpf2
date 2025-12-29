@@ -11,13 +11,21 @@ void Lpf2Port::init(
 #endif
 )
 {
+
+#if defined(LPF2_USE_FREERTOS)
+    if (m_serialMutex == nullptr) {
+        m_serialMutex = xSemaphoreCreateMutex();
+        configASSERT(m_serialMutex);
+    }
+#endif
+
     if (!m_IO->ready()) {
         return;
     }
     m_serial->uartPinsOn();
     resetDevice();
+
 #if defined(LPF2_USE_FREERTOS)
-    m_serialMutex = xSemaphoreCreateMutex();
 
     if (!useFreeRTOSTask)
         return;
@@ -51,9 +59,6 @@ void Lpf2Port::taskEntryPoint(void *pvParameters)
 
 void Lpf2Port::uartTask()
 {
-    if (!m_IO->ready()) {
-        return;
-    }
     int baudRate = 2400;
 
     log_i("Initialization done.");
@@ -64,8 +69,11 @@ void Lpf2Port::uartTask()
 
     while (1)
     {
-
         vTaskDelay(1);
+        if (!m_IO->ready()) {
+            return;
+        }
+        update();
     }
 }
 #endif
@@ -75,6 +83,14 @@ void Lpf2Port::update()
     if (!m_IO->ready()) {
         return;
     }
+    
+#if defined(LPF2_USE_FREERTOS)
+    if (m_serialMutex == nullptr) {
+        LPF2_LOG_E("Serial mutex not initialized!");
+        return;
+    }
+#endif
+
     auto messages = m_parser.update();
 
     for (const auto &msg : messages)

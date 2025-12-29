@@ -5,7 +5,3 @@
 
 #include <Arduino.h>
 #include "log/log.h"
-
-#if defined(ESP32)
-#define LPF2_USE_FREERTOS
-#endif
