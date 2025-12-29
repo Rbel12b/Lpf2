@@ -9,11 +9,12 @@
 #include "Lpf2Const.h"
 #include "Lpf2Serial.h"
 #include "Lpf2SerialDef.h"
+#include "Util/mutex.h"
 
 class Lpf2Port
 {
 public:
-    Lpf2Port(Lpf2IO *IO) : m_IO(IO), m_serial(m_IO->getUart()), m_pwm(m_IO->getPWM()) ,m_parser(m_serial) {};
+    Lpf2Port(Lpf2IO *IO) : m_IO(IO), m_serial(m_IO->getUart()), m_pwm(m_IO->getPWM()), m_parser(m_serial) {};
 
     void init(
 #if defined(LPF2_USE_FREERTOS)
@@ -103,7 +104,7 @@ public:
         return convertValue(modeData[modeNum]);
     }
 
-    int writeData(uint8_t modeNum, const std::vector<uint8_t>& data);
+    int writeData(uint8_t modeNum, const std::vector<uint8_t> &data);
 
     void setPower(uint8_t pin1, uint8_t pin2);
 
@@ -175,9 +176,7 @@ private:
     Lpf2PWM *m_pwm;
     Lpf2Parser m_parser;
 
-#if defined(LPF2_USE_FREERTOS)
-    xQueueHandle m_serialMutex;
-#endif
+    Mutex m_serialMutex = LPF2_MUTEX_INVALID;
 
     /**
      * Time of the last data received (millis since startup).
