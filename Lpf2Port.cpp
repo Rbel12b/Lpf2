@@ -12,11 +12,13 @@ void Lpf2Port::init(
 )
 {
 
+#ifdef LPF2_MUTEX_INVALID
     if (m_serialMutex == LPF2_MUTEX_INVALID)
     {
         m_serialMutex = LPF2_MUTEX_CREATE();
         configASSERT(m_serialMutex != LPF2_MUTEX_INVALID);
     }
+#endif
 
     if (!m_IO->ready())
     {
@@ -86,11 +88,13 @@ void Lpf2Port::update()
         return;
     }
 
+#ifdef LPF2_MUTEX_INVALID
     if (m_serialMutex == LPF2_MUTEX_INVALID)
     {
         LPF2_LOG_E("Serial mutex not initialized!");
         return;
     }
+#endif
 
     auto messages = m_parser.update();
 
