@@ -18,8 +18,6 @@ using Mutex = xQueueHandle;
 using Mutex = std::mutex;
 #define LPF2_MUTEX_LOCK(m) m.lock()
 #define LPF2_MUTEX_UNLOCK(m) m.unlock()
-#define LPF2_MUTEX_CREATE() std::mutex()
-#define LPF2_MUTEX_INVALID std::mutex() // Can't be invalid
 
 #else
 
@@ -35,7 +33,7 @@ using Mutex = int;
 class MutexLock
 {
 public:
-    MutexLock(Mutex mutex)
+    MutexLock(Mutex& mutex)
         : m_mutex(mutex)
     {
         LPF2_MUTEX_LOCK(m_mutex);
@@ -46,6 +44,6 @@ public:
     }
 
 private:
-    Mutex m_mutex;
+    Mutex& m_mutex;
 };
 #endif // _LPF2_UTIL_MUTEX_H_
