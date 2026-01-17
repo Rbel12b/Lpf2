@@ -108,7 +108,7 @@ public:
 
     void setPower(uint8_t pin1, uint8_t pin2);
 
-    DeviceType getDeviceType() const { return m_deviceType; }
+    Lpf2DeviceType getDeviceType() const { return m_deviceType; }
     size_t getSpeed() const { return baud; }
     uint8_t getModeCount() const { return modes; }
     uint8_t getViewCount() const { return views; }
@@ -139,8 +139,8 @@ private:
     void sendACK(bool NACK = false);
 
     static uint8_t getDataSize(uint8_t format);
-    static ModeNum getDefaultMode(DeviceType id);
-    static bool deviceIsAbsMotor(DeviceType id);
+    static ModeNum getDefaultMode(Lpf2DeviceType id);
+    static bool deviceIsAbsMotor(Lpf2DeviceType id);
 
     void setMode(uint8_t num);
     void requestSpeedChange(uint32_t speed);
@@ -164,7 +164,7 @@ private:
 private:
     LPF2_STATUS m_status = LPF2_STATUS::STATUS_ERR;
     LPF2_STATUS m_new_status = LPF2_STATUS::STATUS_ERR;
-    DeviceType m_deviceType = DeviceType::UNKNOWNDEVICE;
+    Lpf2DeviceType m_deviceType = Lpf2DeviceType::UNKNOWNDEVICE;
     uint8_t modes, views;
     uint32_t baud = 2400;
     uint16_t modeCombos[16];
