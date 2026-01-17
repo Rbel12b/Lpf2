@@ -63,7 +63,7 @@ void Lpf2Port::uartTask()
 {
     int baudRate = 2400;
 
-    log_i("Initialization done.");
+    LPF2_LOG_I("Initialization done.");
 
     resetDevice();
 
@@ -115,7 +115,7 @@ void Lpf2Port::update()
         }
 
         LPF2_DEBUG_EXPR_D(
-            parser.printMessage(msg););
+            m_parser.printMessage(msg););
 
         parseMessage(msg);
 
@@ -144,6 +144,12 @@ uint8_t Lpf2Port::process(unsigned long now)
         resetDevice();
         sendACK(true);
         m_timeStart = now;
+    }
+
+    if (m_lastStatus != m_status)
+    {
+        m_lastStatus = m_status;
+        LPF2_LOG_D("New status: %i", (int)m_status);
     }
 
     switch (m_status)
@@ -291,11 +297,12 @@ void Lpf2Port::setMode(uint8_t num)
     {
         m_pwm->out(0, 255);
     }
+
+    LPF2_LOG_D("Set mode to %i (%s)", num, modeData[num].name.c_str());
 }
 
 void Lpf2Port::requestSpeedChange(uint32_t speed)
 {
-    LPF2_LOG_D("Trying to change speed to %i", speed);
     uint8_t header = MESSAGE_CMD | CMD_SPEED | (2 << 3);
     uint8_t checksum = header ^ 0xFF;
     uint8_t b;
@@ -324,6 +331,8 @@ void Lpf2Port::requestSpeedChange(uint32_t speed)
 
 void Lpf2Port::resetDevice()
 {
+    m_pwm->off();
+    m_serial->uartPinsOn();
     baud = 115200;
     changeBaud(baud);
     m_deviceType = Lpf2DeviceType::UNKNOWNDEVICE;
@@ -451,7 +460,7 @@ void Lpf2Port::parseMessage(const Lpf2Message &msg)
     }
     default:
     {
-        log_e("Unknown message type: 0x%02X", msg.msg);
+        LPF2_LOG_E("Unknown message type: 0x%02X", msg.msg);
     }
     }
 }
@@ -483,6 +492,7 @@ void Lpf2Port::parseMessageCMD(const Lpf2Message &msg)
             modes = msg.data[2] + 1;
             views = msg.data[3] + 1;
         }
+        modeData.resize(modes);
         break;
     }
     case CMD_SPEED:
@@ -508,7 +518,7 @@ void Lpf2Port::parseMessageCMD(const Lpf2Message &msg)
     }
     default:
     {
-        log_w("Unknown command: 0x%02X", msg.cmd);
+        LPF2_LOG_W("Unknown command: 0x%02X", msg.cmd);
         break;
     }
     }
@@ -516,11 +526,19 @@ void Lpf2Port::parseMessageCMD(const Lpf2Message &msg)
 
 void Lpf2Port::parseMessageInfo(const Lpf2Message &msg)
 {
+    uint8_t mode = GET_MODE(msg.cmd) + ((msg.data[0] & INFO_MODE_PLUS_8) ? 8 : 0);
+    if (mode >= modes)
+    {
+        return;
+    }
+    if (modeData.size() < static_cast<size_t>(modes))
+    {
+        modeData.resize(modes);
+    }
     switch (msg.data[0] & 0xDF)
     {
     case INFO_NAME:
     {
-        uint8_t mode = GET_MODE(msg.cmd) + ((msg.data[0] & INFO_MODE_PLUS_8) ? 8 : 0);
         if (mode >= modes)
         {
             break;
@@ -545,7 +563,6 @@ void Lpf2Port::parseMessageInfo(const Lpf2Message &msg)
     }
     case INFO_RAW:
     {
-        uint8_t mode = GET_MODE(msg.cmd) + ((msg.data[0] & INFO_MODE_PLUS_8) ? 8 : 0);
         if (mode >= modes || msg.length < 9)
         {
             break;
@@ -559,7 +576,6 @@ void Lpf2Port::parseMessageInfo(const Lpf2Message &msg)
     }
     case INFO_PCT:
     {
-        uint8_t mode = GET_MODE(msg.cmd) + ((msg.data[0] & INFO_MODE_PLUS_8) ? 8 : 0);
         if (mode >= modes || msg.length < 5)
         {
             break;
@@ -574,7 +590,6 @@ void Lpf2Port::parseMessageInfo(const Lpf2Message &msg)
     }
     case INFO_SI:
     {
-        uint8_t mode = GET_MODE(msg.cmd) + ((msg.data[0] & INFO_MODE_PLUS_8) ? 8 : 0);
         if (mode >= modes || msg.length < 9)
         {
             break;
@@ -585,7 +600,6 @@ void Lpf2Port::parseMessageInfo(const Lpf2Message &msg)
     }
     case INFO_UNITS:
     {
-        uint8_t mode = GET_MODE(msg.cmd) + ((msg.data[0] & INFO_MODE_PLUS_8) ? 8 : 0);
         if (mode >= modes)
         {
             break;
@@ -605,7 +619,6 @@ void Lpf2Port::parseMessageInfo(const Lpf2Message &msg)
     }
     case INFO_MAPPING:
     {
-        uint8_t mode = GET_MODE(msg.cmd) + ((msg.data[0] & INFO_MODE_PLUS_8) ? 8 : 0);
         if (mode >= modes || msg.length < 3)
         {
             break;
@@ -632,7 +645,6 @@ void Lpf2Port::parseMessageInfo(const Lpf2Message &msg)
     }
     case INFO_FORMAT:
     {
-        uint8_t mode = GET_MODE(msg.cmd) + ((msg.data[0] & INFO_MODE_PLUS_8) ? 8 : 0);
         if (mode >= modes || msg.length < 5)
         {
             break;
@@ -645,7 +657,7 @@ void Lpf2Port::parseMessageInfo(const Lpf2Message &msg)
     }
     default:
     {
-        log_w("Unknown info: 0x%02X", msg.data[0]);
+        LPF2_LOG_W("Unknown info: 0x%02X", msg.data[0]);
         break;
     }
     }
