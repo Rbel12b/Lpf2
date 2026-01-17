@@ -44,7 +44,7 @@ void Lpf2Port::init(
 
 bool Lpf2Port::deviceConnected()
 {
-    if (m_deviceType == DeviceType::UNKNOWNDEVICE)
+    if (m_deviceType == Lpf2DeviceType::UNKNOWNDEVICE)
         return false;
     if (m_status != LPF2_STATUS::STATUS_DATA)
         return false;
@@ -244,18 +244,18 @@ uint8_t Lpf2Port::getDataSize(uint8_t format)
     return 0;
 }
 
-bool Lpf2Port::deviceIsAbsMotor(DeviceType id)
+bool Lpf2Port::deviceIsAbsMotor(Lpf2DeviceType id)
 {
     switch (id)
     {
-    case DeviceType::TECHNIC_LARGE_LINEAR_MOTOR:
-    case DeviceType::TECHNIC_XLARGE_LINEAR_MOTOR:
-    case DeviceType::TECHNIC_LARGE_ANGULAR_MOTOR:
-    case DeviceType::TECHNIC_LARGE_ANGULAR_MOTOR_GREY:
-    case DeviceType::TECHNIC_MEDIUM_ANGULAR_MOTOR:
-    case DeviceType::TECHNIC_MEDIUM_ANGULAR_MOTOR_GREY:
-    case DeviceType::MEDIUM_LINEAR_MOTOR:
-    case DeviceType::SIMPLE_MEDIUM_LINEAR_MOTOR:
+    case Lpf2DeviceType::TECHNIC_LARGE_LINEAR_MOTOR:
+    case Lpf2DeviceType::TECHNIC_XLARGE_LINEAR_MOTOR:
+    case Lpf2DeviceType::TECHNIC_LARGE_ANGULAR_MOTOR:
+    case Lpf2DeviceType::TECHNIC_LARGE_ANGULAR_MOTOR_GREY:
+    case Lpf2DeviceType::TECHNIC_MEDIUM_ANGULAR_MOTOR:
+    case Lpf2DeviceType::TECHNIC_MEDIUM_ANGULAR_MOTOR_GREY:
+    case Lpf2DeviceType::MEDIUM_LINEAR_MOTOR:
+    case Lpf2DeviceType::SIMPLE_MEDIUM_LINEAR_MOTOR:
         return true;
     default:
         return false;
@@ -326,7 +326,7 @@ void Lpf2Port::resetDevice()
 {
     baud = 115200;
     changeBaud(baud);
-    m_deviceType = DeviceType::UNKNOWNDEVICE;
+    m_deviceType = Lpf2DeviceType::UNKNOWNDEVICE;
     modes = views = 0;
     comboNum = 0;
     for (int i = 0; i < modes; i++)
@@ -343,7 +343,7 @@ void Lpf2Port::resetDevice()
     m_start = millis();
 }
 
-ModeNum Lpf2Port::getDefaultMode(DeviceType id)
+ModeNum Lpf2Port::getDefaultMode(Lpf2DeviceType id)
 {
 
     if (deviceIsAbsMotor(id))
@@ -353,7 +353,7 @@ ModeNum Lpf2Port::getDefaultMode(DeviceType id)
 
     switch (id)
     {
-    case DeviceType::COLOR_DISTANCE_SENSOR:
+    case Lpf2DeviceType::COLOR_DISTANCE_SENSOR:
         return ModeNum::COLOR_DISTANCE_SENSOR__RGB_I;
     default:
         return ModeNum::_DEFAULT;
@@ -462,7 +462,7 @@ void Lpf2Port::parseMessageCMD(const Lpf2Message &msg)
     {
     case CMD_TYPE:
     {
-        m_deviceType = (DeviceType)msg.data[0];
+        m_deviceType = (Lpf2DeviceType)msg.data[0];
         m_status = LPF2_STATUS::STATUS_INFO;
         nextModeExt = false;
         break;

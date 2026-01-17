@@ -2,7 +2,7 @@
 #ifndef _LPF2_CONST_H_
 #define _LPF2_CONST_H_
 
-enum class DeviceType
+enum class Lpf2DeviceType
 {
     UNKNOWNDEVICE = 0,
     SIMPLE_MEDIUM_LINEAR_MOTOR = 1,

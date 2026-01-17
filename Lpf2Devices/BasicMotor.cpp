@@ -45,8 +45,8 @@ bool BasicMotorFactory::matches(Lpf2Port &port) const
 {
     switch (port.getDeviceType())
     {
-    case DeviceType::SIMPLE_MEDIUM_LINEAR_MOTOR:
-    case DeviceType::TRAIN_MOTOR:
+    case Lpf2DeviceType::SIMPLE_MEDIUM_LINEAR_MOTOR:
+    case Lpf2DeviceType::TRAIN_MOTOR:
         return true;
     default:
         break;

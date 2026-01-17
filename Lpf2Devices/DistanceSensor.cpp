@@ -57,7 +57,7 @@ bool TechnicDistanceSensorFactory::matches(Lpf2Port &port) const
 {
     switch (port.getDeviceType())
     {
-    case DeviceType::TECHNIC_DISTANCE_SENSOR:
+    case Lpf2DeviceType::TECHNIC_DISTANCE_SENSOR:
         return true;
     default:
         break;
