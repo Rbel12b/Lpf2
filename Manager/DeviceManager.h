@@ -22,6 +22,7 @@ public:
         if (!inited)
         {
             port_.init(false);
+            inited = true;
         }
         port_.update();
         if (!port_.deviceConnected())
