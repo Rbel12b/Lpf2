@@ -31,7 +31,7 @@ extern "C"
 #define LPF2_DEBUG_EXPR_E(...) \
     do                         \
     {                          \
-        __VA_ARGS__;           \
+        __VA_ARGS__            \
     } while (0)
 #else
 #define LPF2_LOG_E(...) \
@@ -48,7 +48,7 @@ extern "C"
 #define LPF2_DEBUG_EXPR_W(...) \
     do                         \
     {                          \
-        __VA_ARGS__;           \
+        __VA_ARGS__            \
     } while (0)
 #else
 #define LPF2_LOG_W(...) \
@@ -65,7 +65,7 @@ extern "C"
 #define LPF2_DEBUG_EXPR_I(...) \
     do                         \
     {                          \
-        __VA_ARGS__;           \
+        __VA_ARGS__            \
     } while (0)
 #else
 #define LPF2_LOG_I(...) \
@@ -82,7 +82,7 @@ extern "C"
 #define LPF2_DEBUG_EXPR_D(...) \
     do                         \
     {                          \
-        __VA_ARGS__;           \
+        __VA_ARGS__            \
     } while (0)
 #else
 #define LPF2_LOG_D(...) \
@@ -99,7 +99,7 @@ extern "C"
 #define LPF2_DEBUG_EXPR_V(...) \
     do                         \
     {                          \
-        __VA_ARGS__;           \
+        __VA_ARGS__            \
     } while (0)
 #else
 #define LPF2_LOG_V(...) \
