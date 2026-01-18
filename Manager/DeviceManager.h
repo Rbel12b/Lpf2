@@ -32,7 +32,11 @@ public:
         }
         if (!inited)
         {
+            #if defined(LPF2_USE_FREERTOS)
             port_.init(false);
+            #else
+            port_.init();
+            #endif
             inited = true;
         }
     }
@@ -45,7 +49,11 @@ public:
         }
         if (!inited)
         {
+            #if defined(LPF2_USE_FREERTOS)
             port_.init(false);
+            #else
+            port_.init();
+            #endif
             inited = true;
         }
         port_.update();

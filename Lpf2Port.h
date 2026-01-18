@@ -11,6 +11,7 @@
 #include "Lpf2SerialDef.h"
 #include "Util/mutex.h"
 
+#define MEASUREMENTS 20
 class Lpf2Port
 {
 public:
@@ -49,6 +50,8 @@ public:
         STATUS_DATA_START,
         /* Normal data receiving state */
         STATUS_DATA,
+        /* Analog identification */
+        STATUS_ANALOD_ID,
     };
 
     class Mode
@@ -146,6 +149,7 @@ private:
     void requestSpeedChange(uint32_t speed);
 
     void resetDevice();
+    void enterUartState();
 
     uint8_t process(unsigned long now);
 
@@ -178,7 +182,11 @@ private:
     Lpf2PWM *m_pwm;
     Lpf2Parser m_parser;
 
+#ifdef LPF2_MUTEX_INVALID
     Mutex m_serialMutex = LPF2_MUTEX_INVALID;
+#else
+    Mutex m_serialMutex;
+#endif
 
     /**
      * Time of the last data received (millis since startup).
@@ -191,6 +199,10 @@ private:
     uint64_t m_start = 0;
 
     uint8_t m_mode = 0;
+
+    float ch0Measurements[MEASUREMENTS];
+    float ch1Measurements[MEASUREMENTS];
+    uint8_t measurementNum = 0;
 };
 
 #endif
