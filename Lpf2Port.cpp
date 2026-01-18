@@ -139,7 +139,11 @@ uint8_t Lpf2Port::process(unsigned long now)
         (m_status != LPF2_STATUS::STATUS_SPEED_CHANGE) &&
         !(m_status == LPF2_STATUS::STATUS_ACK_WAIT && m_new_status == LPF2_STATUS::STATUS_SPEED))
     {
-        LPF2_LOG_D("Device disconnected.");
+        if (m_deviceConnected)
+        {
+            LPF2_LOG_I("Device disconnected.");
+            m_deviceConnected = false;
+        }
         resetDevice();
         sendACK(true);
         m_timeStart = now;
@@ -148,7 +152,7 @@ uint8_t Lpf2Port::process(unsigned long now)
     if (m_lastStatus != m_status)
     {
         m_lastStatus = m_status;
-        LPF2_LOG_D("New status: %i", (int)m_status);
+        LPF2_LOG_V("New status: %i", (int)m_status);
     }
 
     switch (m_status)
@@ -482,6 +486,7 @@ void Lpf2Port::parseMessageCMD(const Lpf2Message &msg)
     case CMD_TYPE:
     {
         m_deviceType = (Lpf2DeviceType)msg.data[0];
+        m_deviceConnected = true;
         m_status = LPF2_STATUS::STATUS_INFO;
         nextModeExt = false;
         break;
