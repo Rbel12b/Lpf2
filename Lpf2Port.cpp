@@ -24,7 +24,11 @@ void Lpf2Port::init(
     {
         return;
     }
-    m_serial->uartPinsOn();
+
+    {
+        MutexLock lock(m_serialMutex);
+        m_serial->uartPinsOn();
+    }
     resetDevice();
 
 #if defined(LPF2_USE_FREERTOS)
@@ -61,8 +65,6 @@ void Lpf2Port::taskEntryPoint(void *pvParameters)
 
 void Lpf2Port::uartTask()
 {
-    int baudRate = 2400;
-
     LPF2_LOG_I("Initialization done.");
 
     resetDevice();
@@ -102,20 +104,22 @@ void Lpf2Port::update()
     {
         if (m_status == LPF2_STATUS::STATUS_SYNCING)
         {
+            LPF2_DEBUG_EXPR_D(
+                m_parser.printMessage(msg););
+
             if (msg.msg == MESSAGE_SYS)
             {
-                break; // system messages are one byte so they are not useful for syncing
+                continue; // system messages are one byte so they are not useful for syncing
             }
             LPF2_LOG_D("Synced with device.");
             m_status = m_new_status;
             if (m_new_status == LPF2_STATUS::STATUS_ACK_WAIT)
                 m_new_status = LPF2_STATUS::STATUS_SPEED_CHANGE;
+            else if (m_new_status == LPF2_STATUS::STATUS_SYNC_WAIT)
+                m_new_status == LPF2_STATUS::STATUS_INFO;
             else
                 m_new_status = LPF2_STATUS::STATUS_INFO;
         }
-
-        LPF2_DEBUG_EXPR_D(
-            m_parser.printMessage(msg););
 
         parseMessage(msg);
 
@@ -127,11 +131,6 @@ void Lpf2Port::update()
 end_loop:
 
     process(millis());
-
-    if (!deviceConnected())
-    {
-        resetDevice();
-    }
 }
 
 uint8_t Lpf2Port::process(unsigned long now)
@@ -332,8 +331,12 @@ void Lpf2Port::requestSpeedChange(uint32_t speed)
 void Lpf2Port::resetDevice()
 {
     m_pwm->off();
-    m_serial->uartPinsOn();
+    {
+        MutexLock lock(m_serialMutex);
+        m_serial->uartPinsOn();
+    }
     baud = 115200;
+    // baud = 2400;
     changeBaud(baud);
     m_deviceType = Lpf2DeviceType::UNKNOWNDEVICE;
     modes = views = 0;
@@ -349,6 +352,8 @@ void Lpf2Port::resetDevice()
     nextModeExt = false;
     m_status = LPF2_STATUS::STATUS_SPEED_CHANGE;
     m_new_status = LPF2_STATUS::STATUS_SPEED_CHANGE;
+    // m_status = LPF2_STATUS::STATUS_SYNCING;
+    // m_new_status = LPF2_STATUS::STATUS_SYNC_WAIT;
     m_start = millis();
 }
 
@@ -450,6 +455,11 @@ void Lpf2Port::parseMessage(const Lpf2Message &msg)
         if (msg.length < size)
         {
             readLen = msg.length;
+        }
+
+        if (modeData[mode].rawData.size() < readLen)
+        {
+            modeData[mode].rawData.resize(readLen);
         }
 
         for (int i = 0; i < readLen; i++)
@@ -665,6 +675,7 @@ void Lpf2Port::parseMessageInfo(const Lpf2Message &msg)
 
 void Lpf2Port::changeBaud(uint32_t baud)
 {
+    MutexLock lock(m_serialMutex);
     m_serial->flush();
     m_serial->setBaudrate(baud);
 }
@@ -789,6 +800,10 @@ std::string Lpf2Port::convertValue(Mode modeData)
 
 int Lpf2Port::writeData(uint8_t modeNum, const std::vector<uint8_t> &data)
 {
+    if (!deviceConnected())
+    {
+        return 1;
+    }
     if (modeNum >= modeData.size())
     {
         return 1;

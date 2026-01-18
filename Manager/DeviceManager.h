@@ -13,6 +13,30 @@ public:
     explicit Lpf2DeviceManager(Lpf2IO *io)
         : port_(io), io(io) {}
 
+    void init()
+    {
+
+#if defined(LPF2_USE_FREERTOS)
+
+        xTaskCreate(
+            &Lpf2DeviceManager::taskEntryPoint, // Static entry point
+            "Lpf2DeviceManager",                // Task name
+            4096,
+            this, // Pass this pointer
+            5,
+            nullptr);
+#endif
+        if (!io->ready())
+        {
+            return;
+        }
+        if (!inited)
+        {
+            port_.init(false);
+            inited = true;
+        }
+    }
+
     void update()
     {
         if (!io->ready())
@@ -44,6 +68,8 @@ public:
 
     Lpf2Device *device()
     {
+        if (getDeviceType() == Lpf2DeviceType::UNKNOWNDEVICE)
+            return nullptr;
         return device_.get();
     }
 
@@ -69,6 +95,10 @@ private:
             }
         }
     }
+#if defined(LPF2_USE_FREERTOS)
+    static void taskEntryPoint(void *pvParameters);
+    void loopTask();
+#endif
 
     Lpf2Port port_;
     Lpf2IO *io;
