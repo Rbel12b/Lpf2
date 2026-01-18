@@ -166,6 +166,7 @@ private:
     LPF2_STATUS m_new_status = LPF2_STATUS::STATUS_ERR;
     LPF2_STATUS m_lastStatus = LPF2_STATUS::STATUS_ERR;
     Lpf2DeviceType m_deviceType = Lpf2DeviceType::UNKNOWNDEVICE;
+    bool m_deviceConnected = false; // do not rely on this, use deviceConnected() instead
     uint8_t modes, views;
     uint32_t baud = 2400;
     uint16_t modeCombos[16];
