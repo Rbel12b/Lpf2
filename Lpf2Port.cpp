@@ -44,9 +44,13 @@ void Lpf2Port::init(
 bool Lpf2Port::deviceConnected()
 {
     if (m_deviceType == Lpf2DeviceType::UNKNOWNDEVICE)
+    {
         return false;
-    if (m_status != LPF2_STATUS::STATUS_DATA && m_status != LPF2_STATUS::STATUS_ANALOD_ID)
+    }
+    else if (m_status != LPF2_STATUS::STATUS_DATA && m_status != LPF2_STATUS::STATUS_ANALOD_ID)
+    {
         return false;
+    }
     return true;
 }
 
@@ -126,47 +130,102 @@ void Lpf2Port::update()
             float ch0diff = ch0max - ch0min;
             float ch1diff = ch1max - ch1min;
             LPF2_LOG_D("Analog ID results: ch0min=%.2f ch0max=%.2f ch0diff=%.2f | ch1min=%.2f ch1max=%.2f ch1diff=%.2f",
-                        ch0min, ch0max, ch0diff,
-                        ch1min, ch1max, ch1diff);
+                       ch0min, ch0max, ch0diff,
+                       ch1min, ch1max, ch1diff);
+
+            static int detectionCounter = 0;
+            static const int detectionThreshold = 2; // Number of consecutive detections required - 1, so 2 means 3 times
+            static int lastDetectedType = -1;
             if (ch1diff >= 2.5f)
             {
-                // Serial protocol
-                m_dumb = false;
-                enterUartState();
-                LPF2_LOG_I("Uart detected");
-                return;
+                if (lastDetectedType == 0)
+                {
+                    detectionCounter++;
+                }
+                else
+                {
+                    lastDetectedType = 0;
+                    detectionCounter = 0;
+                }
+                if (detectionCounter >= detectionThreshold)
+                {
+                    // Serial protocol
+                    m_dumb = false;
+                    enterUartState();
+                    LPF2_LOG_I("Uart detected");
+                }
+                goto end_analog_check;
             }
-            
-            if (ch0max >= 3.0f && ch0diff < 0.5f)
+            else if (ch0max >= 3.0f && ch0diff < 0.5f)
             {
                 if (ch1min <= 0.5f && ch1diff < 0.5f)
                 {
-                    m_deviceType = Lpf2DeviceType::TRAIN_MOTOR;
-                    m_dumb = true;
-                    LPF2_LOG_D("Analog: Train Motor");
+                    if (lastDetectedType == 1)
+                    {
+                        detectionCounter++;
+                    }
+                    else
+                    {
+                        lastDetectedType = 1;
+                        detectionCounter = 0;
+                    }
+                    if (detectionCounter >= detectionThreshold)
+                    {
+                        m_deviceType = Lpf2DeviceType::TRAIN_MOTOR;
+                        m_dumb = true;
+                        LPF2_LOG_D("Analog: Train Motor");
+                    }
+                    goto end_analog_check;
                 }
             }
             else if (ch0min <= 1.0f && ch0diff < 0.5f)
             {
                 if (ch1min <= 0.5f && ch1diff < 0.5f)
                 {
-                    m_deviceType = Lpf2DeviceType::SIMPLE_MEDIUM_LINEAR_MOTOR;
-                    m_dumb = true;
-                    LPF2_LOG_D("Analog: Simple Motor");
+                    if (lastDetectedType == 2)
+                    {
+                        detectionCounter++;
+                    }
+                    else
+                    {
+                        lastDetectedType = 2;
+                        detectionCounter = 0;
+                    }
+                    if (detectionCounter >= detectionThreshold)
+                    {
+                        m_deviceType = Lpf2DeviceType::SIMPLE_MEDIUM_LINEAR_MOTOR;
+                        m_dumb = true;
+                        LPF2_LOG_D("Analog: Simple Motor");
+                    }
+                    goto end_analog_check;
                 }
                 else if (ch1min >= 2.5f && ch1diff < 0.5f)
                 {
-                    m_deviceType = Lpf2DeviceType::LIGHT;
-                    m_dumb = true;
-                    LPF2_LOG_D("Analog: Light");
+                    if (lastDetectedType == 3)
+                    {
+                        detectionCounter++;
+                    }
+                    else
+                    {
+                        lastDetectedType = 3;
+                        detectionCounter = 0;
+                    }
+                    if (detectionCounter >= detectionThreshold)
+                    {
+                        m_deviceType = Lpf2DeviceType::LIGHT;
+                        m_dumb = true;
+                        LPF2_LOG_D("Analog: Light");
+                    }
+                    goto end_analog_check;
                 }
             }
-            else
-            {
-                m_deviceType = Lpf2DeviceType::UNKNOWNDEVICE;
-            }
+            LPF2_LOG_D("Analog: No device detected");
+            detectionCounter = 0;
+            m_deviceType = Lpf2DeviceType::UNKNOWNDEVICE;
+            lastDetectedType = -1;
         }
-        vTaskDelay(10 / portTICK_PERIOD_MS);
+    end_analog_check:
+        vTaskDelay(5 / portTICK_PERIOD_MS);
         return;
     }
 
@@ -174,11 +233,10 @@ void Lpf2Port::update()
 
     for (const auto &msg : messages)
     {
+        LPF2_DEBUG_EXPR_V(
+            m_parser.printMessage(msg););
         if (m_status == LPF2_STATUS::STATUS_SYNCING)
         {
-            LPF2_DEBUG_EXPR_D(
-                m_parser.printMessage(msg););
-
             if (msg.msg == MESSAGE_SYS)
             {
                 continue; // system messages are one byte so they are not useful for syncing
@@ -207,7 +265,7 @@ end_loop:
 
 uint8_t Lpf2Port::process(unsigned long now)
 {
-    if (now - m_timeStart > 1000)
+    if (now - m_startRec > 1000)
     {
         if (m_deviceConnected)
         {
@@ -216,7 +274,7 @@ uint8_t Lpf2Port::process(unsigned long now)
         }
         resetDevice();
         sendACK(true);
-        m_timeStart = now;
+        m_startRec = now;
     }
 
     if (m_lastStatus != m_status)
@@ -265,7 +323,7 @@ uint8_t Lpf2Port::process(unsigned long now)
         break;
 
     case LPF2_STATUS::STATUS_ACK_WAIT:
-        if (now - m_timeStart > 100)
+        if (now - m_start > 100)
         {
             switch (m_new_status)
             {
@@ -399,7 +457,7 @@ void Lpf2Port::requestSpeedChange(uint32_t speed)
     }
     m_status = LPF2_STATUS::STATUS_ACK_WAIT;
     m_new_status = LPF2_STATUS::STATUS_SPEED;
-    m_timeStart = millis();
+    m_start = millis();
 }
 
 void Lpf2Port::resetDevice()
@@ -427,6 +485,7 @@ void Lpf2Port::resetDevice()
     measurementNum = 0;
     m_status = LPF2_STATUS::STATUS_ANALOD_ID;
     m_start = millis();
+    m_startRec = m_start;
 }
 
 void Lpf2Port::enterUartState()
@@ -454,6 +513,7 @@ void Lpf2Port::enterUartState()
     m_status = LPF2_STATUS::STATUS_SPEED_CHANGE;
     m_new_status = LPF2_STATUS::STATUS_SPEED_CHANGE;
     m_start = millis();
+    m_startRec = m_start;
 }
 
 ModeNum Lpf2Port::getDefaultMode(Lpf2DeviceType id)
@@ -488,13 +548,13 @@ void Lpf2Port::parseMessage(const Lpf2Message &msg)
             m_status = LPF2_STATUS::STATUS_SYNC_WAIT;
             m_new_status = LPF2_STATUS::STATUS_INFO;
         }
-        m_timeStart = millis();
+        m_startRec = millis();
         parseMessageCMD(msg);
         break;
     }
     case MESSAGE_INFO:
     {
-        m_timeStart = millis();
+        m_startRec = millis();
         parseMessageInfo(msg);
         break;
     }
@@ -534,7 +594,7 @@ void Lpf2Port::parseMessage(const Lpf2Message &msg)
         {
             m_status = LPF2_STATUS::STATUS_DATA_RECEIVED;
         }
-        m_timeStart = millis();
+        m_startRec = millis();
         uint8_t mode = GET_MODE(msg.header);
 
         if (nextModeExt)

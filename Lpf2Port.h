@@ -191,7 +191,7 @@ private:
     /**
      * Time of the last data received (millis since startup).
      */
-    uint64_t m_timeStart = 0;
+    uint64_t m_startRec = 0;
 
     /**
      * Time of the start of the current operation (millis since startup).

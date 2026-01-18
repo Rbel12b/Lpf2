@@ -59,7 +59,8 @@ public:
         port_.update();
         if (!port_.deviceConnected())
         {
-            device_.reset();
+            port_.setPower(0, 0);
+            device_.reset(nullptr);
             return;
         }
 

@@ -75,7 +75,7 @@ std::vector<Lpf2Message> Lpf2Parser::update()
         if (b != getChecksum())
         {
             LPF2_LOG_W("Checksum mismatch: 0x%02X != 0x%02X", b, getChecksum());
-            printMessage(message);
+            // printMessage(message);
             buffer.erase(buffer.begin());
             continue;
         }
