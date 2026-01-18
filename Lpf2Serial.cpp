@@ -11,6 +11,7 @@ std::vector<Lpf2Message> Lpf2Parser::update()
     {
         uint8_t b = m_serial->read();
         buffer.push_back(b);
+        m_lastReceivedTime = millis();
     }
 
     while (buffer.size())
@@ -46,6 +47,12 @@ std::vector<Lpf2Message> Lpf2Parser::update()
 
         if (buffer.size() < message.length + 2)
         {
+            // if (m_lastReceivedTime - millis() >= 500)
+            // {
+            //     // Probably corrupted message
+            //     buffer.erase(buffer.begin());
+            //     log_w("Discarding 1 byte, because message may be corrupted");
+            // }
             break;
         }
 

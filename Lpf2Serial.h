@@ -34,6 +34,7 @@ private:
     Lpf2Uart *m_serial;
     std::vector<uint8_t> buffer;
     uint8_t checksum;
+    uint32_t m_lastReceivedTime = 0;
 };
 
 #endif

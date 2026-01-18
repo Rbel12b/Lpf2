@@ -60,7 +60,7 @@ public:
      * @brief Get the number of bytes available to read from the UART receive buffer.
      * @return The number of available bytes ready to read.
      */
-    virtual size_t available() = 0;
+    virtual int available() = 0;
 
     /**
      * @brief Flush the UART transmit buffer, ensuring all pending data is sent.
