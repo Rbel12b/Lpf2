@@ -24,11 +24,6 @@ void Lpf2Port::init(
     {
         return;
     }
-
-    {
-        MutexLock lock(m_serialMutex);
-        m_serial->uartPinsOn();
-    }
     resetDevice();
 
 #if defined(LPF2_USE_FREERTOS)
@@ -50,7 +45,7 @@ bool Lpf2Port::deviceConnected()
 {
     if (m_deviceType == Lpf2DeviceType::UNKNOWNDEVICE)
         return false;
-    if (m_status != LPF2_STATUS::STATUS_DATA)
+    if (m_status != LPF2_STATUS::STATUS_DATA && m_status != LPF2_STATUS::STATUS_ANALOD_ID)
         return false;
     return true;
 }
@@ -98,6 +93,83 @@ void Lpf2Port::update()
     }
 #endif
 
+    if (m_status == LPF2_STATUS::STATUS_ANALOD_ID)
+    {
+        // m_serial->uartPinsOff();
+        ch0Measurements[measurementNum] = m_serial->readCh(0);
+        ch1Measurements[measurementNum] = m_serial->readCh(1);
+        measurementNum++;
+        if (measurementNum >= MEASUREMENTS)
+        {
+            measurementNum = 0;
+            float ch0min = 5, ch0max = 0, ch1min = 5, ch1max = 0;
+            for (int i = 0; i < MEASUREMENTS; i++)
+            {
+                if (ch0Measurements[i] < ch0min)
+                {
+                    ch0min = ch0Measurements[i];
+                }
+                if (ch0Measurements[i] > ch0max)
+                {
+                    ch0max = ch0Measurements[i];
+                }
+
+                if (ch1Measurements[i] < ch1min)
+                {
+                    ch1min = ch1Measurements[i];
+                }
+                if (ch1Measurements[i] > ch1max)
+                {
+                    ch1max = ch1Measurements[i];
+                }
+            }
+            float ch0diff = ch0max - ch0min;
+            float ch1diff = ch1max - ch1min;
+            LPF2_LOG_D("Analog ID results: ch0min=%.2f ch0max=%.2f ch0diff=%.2f | ch1min=%.2f ch1max=%.2f ch1diff=%.2f",
+                        ch0min, ch0max, ch0diff,
+                        ch1min, ch1max, ch1diff);
+            if (ch1diff >= 2.5f)
+            {
+                // Serial protocol
+                m_dumb = false;
+                enterUartState();
+                LPF2_LOG_I("Uart detected");
+                return;
+            }
+            
+            if (ch0max >= 3.0f && ch0diff < 0.5f)
+            {
+                if (ch1min <= 0.5f && ch1diff < 0.5f)
+                {
+                    m_deviceType = Lpf2DeviceType::TRAIN_MOTOR;
+                    m_dumb = true;
+                    LPF2_LOG_D("Analog: Train Motor");
+                }
+            }
+            else if (ch0min <= 1.0f && ch0diff < 0.5f)
+            {
+                if (ch1min <= 0.5f && ch1diff < 0.5f)
+                {
+                    m_deviceType = Lpf2DeviceType::SIMPLE_MEDIUM_LINEAR_MOTOR;
+                    m_dumb = true;
+                    LPF2_LOG_D("Analog: Simple Motor");
+                }
+                else if (ch1min >= 2.5f && ch1diff < 0.5f)
+                {
+                    m_deviceType = Lpf2DeviceType::LIGHT;
+                    m_dumb = true;
+                    LPF2_LOG_D("Analog: Light");
+                }
+            }
+            else
+            {
+                m_deviceType = Lpf2DeviceType::UNKNOWNDEVICE;
+            }
+        }
+        vTaskDelay(10 / portTICK_PERIOD_MS);
+        return;
+    }
+
     auto messages = m_parser.update();
 
     for (const auto &msg : messages)
@@ -116,7 +188,7 @@ void Lpf2Port::update()
             if (m_new_status == LPF2_STATUS::STATUS_ACK_WAIT)
                 m_new_status = LPF2_STATUS::STATUS_SPEED_CHANGE;
             else if (m_new_status == LPF2_STATUS::STATUS_SYNC_WAIT)
-                m_new_status == LPF2_STATUS::STATUS_INFO;
+                m_new_status = LPF2_STATUS::STATUS_INFO;
             else
                 m_new_status = LPF2_STATUS::STATUS_INFO;
         }
@@ -135,9 +207,7 @@ end_loop:
 
 uint8_t Lpf2Port::process(unsigned long now)
 {
-    if (now - m_timeStart > 2000 &&
-        (m_status != LPF2_STATUS::STATUS_SPEED_CHANGE) &&
-        !(m_status == LPF2_STATUS::STATUS_ACK_WAIT && m_new_status == LPF2_STATUS::STATUS_SPEED))
+    if (now - m_timeStart > 1000)
     {
         if (m_deviceConnected)
         {
@@ -334,13 +404,39 @@ void Lpf2Port::requestSpeedChange(uint32_t speed)
 
 void Lpf2Port::resetDevice()
 {
+    // enterUartState();
+    // return;
+    m_pwm->off();
+    {
+        MutexLock lock(m_serialMutex);
+        m_serial->uartPinsOff();
+    }
+    baud = 115200;
+    m_deviceType = Lpf2DeviceType::UNKNOWNDEVICE;
+    modes = views = 0;
+    comboNum = 0;
+    for (int i = 0; i < modes; i++)
+    {
+        modeData[i] = Mode();
+    }
+    for (size_t i = 0; i < 16; i++)
+    {
+        modeCombos[i] = 0;
+    }
+    nextModeExt = false;
+    measurementNum = 0;
+    m_status = LPF2_STATUS::STATUS_ANALOD_ID;
+    m_start = millis();
+}
+
+void Lpf2Port::enterUartState()
+{
     m_pwm->off();
     {
         MutexLock lock(m_serialMutex);
         m_serial->uartPinsOn();
     }
     baud = 115200;
-    // baud = 2400;
     changeBaud(baud);
     m_deviceType = Lpf2DeviceType::UNKNOWNDEVICE;
     modes = views = 0;
@@ -354,10 +450,9 @@ void Lpf2Port::resetDevice()
         modeCombos[i] = 0;
     }
     nextModeExt = false;
+    measurementNum = 0;
     m_status = LPF2_STATUS::STATUS_SPEED_CHANGE;
     m_new_status = LPF2_STATUS::STATUS_SPEED_CHANGE;
-    // m_status = LPF2_STATUS::STATUS_SYNCING;
-    // m_new_status = LPF2_STATUS::STATUS_SYNC_WAIT;
     m_start = millis();
 }
 
@@ -865,7 +960,7 @@ int Lpf2Port::writeData(uint8_t modeNum, const std::vector<uint8_t> &data)
 
 void Lpf2Port::setPower(uint8_t pin1, uint8_t pin2)
 {
-    if ((modeData[m_mode].flags.power12() || m_dumb) && m_pwm)
+    if ((m_dumb || (modeData.size() > m_mode && modeData[m_mode].flags.power12())) && m_pwm)
     {
         m_pwm->out(pin1, pin2);
     }

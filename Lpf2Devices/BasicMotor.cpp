@@ -16,6 +16,9 @@ namespace
 
 void BasicMotor::setSpeed(int speed)
 {
+    assert(this);
+    assert(((uintptr_t)this & 0x3) == 0);
+    assert(port_.deviceConnected()); 
     bool forward = speed >= 0;
     speed = std::abs(speed);
     if (speed > 100)
