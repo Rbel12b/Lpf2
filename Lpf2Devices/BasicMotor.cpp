@@ -24,8 +24,8 @@ void BasicMotor::setSpeed(int speed)
     if (speed > 100)
         speed = 100;
 
-    uint8_t pwr1 = speed * 0xFF / 100;
-    uint8_t pwr2 = 0;
+    uint8_t pwr2 = speed * 0xFF / 100;
+    uint8_t pwr1 = 0;
     if (!forward)
         std::swap(pwr1, pwr2);
 
