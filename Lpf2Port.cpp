@@ -252,8 +252,10 @@ void Lpf2Port::update()
         }
 
         parseMessage(msg);
+        auto now = millis();
+        m_startRec = now;
 
-        if (process(millis()) != 0)
+        if (process(now) != 0)
         {
             goto end_loop;
         }
@@ -265,7 +267,7 @@ end_loop:
 
 uint8_t Lpf2Port::process(unsigned long now)
 {
-    if (now - m_startRec > 1000)
+    if (now - m_startRec > 2000)
     {
         if (m_deviceConnected)
         {
