@@ -52,7 +52,7 @@ public:
      * @brief Move the motor by a number of degrees.
      * @param degrees Degrees to move (can be negative).
      * @param speed Speed in percentage (1 to 100).
-    */
+     */
     virtual void moveDegrees(int64_t degrees, uint8_t speed) = 0;
 };
 
@@ -115,16 +115,13 @@ private:
     float m_pidIntegral = 0.0f;
     float m_pidLastError = 0.0f;
 
-    // PID tuning parameters (tune these!)
-    const float m_kp = 0.02f;
-    const float m_ki = 0.0005f;
-    const float m_kd = 0.01f;
+    // PID gains
+    float m_kp = 0.03f;
+    float m_ki = 0.0f;
+    float m_kd = 0.06f;
 
     // Anti-windup
-    float m_pidIntegralLimit = 3000.0f;
-
-    // Timekeeping
-    uint32_t m_lastPidMicros = 0;
+    float m_pidIntegralLimit = 2000.0f;
 
     // Hold targets
     uint16_t m_holdAbsPos = 0;

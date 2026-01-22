@@ -49,28 +49,19 @@ void EncoderMotor::resetPid()
 {
     m_pidIntegral = 0.0f;
     m_pidLastError = 0.0f;
-    m_lastPidMicros = micros();
 }
 
 int EncoderMotor::pidStep(float error)
 {
-    uint32_t now = micros();
-    float dt = (now - m_lastPidMicros) * 1e-6f; // seconds
-    m_lastPidMicros = now;
-
-    // Prevent numerical issues
-    if (dt <= 0.0f || dt > 0.1f)
-        dt = 0.001f;
-
     // Integral
-    m_pidIntegral += error * dt;
+    m_pidIntegral += error;
     if (m_pidIntegral > m_pidIntegralLimit)
         m_pidIntegral = m_pidIntegralLimit;
     else if (m_pidIntegral < -m_pidIntegralLimit)
         m_pidIntegral = -m_pidIntegralLimit;
 
-    // Derivative
-    float derivative = (error - m_pidLastError) / dt;
+    // Derivative (difference only)
+    float derivative = error - m_pidLastError;
     m_pidLastError = error;
 
     // PID output
@@ -79,7 +70,7 @@ int EncoderMotor::pidStep(float error)
         m_ki * m_pidIntegral +
         m_kd * derivative;
 
-    // Clamp to allowed speed
+    // Clamp to max speed
     if (output > m_moveSpeed)
         output = static_cast<float>(m_moveSpeed);
     else if (output < -static_cast<float>(m_moveSpeed))
@@ -87,6 +78,7 @@ int EncoderMotor::pidStep(float error)
 
     return static_cast<int>(output);
 }
+
 
 void EncoderMotor::poll()
 {
@@ -102,6 +94,9 @@ void EncoderMotor::poll()
 
     m_currentRelPos += delta;
     m_lastAbsPos = absPos;
+
+    LPF2_LOG_D("AbsPos: %u, RelPos: %lld, Delta: %d",
+               absPos, m_currentRelPos, delta);
 
     switch (m_mode)
     {
@@ -170,7 +165,7 @@ void EncoderMotor::poll()
                 static_cast<int64_t>(m_relPos) -
                 static_cast<int64_t>(m_currentRelPos));
 
-        if (std::abs(error) <= 1.0f)
+        if (std::abs(error) <= 10.0f)
         {
             m_holdRelPos = m_relPos;
             resetPid();
@@ -210,6 +205,13 @@ void EncoderMotor::poll()
             error = static_cast<float>(diff);
         }
 
+        if (std::abs(error) < 10.0f) // 1°
+        {
+            setSpeed(0);
+            m_pidIntegral = 0.0f;
+            break;
+        }
+
         setSpeed(pidStep(error));
         break;
     }
@@ -218,7 +220,7 @@ void EncoderMotor::poll()
 
 uint16_t EncoderMotor::getAbsPos() const
 {
-    return (uint16_t)port_.getValue(CALIB_MODE, 0);
+    return (uint16_t)(port_.getValue(CALIB_MODE, 0) / 1024.0f * 3600.0f);
 }
 
 uint64_t EncoderMotor::getRelPos() const
@@ -250,7 +252,7 @@ void EncoderMotor::setSpeed(int speed)
 void EncoderMotor::moveToAbsPos(uint16_t pos, uint8_t speed)
 {
     m_moveSpeed = speed;
-    m_absPos = pos;
+    m_absPos = pos * 10;
     resetPid();
     m_mode = Mode::MOVE_TO_ABS;
 }
@@ -258,7 +260,7 @@ void EncoderMotor::moveToAbsPos(uint16_t pos, uint8_t speed)
 void EncoderMotor::moveToRelPos(uint64_t pos, uint8_t speed)
 {
     m_moveSpeed = speed;
-    m_relPos = pos;
+    m_relPos = pos * 10;
     resetPid();
     m_mode = Mode::MOVE_TO_REL;
 }
@@ -266,7 +268,7 @@ void EncoderMotor::moveToRelPos(uint64_t pos, uint8_t speed)
 void EncoderMotor::moveDegrees(int64_t degrees, uint8_t speed)
 {
     m_moveSpeed = speed;
-    m_deg = degrees;
+    m_deg = degrees * 10;
     resetPid();
     m_mode = Mode::MOVE_DEGREES;
 }

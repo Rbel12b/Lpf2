@@ -234,6 +234,13 @@ void Lpf2Port::update()
     for (const auto &msg : messages)
     {
         LPF2_DEBUG_EXPR_V(
+            if ((m_status == LPF2_STATUS::STATUS_SPEED_CHANGE || m_status == LPF2_STATUS::STATUS_ACK_WAIT) &&
+                (!msg.system || msg.header != BYTE_ACK))
+            {
+                // do not print SYNC and other messages because, they're not relevant in this state
+                // (Speed change - lot of garbage is received).
+                break;
+            }
             m_parser.printMessage(msg););
         if (m_status == LPF2_STATUS::STATUS_SYNCING)
         {
