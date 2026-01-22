@@ -75,16 +75,21 @@ public:
         }
     }
 
-    Lpf2Device *device()
+    Lpf2Device *device() const
     {
         if (getDeviceType() == Lpf2DeviceType::UNKNOWNDEVICE)
             return nullptr;
         return device_.get();
     }
 
-    Lpf2DeviceType getDeviceType()
+    Lpf2DeviceType getDeviceType() const
     {
         return port_.getDeviceType();
+    }
+
+    const Lpf2Port& getPort() const
+    {
+        return port_;
     }
 
 private:
