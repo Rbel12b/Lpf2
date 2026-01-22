@@ -116,9 +116,9 @@ private:
     float m_pidLastError = 0.0f;
 
     // PID gains
-    float m_kp = 0.03f;
+    float m_kp = 0.08f;
     float m_ki = 0.0f;
-    float m_kd = 0.06f;
+    float m_kd = 0.006f;
 
     // Anti-windup
     float m_pidIntegralLimit = 2000.0f;
