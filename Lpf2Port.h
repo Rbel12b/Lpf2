@@ -165,6 +165,8 @@ private:
     /// Parse a 32-bit IEEE-754 little-endian float
     static float parseDataF(const uint8_t *ptr);
 
+    void doAnalogID();
+
 private:
     LPF2_STATUS m_status = LPF2_STATUS::STATUS_ERR;
     LPF2_STATUS m_new_status = LPF2_STATUS::STATUS_ERR;
