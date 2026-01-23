@@ -20,13 +20,13 @@ public:
      * @brief Get the relative position of the motor.
      * @return Position in degrees from the zero point (can be negative).
      */
-    virtual uint64_t getRelPos() const = 0;
+    virtual int64_t getRelPos() const = 0;
 
     /**
      * @brief Set the relative position of the motor (set the zero point).
      * @param pos Position in degrees from the zero point.
      */
-    virtual void setRelPos(uint64_t pos) = 0;
+    virtual void setRelPos(int64_t pos) = 0;
 
     /**
      * @brief Set the speed of the motor.
@@ -42,11 +42,35 @@ public:
     virtual void moveToAbsPos(uint16_t pos, uint8_t speed) = 0;
 
     /**
+     * @brief Set the absolute target position of the motor. Does not start movement. Use after moveToAbsPos.
+     * @param pos Position in degrees.
+     */
+    virtual void setAbsTarget(uint16_t pos) = 0;
+
+    /**
      * @brief Move the motor to a relative position.
      * @param pos Position in degrees from the zero point.
      * @param speed Speed in percentage (1 to 100).
      */
-    virtual void moveToRelPos(uint64_t pos, uint8_t speed) = 0;
+    virtual void moveToRelPos(int64_t pos, uint8_t speed) = 0;
+
+    /**
+     * @brief Set the relative target position of the motor. Does not start movement. Use after moveToRelPos.
+     * @param pos Position in degrees from the zero point.
+     */
+    virtual void setRelTarget(int64_t pos) = 0;
+
+    /**
+     * @brief Set the hold target to an absolute position. Motor will try to hold this position.
+     * @param pos Position in degrees.
+     */
+    virtual void setHoldTargetAbs(uint16_t pos) = 0;
+
+    /**
+     * @brief Set the hold target to a relative position. Motor will try to hold this position.
+     * @param pos Position in degrees.
+     */
+    virtual void setHoldTargetRel(int64_t pos) = 0;
 
     /**
      * @brief Move the motor by a number of degrees.
@@ -54,6 +78,12 @@ public:
      * @param speed Speed in percentage (1 to 100).
      */
     virtual void moveDegrees(int64_t degrees, uint8_t speed) = 0;
+
+    /**
+     * @brief Check if the motor is currently moving to a position.
+     * @return true if the motor is moving to a position, false otherwise.
+     */
+    virtual bool isMovingToPos() = 0;
 };
 
 class EncoderMotor : public Lpf2Device, public EncoderMotorControl
@@ -75,12 +105,17 @@ public:
     }
 
     uint16_t getAbsPos() const override;
-    uint64_t getRelPos() const override;
-    void setRelPos(uint64_t pos) override;
+    int64_t getRelPos() const override;
+    void setRelPos(int64_t pos) override;
     void setSpeed(int speed) override;
     void moveToAbsPos(uint16_t pos, uint8_t speed) override;
-    void moveToRelPos(uint64_t pos, uint8_t speed) override;
+    void setAbsTarget(uint16_t pos) override;
+    void moveToRelPos(int64_t pos, uint8_t speed) override;
+    void setRelTarget(int64_t pos) override;
     void moveDegrees(int64_t degrees, uint8_t speed) override;
+    void setHoldTargetAbs(uint16_t pos) override;
+    void setHoldTargetRel(int64_t pos) override;
+    bool isMovingToPos() override;
 
     bool hasCapability(CapabilityId id) const override;
     void *getCapability(CapabilityId id) override;
@@ -91,6 +126,7 @@ public:
 private:
     void resetPid();
     int pidStep(float error);
+    void _setSpeed(int speed);
 
     enum class Mode
     {
@@ -108,7 +144,7 @@ private:
         uint16_t m_deg;
     };
     uint8_t m_moveSpeed = 0;
-    uint64_t m_currentRelPos = 0;
+    int64_t m_currentRelPos = 0;
     uint16_t m_lastAbsPos = 0;
 
     // PID state
@@ -116,7 +152,7 @@ private:
     float m_pidLastError = 0.0f;
 
     // PID gains
-    float m_kp = 0.08f;
+    float m_kp = 0.13f;
     float m_ki = 0.0f;
     float m_kd = 0.006f;
 
@@ -125,7 +161,8 @@ private:
 
     // Hold targets
     uint16_t m_holdAbsPos = 0;
-    uint64_t m_holdRelPos = 0;
+    int64_t m_holdRelPos = 0;
+    bool m_holdRel = false;
 };
 
 class EncoderMotorFactory : public Lpf2DeviceFactory
