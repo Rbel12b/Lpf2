@@ -95,7 +95,7 @@ void EncoderMotor::poll()
     m_currentRelPos += delta;
     m_lastAbsPos = absPos;
 
-    LPF2_LOG_D("AbsPos: %u, RelPos: %lld, Delta: %d",
+    LPF2_LOG_V("AbsPos: %u, RelPos: %lld, Delta: %d",
                absPos, m_currentRelPos, delta);
 
     switch (m_mode)
@@ -108,7 +108,7 @@ void EncoderMotor::poll()
     {
         if (m_deg == 0)
         {
-            setSpeed(0);
+            _setSpeed(0);
             break;
         }
 
@@ -122,11 +122,11 @@ void EncoderMotor::poll()
             m_holdRelPos = m_currentRelPos;
             resetPid();
             m_mode = Mode::HOLD;
-            setSpeed(0);
+            _setSpeed(0);
         }
         else
         {
-            setSpeed(pidStep(error));
+            _setSpeed(pidStep(error));
         }
         break;
     }
@@ -144,16 +144,18 @@ void EncoderMotor::poll()
 
         float error = static_cast<float>(diff);
 
-        if (std::abs(error) <= 10.0f)
+        if (std::abs(error) <= 5.0f)
         {
             m_holdAbsPos = m_absPos;
+            m_holdRelPos = 0;
+            m_holdRel = false;
             resetPid();
             m_mode = Mode::HOLD;
-            setSpeed(0);
+            _setSpeed(0);
         }
         else
         {
-            setSpeed(pidStep(error));
+            _setSpeed(pidStep(error));
         }
         break;
     }
@@ -165,16 +167,18 @@ void EncoderMotor::poll()
                 static_cast<int64_t>(m_relPos) -
                 static_cast<int64_t>(m_currentRelPos));
 
-        if (std::abs(error) <= 10.0f)
+        if (std::abs(error) <= 5.0f)
         {
             m_holdRelPos = m_relPos;
+            m_holdAbsPos = 0;
+            m_holdRel = true;
             resetPid();
             m_mode = Mode::HOLD;
-            setSpeed(0);
+            _setSpeed(0);
         }
         else
         {
-            setSpeed(pidStep(error));
+            _setSpeed(pidStep(error));
         }
         break;
     }
@@ -184,7 +188,7 @@ void EncoderMotor::poll()
         // Prefer relative hold if available
         float error;
 
-        if (m_holdRelPos != 0)
+        if (m_holdRel)
         {
             error =
                 static_cast<float>(
@@ -205,14 +209,14 @@ void EncoderMotor::poll()
             error = static_cast<float>(diff);
         }
 
-        if (std::abs(error) < 10.0f) // 1°
+        if (std::abs(error) < 5.0f) // 0.1°
         {
-            setSpeed(0);
+            _setSpeed(0);
             m_pidIntegral = 0.0f;
             break;
         }
 
-        setSpeed(pidStep(error));
+        _setSpeed(pidStep(error));
         break;
     }
     }
@@ -223,12 +227,12 @@ uint16_t EncoderMotor::getAbsPos() const
     return (uint16_t)(port_.getValue(CALIB_MODE, 0) / 1024.0f * 3600.0f);
 }
 
-uint64_t EncoderMotor::getRelPos() const
+int64_t EncoderMotor::getRelPos() const
 {
     return m_currentRelPos;
 }
 
-void EncoderMotor::setRelPos(uint64_t pos)
+void EncoderMotor::setRelPos(int64_t pos)
 {
     m_currentRelPos = pos;
 }
@@ -236,6 +240,11 @@ void EncoderMotor::setRelPos(uint64_t pos)
 void EncoderMotor::setSpeed(int speed)
 {
     m_mode = Mode::SPEED;
+    _setSpeed(speed);
+}
+
+void EncoderMotor::_setSpeed(int speed)
+{
     bool forward = speed >= 0;
     speed = std::abs(speed);
     if (speed > 100)
@@ -257,11 +266,23 @@ void EncoderMotor::moveToAbsPos(uint16_t pos, uint8_t speed)
     m_mode = Mode::MOVE_TO_ABS;
 }
 
-void EncoderMotor::moveToRelPos(uint64_t pos, uint8_t speed)
+void EncoderMotor::setAbsTarget(uint16_t pos)
+{
+    m_absPos = pos * 10;
+    m_mode = Mode::MOVE_TO_ABS;
+}
+
+void EncoderMotor::moveToRelPos(int64_t pos, uint8_t speed)
 {
     m_moveSpeed = speed;
     m_relPos = pos * 10;
     resetPid();
+    m_mode = Mode::MOVE_TO_REL;
+}
+
+void EncoderMotor::setRelTarget(int64_t pos)
+{
+    m_relPos = pos * 10;
     m_mode = Mode::MOVE_TO_REL;
 }
 
@@ -271,4 +292,25 @@ void EncoderMotor::moveDegrees(int64_t degrees, uint8_t speed)
     m_deg = degrees * 10;
     resetPid();
     m_mode = Mode::MOVE_DEGREES;
+}
+
+void EncoderMotor::setHoldTargetAbs(uint16_t pos)
+{
+    m_holdAbsPos = pos;
+    m_holdRel = false;
+    m_mode = Mode::HOLD;
+}
+
+void EncoderMotor::setHoldTargetRel(int64_t pos)
+{
+    m_holdRelPos = pos;
+    m_holdRel = true;
+    m_mode = Mode::HOLD;
+}
+
+bool EncoderMotor::isMovingToPos()
+{
+    if (m_mode == Mode::HOLD || m_mode == Mode::SPEED)
+        return false;
+    return true;
 }
