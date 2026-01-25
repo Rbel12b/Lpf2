@@ -205,14 +205,14 @@ uint8_t Lpf2Port::process(unsigned long now)
     case LPF2_STATUS::STATUS_ACK_WAIT:
         if (now - m_start > 100)
         {
-            switch (m_new_status)
+            if (m_status == LPF2_STATUS::STATUS_ACK_WAIT && m_new_status == LPF2_STATUS::STATUS_SPEED)
             {
-            case LPF2_STATUS::STATUS_SPEED:
-                m_status = LPF2_STATUS::STATUS_SPEED_CHANGE;
-                break;
-
-            default:
-                break;
+                // device does not support speed change
+                baud = 2400;
+                changeBaud(2400);
+                LPF2_LOG_W("Speed change not supported, continuing at %i baud", baud);
+                m_status = LPF2_STATUS::STATUS_SYNC_WAIT;
+                m_new_status = LPF2_STATUS::STATUS_INFO;
             }
         }
         break;
