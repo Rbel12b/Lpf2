@@ -7,15 +7,6 @@ void Lpf2Port::parseMessage(const Lpf2Message &msg)
     {
     case MESSAGE_CMD:
     {
-        if (m_status == LPF2_STATUS::STATUS_ACK_WAIT && m_new_status == LPF2_STATUS::STATUS_SPEED)
-        {
-            // device does not support speed change
-            baud = 2400;
-            changeBaud(2400);
-            LPF2_LOG_W("Speed change not supported, continuing at %i baud", baud);
-            m_status = LPF2_STATUS::STATUS_SYNC_WAIT;
-            m_new_status = LPF2_STATUS::STATUS_INFO;
-        }
         m_startRec = millis();
         parseMessageCMD(msg);
         break;
