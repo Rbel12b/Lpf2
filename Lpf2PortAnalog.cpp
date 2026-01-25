@@ -2,6 +2,12 @@
 
 void Lpf2Port::doAnalogID()
 {
+    uint64_t now = millis();
+    if (now - lastMeasurement < 5)
+    {
+        return;
+    }
+    lastMeasurement = now;
     ch0Measurements[measurementNum] = m_serial->readCh(0);
     ch1Measurements[measurementNum] = m_serial->readCh(1);
     measurementNum++;
@@ -31,101 +37,96 @@ void Lpf2Port::doAnalogID()
         }
         float ch0diff = ch0max - ch0min;
         float ch1diff = ch1max - ch1min;
-        LPF2_LOG_V("Analog ID results: ch0min=%.2f ch0max=%.2f ch0diff=%.2f | ch1min=%.2f ch1max=%.2f ch1diff=%.2f",
+        LPF2_LOG_D("Analog ID results: ch0min=%.2f ch0max=%.2f ch0diff=%.2f | ch1min=%.2f ch1max=%.2f ch1diff=%.2f",
                    ch0min, ch0max, ch0diff,
                    ch1min, ch1max, ch1diff);
 
-        static int detectionCounter = 0;
-        static const int detectionThreshold = 5; // Number of consecutive detections required - 1, so 2 means 3 times
-        static int lastDetectedType = -1;
         if (ch1diff >= 2.5f)
         {
-            if (lastDetectedType == 0)
+            if (m_lastDetectedType == 0)
             {
-                detectionCounter++;
+                m_detectionCounter++;
             }
             else
             {
-                lastDetectedType = 0;
-                detectionCounter = 0;
+                m_lastDetectedType = 0;
+                m_detectionCounter = 0;
             }
-            if (detectionCounter >= 2) // Uart thresshold is lower on purpose, for faster communication
+            if (m_detectionCounter >= 2) // Uart thresshold is lower on purpose, for faster communication
             {
                 // Serial protocol
                 m_dumb = false;
                 enterUartState();
                 LPF2_LOG_D("Uart detected");
             }
-            goto end_analog_check;
+            return;
         }
         else if (ch0max >= 3.0f && ch0diff < 0.5f)
         {
             if (ch1min <= 0.5f && ch1diff < 0.5f)
             {
-                if (lastDetectedType == 1)
+                if (m_lastDetectedType == 1)
                 {
-                    detectionCounter++;
+                    m_detectionCounter++;
                 }
                 else
                 {
-                    lastDetectedType = 1;
-                    detectionCounter = 0;
+                    m_lastDetectedType = 1;
+                    m_detectionCounter = 0;
                 }
-                if (detectionCounter >= detectionThreshold)
+                if (m_detectionCounter >= m_detectionThreshold)
                 {
                     m_deviceType = Lpf2DeviceType::TRAIN_MOTOR;
                     m_dumb = true;
                     LPF2_LOG_V("Analog: Train Motor");
                 }
-                goto end_analog_check;
+                return;
             }
         }
         else if (ch0min <= 1.0f && ch0diff < 0.5f)
         {
             if (ch1min <= 0.5f && ch1diff < 0.5f)
             {
-                if (lastDetectedType == 2)
+                if (m_lastDetectedType == 2)
                 {
-                    detectionCounter++;
+                    m_detectionCounter++;
                 }
                 else
                 {
-                    lastDetectedType = 2;
-                    detectionCounter = 0;
+                    m_lastDetectedType = 2;
+                    m_detectionCounter = 0;
                 }
-                if (detectionCounter >= detectionThreshold)
+                if (m_detectionCounter >= m_detectionThreshold)
                 {
                     m_deviceType = Lpf2DeviceType::SIMPLE_MEDIUM_LINEAR_MOTOR;
                     m_dumb = true;
                     LPF2_LOG_V("Analog: Simple Motor");
                 }
-                goto end_analog_check;
+                return;
             }
             else if (ch1min >= 2.5f && ch1diff < 0.5f)
             {
-                if (lastDetectedType == 3)
+                if (m_lastDetectedType == 3)
                 {
-                    detectionCounter++;
+                    m_detectionCounter++;
                 }
                 else
                 {
-                    lastDetectedType = 3;
-                    detectionCounter = 0;
+                    m_lastDetectedType = 3;
+                    m_detectionCounter = 0;
                 }
-                if (detectionCounter >= detectionThreshold)
+                if (m_detectionCounter >= m_detectionThreshold)
                 {
                     m_deviceType = Lpf2DeviceType::LIGHT;
                     m_dumb = true;
                     LPF2_LOG_V("Analog: Light");
                 }
-                goto end_analog_check;
+                return;
             }
         }
         LPF2_LOG_V("Analog: No device detected");
-        detectionCounter = 0;
+        m_detectionCounter = 0;
         m_deviceType = Lpf2DeviceType::UNKNOWNDEVICE;
-        lastDetectedType = -1;
+        m_lastDetectedType = -1;
     }
-end_analog_check:
-    vTaskDelay(5 / portTICK_PERIOD_MS);
 }

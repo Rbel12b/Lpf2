@@ -205,6 +205,11 @@ private:
     float ch0Measurements[MEASUREMENTS];
     float ch1Measurements[MEASUREMENTS];
     uint8_t measurementNum = 0;
+    uint64_t lastMeasurement = 0;
+
+    const int m_detectionThreshold = 5; // Number of consecutive detections required - 1, so 2 means 3 times
+    int m_detectionCounter = 0;
+    int m_lastDetectedType = -1;
 };
 
 #endif
