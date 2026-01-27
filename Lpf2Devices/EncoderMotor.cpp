@@ -1,4 +1,5 @@
 #include "EncoderMotor.h"
+#include "BasicMotor.h"
 
 const CapabilityId EncoderMotor::CAP =
     CapabilityRegistry::instance().registerCapability("encoder_motor");
@@ -24,6 +25,8 @@ void *EncoderMotor::getCapability(CapabilityId id)
 {
     if (id == CAP)
         return static_cast<EncoderMotorControl *>(this);
+    if (id == BasicMotor::CAP)
+        return static_cast<BasicMotorControl *>(this);
     return nullptr;
 }
 
