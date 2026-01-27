@@ -4,6 +4,7 @@
 
 #include "../config.h"
 #include "../Lpf2Device.h"
+#include "BasicMotor.h"
 
 class EncoderMotorControl
 {
@@ -86,7 +87,7 @@ public:
     virtual bool isMovingToPos() = 0;
 };
 
-class EncoderMotor : public Lpf2Device, public EncoderMotorControl
+class EncoderMotor : public Lpf2Device, public EncoderMotorControl, public BasicMotorControl
 {
 public:
     EncoderMotor(Lpf2Port &port) : Lpf2Device(port) {}
