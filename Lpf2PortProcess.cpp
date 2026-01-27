@@ -120,6 +120,7 @@ void Lpf2Port::update()
                 continue; // system messages are one byte so they are not useful for syncing
             }
             LPF2_LOG_D("Synced with device.");
+            m_startRec = millis();
             m_status = m_new_status;
             if (m_new_status == LPF2_STATUS::STATUS_ACK_WAIT)
                 m_new_status = LPF2_STATUS::STATUS_SPEED_CHANGE;
@@ -205,14 +206,23 @@ uint8_t Lpf2Port::process(unsigned long now)
     case LPF2_STATUS::STATUS_ACK_WAIT:
         if (now - m_start > 100)
         {
-            if (m_status == LPF2_STATUS::STATUS_ACK_WAIT && m_new_status == LPF2_STATUS::STATUS_SPEED)
+            // if (m_status == LPF2_STATUS::STATUS_ACK_WAIT && m_new_status == LPF2_STATUS::STATUS_SPEED)
+            // {
+            //     // device does not support speed change
+            //     baud = 2400;
+            //     changeBaud(2400);
+            //     LPF2_LOG_W("Speed change not supported, continuing at %i baud", baud);
+            //     m_status = LPF2_STATUS::STATUS_SYNC_WAIT;
+            //     m_new_status = LPF2_STATUS::STATUS_INFO;
+            // }
+            switch (m_new_status)
             {
-                // device does not support speed change
-                baud = 2400;
-                changeBaud(2400);
-                LPF2_LOG_W("Speed change not supported, continuing at %i baud", baud);
-                m_status = LPF2_STATUS::STATUS_SYNC_WAIT;
-                m_new_status = LPF2_STATUS::STATUS_INFO;
+            case LPF2_STATUS::STATUS_SPEED:
+                m_status = LPF2_STATUS::STATUS_SPEED_CHANGE;
+                break;
+
+            default:
+                break;
             }
         }
         break;

@@ -27,7 +27,7 @@ extern "C"
 #endif
 
 #if LPF2_LOG_LEVEL > 0
-#define LPF2_LOG_E log_e
+#define LPF2_LOG_E(format, ...) lpf2_log_printf(ARDUHAL_LOG_FORMAT(E, format), ##__VA_ARGS__)
 #define LPF2_DEBUG_EXPR_E(...) \
     do                         \
     {                          \
@@ -44,7 +44,7 @@ extern "C"
     } while (0)
 #endif
 #if LPF2_LOG_LEVEL > 1
-#define LPF2_LOG_W log_w
+#define LPF2_LOG_W(format, ...) lpf2_log_printf(ARDUHAL_LOG_FORMAT(W, format), ##__VA_ARGS__)
 #define LPF2_DEBUG_EXPR_W(...) \
     do                         \
     {                          \
@@ -61,7 +61,7 @@ extern "C"
     } while (0)
 #endif
 #if LPF2_LOG_LEVEL > 2
-#define LPF2_LOG_I log_i
+#define LPF2_LOG_I(format, ...) lpf2_log_printf(ARDUHAL_LOG_FORMAT(I, format), ##__VA_ARGS__)
 #define LPF2_DEBUG_EXPR_I(...) \
     do                         \
     {                          \
@@ -78,7 +78,7 @@ extern "C"
     } while (0)
 #endif
 #if LPF2_LOG_LEVEL > 3
-#define LPF2_LOG_D log_d
+#define LPF2_LOG_D(format, ...) lpf2_log_printf(ARDUHAL_LOG_FORMAT(D, format), ##__VA_ARGS__)
 #define LPF2_DEBUG_EXPR_D(...) \
     do                         \
     {                          \
@@ -95,7 +95,7 @@ extern "C"
     } while (0)
 #endif
 #if LPF2_LOG_LEVEL > 4
-#define LPF2_LOG_V log_v
+#define LPF2_LOG_V(format, ...) lpf2_log_printf(ARDUHAL_LOG_FORMAT(V, format), ##__VA_ARGS__)
 #define LPF2_DEBUG_EXPR_V(...) \
     do                         \
     {                          \
@@ -113,8 +113,6 @@ extern "C"
 #endif
 
 #ifndef log_n
-
-#define LPF2_LOG_IMPL 1
 
 #define ARDUHAL_LOG_LEVEL_NONE (0)
 #define ARDUHAL_LOG_LEVEL_ERROR (1)
@@ -158,8 +156,8 @@ extern "C"
 #define ARDUHAL_LOG_COLOR_I ARDUHAL_LOG_COLOR(ARDUHAL_LOG_COLOR_GREEN)
 #define ARDUHAL_LOG_COLOR_D ARDUHAL_LOG_COLOR(ARDUHAL_LOG_COLOR_CYAN)
 #define ARDUHAL_LOG_COLOR_V ARDUHAL_LOG_COLOR(ARDUHAL_LOG_COLOR_GRAY)
-#define ARDUHAL_LOG_COLOR_PRINT(letter) log_printf(ARDUHAL_LOG_COLOR_##letter)
-#define ARDUHAL_LOG_COLOR_PRINT_END log_printf(ARDUHAL_LOG_RESET_COLOR)
+#define ARDUHAL_LOG_COLOR_PRINT(letter) lpf2_log_printf(ARDUHAL_LOG_COLOR_##letter)
+#define ARDUHAL_LOG_COLOR_PRINT_END lpf2_log_printf(ARDUHAL_LOG_RESET_COLOR)
 #else
 #define ARDUHAL_LOG_COLOR_E
 #define ARDUHAL_LOG_COLOR_W
@@ -171,67 +169,15 @@ extern "C"
 #define ARDUHAL_LOG_COLOR_PRINT_END
 #endif
 
-    const char *pathToFileName(const char *path);
-    int log_printf(const char *fmt, ...);
-
 #define ARDUHAL_SHORT_LOG_FORMAT(letter, format) ARDUHAL_LOG_COLOR_##letter format ARDUHAL_LOG_RESET_COLOR "\r\n"
 #define ARDUHAL_LOG_FORMAT(letter, format) ARDUHAL_LOG_COLOR_##letter "[%6u][" #letter "][%s:%u] %s(): " format ARDUHAL_LOG_RESET_COLOR "\r\n", (unsigned long)(millis() / 1000ULL), pathToFileName(__FILE__), __LINE__, __FUNCTION__
 
-#if ARDUHAL_LOG_LEVEL >= ARDUHAL_LOG_LEVEL_VERBOSE
-#define log_v(format, ...) log_printf(ARDUHAL_LOG_FORMAT(V, format), ##__VA_ARGS__)
-#else
-#define log_v(format, ...) \
-    do                     \
-    {                      \
-    } while (0)
-#endif
-
-#if ARDUHAL_LOG_LEVEL >= ARDUHAL_LOG_LEVEL_DEBUG
-#define log_d(format, ...) log_printf(ARDUHAL_LOG_FORMAT(D, format), ##__VA_ARGS__)
-#else
-#define log_d(format, ...) \
-    do                     \
-    {                      \
-    } while (0)
-#endif
-
-#if ARDUHAL_LOG_LEVEL >= ARDUHAL_LOG_LEVEL_INFO
-#define log_i(format, ...) log_printf(ARDUHAL_LOG_FORMAT(I, format), ##__VA_ARGS__)
-#else
-#define log_i(format, ...) \
-    do                     \
-    {                      \
-    } while (0)
-#endif
-
-#if ARDUHAL_LOG_LEVEL >= ARDUHAL_LOG_LEVEL_WARN
-#define log_w(format, ...) log_printf(ARDUHAL_LOG_FORMAT(W, format), ##__VA_ARGS__)
-#else
-#define log_w(format, ...) \
-    do                     \
-    {                      \
-    } while (0)
-#endif
-
-#if ARDUHAL_LOG_LEVEL >= ARDUHAL_LOG_LEVEL_ERROR
-#define log_e(format, ...) log_printf(ARDUHAL_LOG_FORMAT(E, format), ##__VA_ARGS__)
-#else
-#define log_e(format, ...) \
-    do                     \
-    {                      \
-    } while (0)
-#endif
-
-#if ARDUHAL_LOG_LEVEL >= ARDUHAL_LOG_LEVEL_NONE
-#define log_n(format, ...) log_printf(ARDUHAL_LOG_FORMAT(E, format), ##__VA_ARGS__)
-#else
-#define log_n(format, ...) \
-    do                     \
-    {                      \
-    } while (0)
-#endif
+const char *pathToFileName(const char *path);
 
 #endif // log_n
+
+
+int lpf2_log_printf(const char *fmt, ...);
 
 #ifdef __cplusplus
 }
