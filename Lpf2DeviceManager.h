@@ -2,9 +2,9 @@
 #ifndef _LPF2_DEVICE_MANAGER_H_
 #define _LPF2_DEVICE_MANAGER_H_
 
-#include "../config.h"
-#include "../Lpf2Device.h"
-#include "../Lpf2Port.h"
+#include "config.h"
+#include "Lpf2Device.h"
+#include "Lpf2Port.h"
 #include <memory>
 
 class Lpf2DeviceManager
