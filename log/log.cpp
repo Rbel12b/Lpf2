@@ -15,13 +15,15 @@ const char *pathToFileName(const char *path)
     return path + i + 1;
 }
 
-int log_printf(const char *fmt, ...)
+#endif // LPF2_LOG_IMPL
+
+int lpf2_log_printf(const char *fmt, ...)
 {
     va_list args;
     va_start(args, fmt);
-    int result = vfprintf(stdout, fmt, args);
+    char buffer[512];
+    int len = vsnprintf(buffer, sizeof(buffer), fmt, args);
     va_end(args);
-    return result;
+    Serial.write((uint8_t *)buffer, len);
+    return len;
 }
-
-#endif // LPF2_LOG_IMPL
