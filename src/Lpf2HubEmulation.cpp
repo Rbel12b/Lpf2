@@ -107,12 +107,6 @@ void Lpf2HubEmulation::onMessageReceived(std::vector<uint8_t> message)
     case Lpf2MessageType::HUB_ALERTS:
         handleHubAlertsMessage(message);
         break;
-    case Lpf2MessageType::HUB_ATTACHED_IO:
-        LPF2_LOG_W("HUB_ATTACHED_IO IO not implemented yet");
-        break;
-    case Lpf2MessageType::GENERIC_ERROR_MESSAGES:
-        LPF2_LOG_W("GENERIC_ERROR_MESSAGES not implemented yet");
-        break;
     case Lpf2MessageType::HW_NETWORK_COMMANDS:
         LPF2_LOG_W("HW_NETWORK_COMMANDSnot implemented yet");
         break;
@@ -125,11 +119,8 @@ void Lpf2HubEmulation::onMessageReceived(std::vector<uint8_t> message)
     case Lpf2MessageType::FW_UPDATE_LOCK_STATUS_REQUEST:
         LPF2_LOG_W("FW_UPDATE_LOCK_STATUS_REQUEST not implemented yet");
         break;
-    case Lpf2MessageType::FW_LOCK_STATUS:
-        LPF2_LOG_W("FW_LOCK_STATUS not implemented yet");
-        break;
     case Lpf2MessageType::PORT_INFORMATION_REQUEST:
-        LPF2_LOG_W("PORT_INFORMATION_REQUEST not implemented yet");
+        handlePortInformationRequestMessage(message);
         break;
     case Lpf2MessageType::PORT_MODE_INFORMATION_REQUEST:
         LPF2_LOG_W("PORT_MODE_INFORMATION_REQUEST not implemented yet");
@@ -137,32 +128,11 @@ void Lpf2HubEmulation::onMessageReceived(std::vector<uint8_t> message)
     case Lpf2MessageType::PORT_INPUT_FORMAT_SETUP_COMBINEDMODE:
         LPF2_LOG_W("PORT_INPUT_FORMAT_SETUP_COMBINEDMODE not implemented yet");
         break;
-    case Lpf2MessageType::PORT_INFORMATION:
-        LPF2_LOG_W("PORT_INFORMATION not implemented yet");
-        break;
-    case Lpf2MessageType::PORT_MODE_INFORMATION:
-        LPF2_LOG_W("PORT_MODE_INFORMATION not implemented yet");
-        break;
-    case Lpf2MessageType::PORT_VALUE_SINGLE:
-        LPF2_LOG_W("PORT_VALUE_SINGLE not implemented yet");
-        break;
-    case Lpf2MessageType::PORT_VALUE_COMBINEDMODE:
-        LPF2_LOG_W("PORT_VALUE_COMBINEDMODE not implemented yet");
-        break;
-    case Lpf2MessageType::PORT_INPUT_FORMAT_SINGLE:
-        LPF2_LOG_W("PORT_INPUT_FORMAT_SINGLE not implemented yet");
-        break;
-    case Lpf2MessageType::PORT_INPUT_FORMAT_COMBINEDMODE:
-        LPF2_LOG_W("PORT_INPUT_FORMAT_COMBINEDMODE not implemented yet");
-        break;
     case Lpf2MessageType::VIRTUAL_PORT_SETUP:
         LPF2_LOG_W("VIRTUAL_PORT_SETUP not implemented yet");
         break;
     case Lpf2MessageType::PORT_OUTPUT_COMMAND:
         LPF2_LOG_W("PORT_OUTPUT_COMMAND not implemented yet");
-        break;
-    case Lpf2MessageType::PORT_OUTPUT_COMMAND_FEEDBACK:
-        LPF2_LOG_W("PORT_OUTPUT_COMMAND_FEEDBACK not implemented yet");
         break;
 
     default:
@@ -178,32 +148,6 @@ void Lpf2HubEmulation::onMessageReceived(std::vector<uint8_t> message)
     //     byte modeInformationType = msgReceived[0x05];
     //     std::string payload = _lpf2HubEmulation->getPortModeInformationRequestPayload((DeviceType)deviceType, port, mode, modeInformationType);
     //     _lpf2HubEmulation->writeValue(MessageType::PORT_MODE_INFORMATION, payload);
-    //   }
-
-    //   // handle port information requests and respond dependent on the device type
-    //   else if (msgReceived[(byte)Lpf2MessageHeader::MESSAGE_TYPE] == (byte)MessageType::PORT_INFORMATION_REQUEST)
-    //   {
-    //     byte port = msgReceived[0x03];
-    //     byte deviceType = _lpf2HubEmulation->getDeviceTypeForPort(port);
-    //     byte informationType = msgReceived[0x04];
-    //     std::string payload = _lpf2HubEmulation->getPortInformationPayload((DeviceType)deviceType, port, informationType);
-    //     _lpf2HubEmulation->writeValue(MessageType::PORT_INFORMATION, payload);
-    //   }
-
-    //   // handle alert response (respond always with status OK)
-    //   else if (msgReceived[(byte)Lpf2MessageHeader::MESSAGE_TYPE] == (byte)MessageType::HUB_ALERTS)
-    //   {
-    //     byte alertType = msgReceived[0x03];
-    //     byte alertOperation = msgReceived[0x04];
-
-    //     if (alertOperation == 0x03)
-    //     {
-    //       std::string payload;
-    //       payload.push_back((char)alertType);
-    //       payload.push_back(0x04); // Alert Operation, Update (Upstream)
-    //       payload.push_back(0x00); // Alert Payload, Status OK
-    //       _lpf2HubEmulation->writeValue(MessageType::HUB_ALERTS, payload);
-    //     }
     //   }
 
     //   // It's a port out command:
@@ -467,6 +411,20 @@ void Lpf2HubEmulation::handleHubAlertsMessage(std::vector<uint8_t> message)
 unimplemented:
     LPF2_LOG_E("Unimplemented!");
     return;
+}
+
+void Lpf2HubEmulation::handlePortInformationRequestMessage(std::vector<uint8_t> message)
+{
+    //   // handle port information requests and respond dependent on the device type
+    //   else if (msgReceived[(byte)Lpf2MessageHeader::MESSAGE_TYPE] == (byte)MessageType::PORT_INFORMATION_REQUEST)
+    //   {
+    //     byte port = msgReceived[0x03];
+    //     byte deviceType = _lpf2HubEmulation->getDeviceTypeForPort(port);
+    //     byte informationType = msgReceived[0x04];
+    //     std::string payload = _lpf2HubEmulation->getPortInformationPayload((DeviceType)deviceType, port, informationType);
+    //     _lpf2HubEmulation->writeValue(MessageType::PORT_INFORMATION, payload);
+    //   }
+    Lpf2PortNum port = (Lpf2PortNum)message[(uint8_t)Lpf2MessageByte::PORT_ID]; 
 }
 
 std::vector<uint8_t> Lpf2HubEmulation::packVersion(Lpf2Version version)

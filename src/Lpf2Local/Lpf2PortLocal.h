@@ -4,8 +4,8 @@
 
 #include "config.h"
 #include "Lpf2Port.h"
-#include "Lpf2PortLocal/Lpf2Serial.h"
-#include "Lpf2PortLocal/Lpf2SerialDef.h"
+#include "Lpf2Serial.h"
+#include "Lpf2SerialDef.h"
 #include "Util/mutex.h"
 
 class Lpf2PortLocal : public Lpf2Port
