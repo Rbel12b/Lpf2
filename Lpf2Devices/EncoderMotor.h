@@ -4,7 +4,7 @@
 
 #include "../config.h"
 #include "../Lpf2Device.h"
-#include "BasicMotor.h"
+#include "Lpf2Devices/BasicMotor.h"
 
 class EncoderMotorControl
 {
@@ -118,11 +118,14 @@ public:
     void setHoldTargetRel(int64_t pos) override;
     bool isMovingToPos() override;
 
-    bool hasCapability(CapabilityId id) const override;
-    void *getCapability(CapabilityId id) override;
+    bool hasCapability(Lpf2DeviceCapabilityId id) const override;
+    void *getCapability(Lpf2DeviceCapabilityId id) override;
 
-    const static CapabilityId CAP;
-    const static uint8_t CALIB_MODE;
+    inline static const Lpf2DeviceCapabilityId CAP =
+        Lpf2CapabilityRegistry::registerCapability("encoder_motor");
+    inline static const uint8_t CALIB_MODE = 4;
+
+    static void registerFactory(Lpf2DeviceRegistry& reg);
 
 private:
     void resetPid();

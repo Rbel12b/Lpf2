@@ -34,10 +34,13 @@ public:
 
     void setSpeed(int speed) override;
 
-    bool hasCapability(CapabilityId id) const override;
-    void *getCapability(CapabilityId id) override;
+    bool hasCapability(Lpf2DeviceCapabilityId id) const override;
+    void *getCapability(Lpf2DeviceCapabilityId id) override;
 
-    const static CapabilityId CAP;
+    inline static const Lpf2DeviceCapabilityId CAP =
+        Lpf2CapabilityRegistry::registerCapability("basic_motor");
+
+    static void registerFactory(Lpf2DeviceRegistry& reg);
 };
 
 class BasicMotorFactory : public Lpf2DeviceFactory

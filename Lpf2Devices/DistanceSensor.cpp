@@ -1,19 +1,13 @@
 #include "DistanceSensor.h"
 
-const int TechnicDistanceSensor::LIGHT_MODE = 5;
-
-const CapabilityId TechnicDistanceSensor::CAP =
-    CapabilityRegistry::instance().registerCapability("technic_distance_sensor");
-
 namespace
 {
     TechnicDistanceSensorFactory factory;
+}
 
-    const bool registered = []
-    {
-        Lpf2DeviceRegistry::instance().registerFactory(&factory);
-        return true;
-    }();
+void TechnicDistanceSensor::registerFactory(Lpf2DeviceRegistry& reg)
+{
+    reg.registerFactory(&factory);
 }
 
 void TechnicDistanceSensor::setLight(uint8_t l1, uint8_t l2, uint8_t l3, uint8_t l4)
@@ -41,12 +35,12 @@ float TechnicDistanceSensor::getDistance()
     return port_.getValue(0, 0);
 }
 
-bool TechnicDistanceSensor::hasCapability(CapabilityId id) const
+bool TechnicDistanceSensor::hasCapability(Lpf2DeviceCapabilityId id) const
 {
     return id == CAP;
 }
 
-void *TechnicDistanceSensor::getCapability(CapabilityId id)
+void *TechnicDistanceSensor::getCapability(Lpf2DeviceCapabilityId id)
 {
     if (id == CAP)
         return static_cast<TechnicDistanceSensorControl *>(this);
