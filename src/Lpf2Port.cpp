@@ -25,7 +25,7 @@ uint8_t Lpf2Port::getDataSize(uint8_t format)
     return 0;
 }
 
-float Lpf2Port::getValue(const Mode &modeData, uint8_t dataSet)
+float Lpf2Port::getValue(const Lpf2Mode &modeData, uint8_t dataSet)
 {
     if (dataSet > modeData.data_sets)
         return 0.0f;
@@ -87,14 +87,14 @@ float Lpf2Port::getValue(uint8_t modeNum, uint8_t dataSet) const
     return getValue(modeData[modeNum], dataSet);
 }
 
-std::string Lpf2Port::formatValue(float value, const Mode &modeData)
+std::string Lpf2Port::formatValue(float value, const Lpf2Mode &modeData)
 {
     std::ostringstream os;
 
     // Use fixed precision from modeData.decimals
     os << std::fixed << std::setprecision(modeData.decimals);
 
-    if (modeData.negativePCT)
+    if (modeData.PCTmin < 0.0f)
     {
         value = value - 100;
     }
@@ -110,7 +110,7 @@ std::string Lpf2Port::formatValue(float value, const Mode &modeData)
     return os.str();
 }
 
-std::string Lpf2Port::convertValue(Mode modeData)
+std::string Lpf2Port::convertValue(Lpf2Mode modeData)
 {
     std::string result;
 

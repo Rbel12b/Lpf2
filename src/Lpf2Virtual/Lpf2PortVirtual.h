@@ -1,6 +1,6 @@
 #pragma once
-#ifndef _LPF2_PORT_LOCAL_H_
-#define _LPF2_PORT_LOCAL_H_
+#ifndef _LPF2_PORT_VIRTUAL_H_
+#define _LPF2_PORT_VIRTUAL_H_
 
 #include "config.h"
 #include "Lpf2Port.h"
