@@ -1,27 +1,22 @@
 #include "EncoderMotor.h"
-#include "BasicMotor.h"
-
-const CapabilityId EncoderMotor::CAP =
-    CapabilityRegistry::instance().registerCapability("encoder_motor");
-const uint8_t EncoderMotor::CALIB_MODE = 4;
+#include "Lpf2Devices/BasicMotor.h"
 
 namespace
 {
     EncoderMotorFactory factory;
-
-    const bool registered = []
-    {
-        Lpf2DeviceRegistry::instance().registerFactory(&factory);
-        return true;
-    }();
 }
 
-bool EncoderMotor::hasCapability(CapabilityId id) const
+void EncoderMotor::registerFactory(Lpf2DeviceRegistry& reg)
+{
+    reg.registerFactory(&factory);
+}
+
+bool EncoderMotor::hasCapability(Lpf2DeviceCapabilityId id) const
 {
     return id == CAP;
 }
 
-void *EncoderMotor::getCapability(CapabilityId id)
+void *EncoderMotor::getCapability(Lpf2DeviceCapabilityId id)
 {
     if (id == CAP)
         return static_cast<EncoderMotorControl *>(this);
