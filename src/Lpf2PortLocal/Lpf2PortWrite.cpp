@@ -1,6 +1,6 @@
-#include "Lpf2Port.h"
+#include "../Lpf2PortLocal.h"
 
-void Lpf2Port::setMode(uint8_t num)
+void Lpf2PortLocal::setMode(uint8_t num)
 {
     if (num >= modes)
     {
@@ -33,7 +33,7 @@ void Lpf2Port::setMode(uint8_t num)
     LPF2_LOG_D("Set mode to %i (%s)", num, modeData[num].name.c_str());
 }
 
-void Lpf2Port::requestSpeedChange(uint32_t speed)
+void Lpf2PortLocal::requestSpeedChange(uint32_t speed)
 {
     uint8_t header = MESSAGE_CMD | CMD_SPEED | (2 << 3);
     uint8_t checksum = header ^ 0xFF;
@@ -61,14 +61,14 @@ void Lpf2Port::requestSpeedChange(uint32_t speed)
     m_start = millis();
 }
 
-void Lpf2Port::changeBaud(uint32_t baud)
+void Lpf2PortLocal::changeBaud(uint32_t baud)
 {
     MutexLock lock(m_serialMutex);
     m_serial->flush();
     m_serial->setBaudrate(baud);
 }
 
-void Lpf2Port::sendACK(bool NACK)
+void Lpf2PortLocal::sendACK(bool NACK)
 {
     MutexLock lock(m_serialMutex);
     m_serial->write(NACK ? BYTE_NACK : BYTE_ACK);
@@ -81,7 +81,7 @@ void Lpf2Port::sendACK(bool NACK)
         msg_size = LENGTH_##length;          \
     }
 
-int Lpf2Port::writeData(uint8_t modeNum, const std::vector<uint8_t> &data)
+int Lpf2PortLocal::writeData(uint8_t modeNum, const std::vector<uint8_t> &data)
 {
     if (!deviceConnected())
     {
@@ -141,7 +141,7 @@ int Lpf2Port::writeData(uint8_t modeNum, const std::vector<uint8_t> &data)
     return 0;
 }
 
-void Lpf2Port::setPower(uint8_t pin1, uint8_t pin2)
+void Lpf2PortLocal::setPower(uint8_t pin1, uint8_t pin2)
 {
     if ((m_dumb || (modeData.size() > m_mode && modeData[m_mode].flags.power12())) && m_pwm)
     {

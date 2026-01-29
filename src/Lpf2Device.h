@@ -12,7 +12,7 @@ using Lpf2DeviceCapabilityId = uint32_t;
 class Lpf2Device
 {
 public:
-    explicit Lpf2Device(Lpf2Port &port) : port_(port) {}
+    explicit Lpf2Device(Lpf2Port &port) : m_port(port) {}
     virtual ~Lpf2Device() = default;
 
     virtual bool init() = 0;
@@ -25,7 +25,7 @@ public:
     const static Lpf2DeviceCapabilityId CAP;
 
 protected:
-    Lpf2Port &port_;
+    Lpf2Port &m_port;
 };
 
 class Lpf2DeviceFactory

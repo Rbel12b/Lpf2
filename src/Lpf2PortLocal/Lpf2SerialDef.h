@@ -45,12 +45,6 @@
 #define   INFO_MODE_PLUS_8              0x20    // Bit flag used in powered up devices to indicate that the mode is 8 + the mode specified in the first byte
 #define   INFO_FORMAT                   0x80    // INFO command - FORMAT  (device data sets and format)
 
-// INFO_FORMAT formats
-#define   DATA8                         0x00    // 8-bit signed integer
-#define   DATA16                        0x01    // 16-bit little-endian signed integer
-#define   DATA32                        0x02    // 32-bit little-endian signed integer
-#define   DATAF                         0x03    // 32-bit little-endian IEEE 754 floating point
-
 #define   LENGTH_1                      (0x00 << 3)
 #define   LENGTH_2                      (0x01 << 3)
 #define   LENGTH_4                      (0x02 << 3)

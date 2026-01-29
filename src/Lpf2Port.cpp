@@ -156,3 +156,38 @@ float Lpf2Port::parseDataF(const uint8_t *ptr)
     std::memcpy(&val, ptr, sizeof(float));
     return val;
 }
+
+Lpf2ModeNum Lpf2Port::getDefaultMode(Lpf2DeviceType id)
+{
+
+    if (deviceIsAbsMotor(id))
+    {
+        return Lpf2ModeNum::MOTOR__CALIB;
+    }
+
+    switch (id)
+    {
+    case Lpf2DeviceType::COLOR_DISTANCE_SENSOR:
+        return Lpf2ModeNum::COLOR_DISTANCE_SENSOR__RGB_I;
+    default:
+        return Lpf2ModeNum::_DEFAULT;
+    }
+}
+
+bool Lpf2Port::deviceIsAbsMotor(Lpf2DeviceType id)
+{
+    switch (id)
+    {
+    case Lpf2DeviceType::TECHNIC_LARGE_LINEAR_MOTOR:
+    case Lpf2DeviceType::TECHNIC_XLARGE_LINEAR_MOTOR:
+    case Lpf2DeviceType::TECHNIC_LARGE_ANGULAR_MOTOR:
+    case Lpf2DeviceType::TECHNIC_LARGE_ANGULAR_MOTOR_GREY:
+    case Lpf2DeviceType::TECHNIC_MEDIUM_ANGULAR_MOTOR:
+    case Lpf2DeviceType::TECHNIC_MEDIUM_ANGULAR_MOTOR_GREY:
+    case Lpf2DeviceType::MEDIUM_LINEAR_MOTOR:
+    case Lpf2DeviceType::SIMPLE_MEDIUM_LINEAR_MOTOR:
+        return true;
+    default:
+        return false;
+    }
+}

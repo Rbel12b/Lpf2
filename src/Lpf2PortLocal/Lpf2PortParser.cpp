@@ -1,7 +1,7 @@
-#include "Lpf2Port.h"
+#include "Lpf2PortLocal.h"
 #include <cstring>
 
-void Lpf2Port::parseMessage(const Lpf2Message &msg)
+void Lpf2PortLocal::parseMessage(const Lpf2Message &msg)
 {
     switch (msg.msg)
     {
@@ -93,7 +93,7 @@ void Lpf2Port::parseMessage(const Lpf2Message &msg)
     }
 }
 
-void Lpf2Port::parseMessageCMD(const Lpf2Message &msg)
+void Lpf2PortLocal::parseMessageCMD(const Lpf2Message &msg)
 {
     switch (msg.cmd)
     {
@@ -153,7 +153,7 @@ void Lpf2Port::parseMessageCMD(const Lpf2Message &msg)
     }
 }
 
-void Lpf2Port::parseMessageInfo(const Lpf2Message &msg)
+void Lpf2PortLocal::parseMessageInfo(const Lpf2Message &msg)
 {
     uint8_t mode = GET_MODE(msg.cmd) + ((msg.data[0] & INFO_MODE_PLUS_8) ? 8 : 0);
     if (mode >= modes)
