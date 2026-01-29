@@ -73,8 +73,8 @@ public:
     byte getDeviceTypeForPort(byte port);
 
     void writeValue(Lpf2MessageType messageType, std::vector<uint8_t> payload, bool notify = true);
-    std::vector<uint8_t> getPortModeInformationRequestPayload(Lpf2DeviceType deviceType, byte port, byte mode, byte modeInformationType);
-    std::vector<uint8_t> getPortInformationPayload(Lpf2DeviceType deviceType, byte port, byte informationType);
+    // std::vector<uint8_t> getPortModeInformationRequestPayload(Lpf2DeviceType deviceType, byte port, byte mode, byte modeInformationType);
+    // std::vector<uint8_t> getPortInformationPayload(Lpf2DeviceType deviceType, byte port, byte informationType);
 
     void onMessageReceived(std::vector<uint8_t> message);
 

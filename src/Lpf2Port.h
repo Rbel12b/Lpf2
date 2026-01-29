@@ -9,52 +9,12 @@
 class Lpf2Port
 {
 public:
-    class Mode
-    {
-    public:
-        std::string name;
-        float min = 0.0f, max = 1023.0f;
-        float SImin = 0.0f, SImax = 1023.0f;
-        bool negativePCT = false;
-        std::string unit;
-        struct Mapping
-        {
-            uint8_t val;
-
-            bool nullSupport() const { return val & (1 << 7); }
-            bool mapping2() const { return val & (1 << 6); }
-            bool m_abs() const { return val & (1 << 4); }
-            bool m_rel() const { return val & (1 << 3); }
-            bool m_dis() const { return val & (1 << 2); }
-        };
-        Mapping in, out;
-        uint8_t data_sets = 0, format = 0, figures = 0, decimals = 0;
-        std::vector<uint8_t> rawData;
-        struct Flags
-        {
-            uint8_t bytes[6] = {0, 0, 0, 0, 0, 0};
-
-            bool speed() const { return bytes[0] & (1 << 0); }
-            bool apos() const { return bytes[0] & (1 << 1); }
-            bool pos() const { return bytes[0] & (1 << 2); }
-            bool power() const { return bytes[0] & (1 << 4); }
-            bool motor() const { return bytes[0] & (1 << 5); }
-            bool pin1() const { return bytes[0] & (1 << 6); }
-            bool pin2() const { return bytes[0] & (1 << 7); }
-
-            bool calib() const { return bytes[1] & (1 << 6); }
-
-            bool power12() const { return bytes[4] & (1 << 0); }
-        };
-        Flags flags;
-    };
-
     virtual void update() = 0;
 
-    static float getValue(const Mode &modeData, uint8_t dataSet);
+    static float getValue(const Lpf2Mode &modeData, uint8_t dataSet);
     float getValue(uint8_t modeNum, uint8_t dataSet) const;
-    static std::string formatValue(float value, const Mode &modeData);
-    static std::string convertValue(Mode modeData);
+    static std::string formatValue(float value, const Lpf2Mode &modeData);
+    static std::string convertValue(Lpf2Mode modeData);
     std::string convertValue(uint8_t modeNum) const
     {
         if (modeNum >= modeData.size())
@@ -72,7 +32,7 @@ public:
     size_t getSpeed() const { return baud; }
     uint8_t getModeCount() const { return modes; }
     uint8_t getViewCount() const { return views; }
-    const std::vector<Mode> &getModes() const { return modeData; }
+    const std::vector<Lpf2Mode> &getModes() const { return modeData; }
     uint8_t getModeComboCount() const { return comboNum; }
 
     uint16_t getModeCombo(uint8_t combo) const
@@ -84,7 +44,7 @@ public:
 
     virtual bool deviceConnected() = 0;
 
-    std::vector<Mode> modeData;
+    std::vector<Lpf2Mode> modeData;
 
 protected:
     static uint8_t getDataSize(uint8_t format);

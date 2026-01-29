@@ -205,16 +205,12 @@ void Lpf2PortLocal::parseMessageInfo(const Lpf2Message &msg)
     }
     case INFO_PCT:
     {
-        if (mode >= modes || msg.length < 5)
+        if (mode >= modes || msg.length < 9)
         {
             break;
         }
-        float val;
-        std::memcpy(&val, msg.data.data() + 1, 4);
-        if (val == -100.0f)
-        {
-            modeData[mode].negativePCT = true;
-        }
+        std::memcpy(&modeData[mode].PCTmin, msg.data.data() + 1, 4);
+        std::memcpy(&modeData[mode].PCTmax, msg.data.data() + 5, 4);
         break;
     }
     case INFO_SI:
