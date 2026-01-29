@@ -142,7 +142,7 @@ private:
     void sendACK(bool NACK = false);
 
     static uint8_t getDataSize(uint8_t format);
-    static ModeNum getDefaultMode(Lpf2DeviceType id);
+    static Lpf2ModeNum getDefaultMode(Lpf2DeviceType id);
     static bool deviceIsAbsMotor(Lpf2DeviceType id);
 
     void setMode(uint8_t num);
