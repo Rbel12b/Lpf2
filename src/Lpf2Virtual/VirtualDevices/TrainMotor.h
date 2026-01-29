@@ -10,6 +10,7 @@ public:
     Lpf2DeviceType getDeviceType() const override;
     const std::vector<Lpf2Mode> &getModes() const override;
     int writeData(uint8_t modeNum, const std::vector<uint8_t> &data) override;
+    void setPower(uint8_t pin1, uint8_t pin2) override;
     std::vector<uint16_t> getModeCombos() const override;
     uint8_t getModeCount() const override;
     uint16_t getInputModes() const override;
