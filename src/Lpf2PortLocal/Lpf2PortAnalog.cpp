@@ -1,6 +1,6 @@
-#include "Lpf2Port.h"
+#include "Lpf2PortLocal.h"
 
-void Lpf2Port::doAnalogID()
+void Lpf2PortLocal::doAnalogID()
 {
     uint64_t now = millis();
     if (now - lastMeasurement < 5)

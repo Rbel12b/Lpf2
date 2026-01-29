@@ -114,26 +114,26 @@ enum class Lpf2MessageType
     HUB_PROPERTIES = 0x01,
     HUB_ACTIONS = 0x02,
     HUB_ALERTS = 0x03,
-    HUB_ATTACHED_IO = 0x04,
-    GENERIC_ERROR_MESSAGES = 0x05,
+    HUB_ATTACHED_IO = 0x04, // up
+    GENERIC_ERROR_MESSAGES = 0x05, // up
     HW_NETWORK_COMMANDS = 0x08,
     FW_UPDATE_GO_INTO_BOOT_MODE = 0x10,
     FW_UPDATE_LOCK_MEMORY = 0x11,
     FW_UPDATE_LOCK_STATUS_REQUEST = 0x12,
-    FW_LOCK_STATUS = 0x13,
+    FW_LOCK_STATUS = 0x13, // up
     PORT_INFORMATION_REQUEST = 0x21,
     PORT_MODE_INFORMATION_REQUEST = 0x22,
     PORT_INPUT_FORMAT_SETUP_SINGLE = 0x41,
     PORT_INPUT_FORMAT_SETUP_COMBINEDMODE = 0x42,
-    PORT_INFORMATION = 0x43,
-    PORT_MODE_INFORMATION = 0x44,
-    PORT_VALUE_SINGLE = 0x45,
-    PORT_VALUE_COMBINEDMODE = 0x46,
-    PORT_INPUT_FORMAT_SINGLE = 0x47,
-    PORT_INPUT_FORMAT_COMBINEDMODE = 0x48,
+    PORT_INFORMATION = 0x43, // up
+    PORT_MODE_INFORMATION = 0x44, // up
+    PORT_VALUE_SINGLE = 0x45, // up
+    PORT_VALUE_COMBINEDMODE = 0x46, // up
+    PORT_INPUT_FORMAT_SINGLE = 0x47, // up
+    PORT_INPUT_FORMAT_COMBINEDMODE = 0x48, // up
     VIRTUAL_PORT_SETUP = 0x61,
     PORT_OUTPUT_COMMAND = 0x81,
-    PORT_OUTPUT_COMMAND_FEEDBACK = 0x82,
+    PORT_OUTPUT_COMMAND_FEEDBACK = 0x82, // up
 };
 
 enum class Lpf2HubPropertyReference
@@ -315,7 +315,9 @@ enum class Lpf2BrakingStyle
     BRAKE = 127,
 };
 
-enum class Lpf2ControlPlusHubPort
+using Lpf2PortNum = uint8_t;
+
+enum class Lpf2ControlPlusHubPort: Lpf2PortNum
 {
     A = 0x00,
     B = 0x01,
@@ -332,7 +334,7 @@ enum class Lpf2ControlPlusHubPort
     GESTURE = 100,
 };
 
-enum class Lpf2DuploTrainHubPort
+enum class Lpf2DuploTrainHubPort: Lpf2PortNum
 {
     MOTOR = 0x00,
     LED = 0x11,
@@ -342,7 +344,7 @@ enum class Lpf2DuploTrainHubPort
     VOLTAGE = 0x14,
 };
 
-enum class Lpf2MoveHubPort
+enum class Lpf2MoveHubPort: Lpf2PortNum
 {
     A = 0x00,
     B = 0x01,
@@ -355,7 +357,7 @@ enum class Lpf2MoveHubPort
     VOLTAGE = 0x3C,
 };
 
-enum class Lpf2PoweredUpHubPort
+enum class Lpf2PoweredUpHubPort: Lpf2PortNum
 {
     A = 0x00,
     B = 0x01,
@@ -364,7 +366,7 @@ enum class Lpf2PoweredUpHubPort
     VOLTAGE = 0x3C,
 };
 
-enum class Lpf2PoweredUpRemoteHubPort
+enum class Lpf2PoweredUpRemoteHubPort: Lpf2PortNum
 {
     LEFT = 0x00,
     RIGHT = 0x01,
@@ -374,12 +376,18 @@ enum class Lpf2PoweredUpRemoteHubPort
 };
 
 // https://github.com/bricklife/LEGO-Mario-Reveng/blob/master/IOType-0x4a.md
-enum class Lpf2MarioHubPort
+enum class Lpf2MarioHubPort: Lpf2PortNum
 {
     GESTURE = 0x00,
     BARCODE = 0x01,
     PANTS = 0x02,
     VOLTAGE = 0x06,
 };
+
+// Data formats
+#define   DATA8                         0x00    // 8-bit signed integer
+#define   DATA16                        0x01    // 16-bit little-endian signed integer
+#define   DATA32                        0x02    // 32-bit little-endian signed integer
+#define   DATAF                         0x03    // 32-bit little-endian IEEE 754 floating point
 
 #endif

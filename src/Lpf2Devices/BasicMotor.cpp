@@ -14,7 +14,7 @@ void BasicMotor::setSpeed(int speed)
 {
     assert(this);
     assert(((uintptr_t)this & 0x3) == 0);
-    assert(port_.deviceConnected()); 
+    assert(m_port.deviceConnected()); 
     bool forward = speed >= 0;
     speed = std::abs(speed);
     if (speed > 100)
@@ -25,7 +25,7 @@ void BasicMotor::setSpeed(int speed)
     if (!forward)
         std::swap(pwr1, pwr2);
 
-    port_.setPower(pwr1, pwr2);
+    m_port.setPower(pwr1, pwr2);
 }
 
 bool BasicMotor::hasCapability(Lpf2DeviceCapabilityId id) const

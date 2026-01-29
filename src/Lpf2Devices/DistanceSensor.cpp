@@ -27,12 +27,12 @@ void TechnicDistanceSensor::setLight(uint8_t l1, uint8_t l2, uint8_t l3, uint8_t
     data.push_back(l3);
     data.push_back(l4);
 
-    port_.writeData(LIGHT_MODE, data);
+    m_port.writeData(LIGHT_MODE, data);
 }
 
 float TechnicDistanceSensor::getDistance()
 {
-    return port_.getValue(0, 0);
+    return m_port.getValue(0, 0);
 }
 
 bool TechnicDistanceSensor::hasCapability(Lpf2DeviceCapabilityId id) const

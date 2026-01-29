@@ -10,14 +10,12 @@
 class Lpf2DeviceManager
 {
 public:
-    explicit Lpf2DeviceManager(Lpf2IO *io)
-        : port_(io), io(io) {}
+    explicit Lpf2DeviceManager(Lpf2Port &port)
+        : m_port(port) {}
 
     void init()
     {
-
 #if defined(LPF2_USE_FREERTOS)
-
         xTaskCreate(
             &Lpf2DeviceManager::taskEntryPoint, // Static entry point
             "Lpf2DeviceManager",                // Task name
@@ -26,45 +24,19 @@ public:
             5,
             nullptr);
 #endif
-        if (!io->ready())
-        {
-            return;
-        }
-        if (!inited)
-        {
-            #if defined(LPF2_USE_FREERTOS)
-            port_.init(false);
-            #else
-            port_.init();
-            #endif
-            inited = true;
-        }
     }
 
     void update()
     {
-        if (!io->ready())
+        m_port.update();
+        if (!m_port.deviceConnected())
         {
-            return;
-        }
-        if (!inited)
-        {
-            #if defined(LPF2_USE_FREERTOS)
-            port_.init(false);
-            #else
-            port_.init();
-            #endif
-            inited = true;
-        }
-        port_.update();
-        if (!port_.deviceConnected())
-        {
-            port_.setPower(0, 0);
+            m_port.setPower(0, 0);
             device_.reset(nullptr);
             return;
         }
 
-        if (!device_ && port_.deviceConnected())
+        if (!device_ && m_port.deviceConnected())
         {
             attachViaFactory();
         }
@@ -84,12 +56,12 @@ public:
 
     Lpf2DeviceType getDeviceType() const
     {
-        return port_.getDeviceType();
+        return m_port.getDeviceType();
     }
 
     const Lpf2Port& getPort() const
     {
-        return port_;
+        return m_port;
     }
 
 private:
@@ -101,9 +73,9 @@ private:
         {
             const Lpf2DeviceFactory *factory = reg.factories()[i];
 
-            if (factory->matches(port_))
+            if (factory->matches(m_port))
             {
-                device_.reset(factory->create(port_));
+                device_.reset(factory->create(m_port));
                 device_->init();
                 break;
             }
@@ -114,9 +86,7 @@ private:
     void loopTask();
 #endif
 
-    Lpf2Port port_;
-    Lpf2IO *io;
-    bool inited = false;
+    Lpf2Port& m_port;
     std::unique_ptr<Lpf2Device> device_;
 };
 
