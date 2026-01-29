@@ -198,7 +198,7 @@ enum class Lpf2HubPropertyOperation
     UPDATE_UPSTREAM = 0x06,
 };
 
-enum Lpf2ActionType
+enum class Lpf2ActionType
 {
     SWITCH_OFF_HUB = 0x01,
     DISCONNECT = 0x02,
@@ -212,7 +212,7 @@ enum Lpf2ActionType
     HUB_WILL_GO_INTO_BOOT_MODE = 0x32,
 };
 
-enum Lpf2Event
+enum class Lpf2Event
 {
     DETACHED_IO = 0x00,
     ATTACHED_IO = 0x01,
@@ -236,7 +236,20 @@ enum Lpf2Color
     NONE = 255,
 };
 
-static const char *Lpf2_COLOR_STRING[NUM_COLORS + 1] = {
+enum class Lpf2ModeInfoType
+{
+    NAME = 0x00,
+    RAW = 0x01,
+    PCT = 0x02,
+    SI = 0x03,
+    SYMBOL = 0x04,
+    MAPPING = 0x005,
+    MOTOR_BIAS = 0x07,
+    CAPS = 0x08,
+    VALUE = 0x80
+};
+
+static const char *Lpf2_COLOR_STRING[(uint8_t)Lpf2Color::NUM_COLORS + 1] = {
     "black", "pink", "purple", "blue", "lightblue", "cyan", "green", "yellow", "orange", "red", "white", "none"};
 
 enum class Lpf2DuploTrainBaseSound

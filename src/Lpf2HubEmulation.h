@@ -48,6 +48,7 @@ private:
     void handleHubAlertsMessage(std::vector<uint8_t> message);
 
     void handlePortInformationRequestMessage(std::vector<uint8_t> message);
+    void handlePortModeInformationRequestMessage(std::vector<uint8_t> message);
 
     std::vector<uint8_t> packVersion(Lpf2Version version);
     Lpf2Version unPackVersion(std::vector<uint8_t> version);
