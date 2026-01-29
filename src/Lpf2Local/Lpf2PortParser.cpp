@@ -51,6 +51,7 @@ void Lpf2PortLocal::parseMessage(const Lpf2Message &msg)
     {
         if (m_status == LPF2_STATUS::STATUS_DATA_START)
         {
+            LPF2_LOG_I("Device connected, type: %i", (int)m_deviceType);
             m_status = LPF2_STATUS::STATUS_DATA_RECEIVED;
         }
         m_startRec = millis();

@@ -8,6 +8,8 @@
 #include "Lpf2SerialDef.h"
 #include "Util/mutex.h"
 
+#define MEASUREMENTS 20
+
 class Lpf2PortLocal : public Lpf2Port
 {
 public:
@@ -80,7 +82,6 @@ private:
     LPF2_STATUS m_status = LPF2_STATUS::STATUS_ERR;
     LPF2_STATUS m_new_status = LPF2_STATUS::STATUS_ERR;
     LPF2_STATUS m_lastStatus = LPF2_STATUS::STATUS_ERR;
-    Lpf2DeviceType m_deviceType = Lpf2DeviceType::UNKNOWNDEVICE;
     bool m_deviceConnected = false; // do not rely on this, use deviceConnected() instead
     bool nextModeExt = false;
     bool m_dumb = false;
