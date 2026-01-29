@@ -1,8 +1,9 @@
-#include "Lpf2Port.h"
+#include "Lpf2PortLocal.h"
 #include <string>
 #include <cstring>
 
-void Lpf2Port::init(
+
+void Lpf2PortLocal::init(
 #if defined(LPF2_USE_FREERTOS)
     bool useFreeRTOSTask,
     std::string taskName
@@ -30,7 +31,7 @@ void Lpf2Port::init(
         return;
 
     xTaskCreate(
-        &Lpf2Port::taskEntryPoint, // Static entry point
+        &Lpf2PortLocal::taskEntryPoint, // Static entry point
         taskName.c_str(),          // Task name
         4096,
         this, // Pass this pointer
@@ -39,7 +40,7 @@ void Lpf2Port::init(
 #endif
 }
 
-bool Lpf2Port::deviceConnected()
+bool Lpf2PortLocal::deviceConnected()
 {
     if (m_deviceType == Lpf2DeviceType::UNKNOWNDEVICE)
     {
@@ -54,13 +55,13 @@ bool Lpf2Port::deviceConnected()
 
 #if defined(LPF2_USE_FREERTOS)
 
-void Lpf2Port::taskEntryPoint(void *pvParameters)
+void Lpf2PortLocal::taskEntryPoint(void *pvParameters)
 {
-    Lpf2Port *self = static_cast<Lpf2Port *>(pvParameters);
+    Lpf2PortLocal *self = static_cast<Lpf2PortLocal *>(pvParameters);
     self->uartTask(); // Call actual member function
 }
 
-void Lpf2Port::uartTask()
+void Lpf2PortLocal::uartTask()
 {
     LPF2_LOG_I("Initialization done.");
 
@@ -80,7 +81,7 @@ void Lpf2Port::uartTask()
 }
 #endif
 
-void Lpf2Port::update()
+void Lpf2PortLocal::update()
 {
     if (!m_IO->ready())
     {
@@ -144,7 +145,7 @@ end_loop:
     process(millis());
 }
 
-uint8_t Lpf2Port::process(unsigned long now)
+uint8_t Lpf2PortLocal::process(unsigned long now)
 {
     if (now - m_startRec > 1500)
     {
@@ -250,25 +251,7 @@ uint8_t Lpf2Port::process(unsigned long now)
     return 0;
 }
 
-bool Lpf2Port::deviceIsAbsMotor(Lpf2DeviceType id)
-{
-    switch (id)
-    {
-    case Lpf2DeviceType::TECHNIC_LARGE_LINEAR_MOTOR:
-    case Lpf2DeviceType::TECHNIC_XLARGE_LINEAR_MOTOR:
-    case Lpf2DeviceType::TECHNIC_LARGE_ANGULAR_MOTOR:
-    case Lpf2DeviceType::TECHNIC_LARGE_ANGULAR_MOTOR_GREY:
-    case Lpf2DeviceType::TECHNIC_MEDIUM_ANGULAR_MOTOR:
-    case Lpf2DeviceType::TECHNIC_MEDIUM_ANGULAR_MOTOR_GREY:
-    case Lpf2DeviceType::MEDIUM_LINEAR_MOTOR:
-    case Lpf2DeviceType::SIMPLE_MEDIUM_LINEAR_MOTOR:
-        return true;
-    default:
-        return false;
-    }
-}
-
-void Lpf2Port::resetDevice()
+void Lpf2PortLocal::resetDevice()
 {
     // enterUartState();
     // return;
@@ -293,7 +276,7 @@ void Lpf2Port::resetDevice()
     m_startRec = m_start;
 }
 
-void Lpf2Port::enterUartState()
+void Lpf2PortLocal::enterUartState()
 {
     m_pwm->off();
     {
@@ -316,21 +299,4 @@ void Lpf2Port::enterUartState()
     m_new_status = LPF2_STATUS::STATUS_SPEED_CHANGE;
     m_start = millis();
     m_startRec = m_start;
-}
-
-Lpf2ModeNum Lpf2Port::getDefaultMode(Lpf2DeviceType id)
-{
-
-    if (deviceIsAbsMotor(id))
-    {
-        return Lpf2ModeNum::MOTOR__CALIB;
-    }
-
-    switch (id)
-    {
-    case Lpf2DeviceType::COLOR_DISTANCE_SENSOR:
-        return Lpf2ModeNum::COLOR_DISTANCE_SENSOR__RGB_I;
-    default:
-        return Lpf2ModeNum::_DEFAULT;
-    }
 }

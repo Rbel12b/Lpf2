@@ -12,7 +12,7 @@ void TechnicColorSensor::registerFactory(Lpf2DeviceRegistry& reg)
 
 Lpf2ColorIDX TechnicColorSensor::getColorIdx()
 {
-    return Lpf2ColorIDX((int)port_.getValue(0, 0));
+    return Lpf2ColorIDX((int)m_port.getValue(0, 0));
 }
 
 bool TechnicColorSensor::hasCapability(Lpf2DeviceCapabilityId id) const

@@ -222,7 +222,7 @@ void EncoderMotor::poll()
 
 uint16_t EncoderMotor::getAbsPos() const
 {
-    return (uint16_t)(port_.getValue(CALIB_MODE, 0) / 1024.0f * 3600.0f);
+    return (uint16_t)(m_port.getValue(CALIB_MODE, 0) / 1024.0f * 3600.0f);
 }
 
 int64_t EncoderMotor::getRelPos() const
@@ -253,7 +253,7 @@ void EncoderMotor::_setSpeed(int speed)
     if (!forward)
         std::swap(pwr1, pwr2);
 
-    port_.setPower(pwr1, pwr2);
+    m_port.setPower(pwr1, pwr2);
 }
 
 void EncoderMotor::moveToAbsPos(uint16_t pos, uint8_t speed)
