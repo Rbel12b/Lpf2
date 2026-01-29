@@ -1,7 +1,7 @@
 #if defined(ESP32)
 
-#include "Lpf2HubEmulation.h"
 #include "./log/log.h"
+#include "Lpf2HubEmulation.h"
 
 #include <sstream>
 #include <iomanip>
@@ -91,7 +91,9 @@ public:
 void Lpf2HubEmulation::onMessageReceived(std::vector<uint8_t> message)
 {
     Lpf2MessageType type = (Lpf2MessageType)message[(byte)Lpf2MessageHeader::MESSAGE_TYPE];
-    LPF2_LOG_D("message received (%d): %s", message.size(), LegoinoCommon::HexString(message).c_str());
+    LPF2_DEBUG_EXPR_D(
+        std::string hexMessage = toCommaSeparatedHex(message);
+        LPF2_LOG_D("message received (%d): %s", message.size(), hexMessage.c_str()););
     LPF2_LOG_D("message type: %d", (byte)type);
 
     switch (type)
@@ -103,7 +105,7 @@ void Lpf2HubEmulation::onMessageReceived(std::vector<uint8_t> message)
         LPF2_LOG_W("HUB_ACTIONS not implemented yet");
         break;
     case Lpf2MessageType::HUB_ALERTS:
-        LPF2_LOG_W("HUB_ALERTS not implemented yet");
+        handleHubAlertsMessage(message);
         break;
     case Lpf2MessageType::HUB_ATTACHED_IO:
         LPF2_LOG_W("HUB_ATTACHED_IO IO not implemented yet");
@@ -395,6 +397,78 @@ void Lpf2HubEmulation::resetHubProperty(Lpf2HubPropertyReference propRef)
     }
 }
 
+void Lpf2HubEmulation::updateHubAlert(Lpf2HubAlertType alert, bool on)
+{
+    if (alert >= Lpf2HubAlertType::END)
+    {
+        LPF2_LOG_E("Invalid Hub alert type: %i", (int)alert);
+        return;
+    }
+    hubAlert[(uint8_t)alert] = on;
+    if (hubAlertEnabled[(uint8_t)alert])
+    {
+        sendHubAlertUpdate(alert);
+    }
+}
+
+void Lpf2HubEmulation::sendHubAlertUpdate(Lpf2HubAlertType alert)
+{
+    std::vector<uint8_t> payload;
+    payload.push_back((uint8_t)alert);
+    payload.push_back((uint8_t)Lpf2HubAlertOperation::UPDATE_UPSTREAM);
+    payload.push_back(hubAlert[(uint8_t)alert] ? 255 : 0);
+    writeValue(Lpf2MessageType::HUB_ALERTS, payload);
+}
+
+void Lpf2HubEmulation::resetHubAlerts()
+{
+    for (uint8_t i = 0; i < (uint8_t)Lpf2HubAlertType::END; i++)
+    {
+        hubAlertEnabled[i] = false;
+        hubAlert[i] = false;
+    }
+}
+
+void Lpf2HubEmulation::handleHubAlertsMessage(std::vector<uint8_t> message)
+{
+    if (message.size() < 5)
+    {
+        LPF2_LOG_E("Unexpected message length: %i", message.size());
+        return;
+    }
+    Lpf2HubAlertType alertType = (Lpf2HubAlertType)message[(byte)Lpf2MessageByte::PROPERTY];
+    Lpf2HubAlertOperation alertOperation = (Lpf2HubAlertOperation)message[(byte)Lpf2MessageByte::OPERATION];
+    if (alertType >= Lpf2HubAlertType::END)
+    {
+        LPF2_LOG_E("Invalid HUB alert type requested.");
+        return;
+    }
+    switch (alertOperation)
+    {
+    case Lpf2HubAlertOperation::ENABLE_UPDATES_DOWNSTREAM:
+    {
+        hubAlertEnabled[(uint8_t)alertType] = true;
+        break;
+    }
+    case Lpf2HubAlertOperation::DISABLE_UPDATES_DOWNSTREAM:
+    {
+        hubAlertEnabled[(uint8_t)alertType] = false;
+        break;
+    }
+    case Lpf2HubAlertOperation::REQUEST_UPDATE_DOWNSTREAM:
+    {
+        sendHubAlertUpdate(alertType);
+        break;
+    }
+    default:
+        goto unimplemented;
+    }
+    return;
+unimplemented:
+    LPF2_LOG_E("Unimplemented!");
+    return;
+}
+
 std::vector<uint8_t> Lpf2HubEmulation::packVersion(Lpf2Version version)
 {
     std::vector<uint8_t> v;
@@ -425,8 +499,8 @@ void Lpf2HubEmulation::handleHubPropertyMessage(std::vector<uint8_t> message)
         LPF2_LOG_E("Unexpected message length: %i", message.size());
         return;
     }
-    Lpf2HubPropertyOperation op = (Lpf2HubPropertyOperation)message[(byte)Lpf2HubPropertyMessage::OPERATION];
-    Lpf2HubPropertyReference propId = (Lpf2HubPropertyReference)message[(byte)Lpf2HubPropertyMessage::PROPERTY];
+    Lpf2HubPropertyOperation op = (Lpf2HubPropertyOperation)message[(byte)Lpf2MessageByte::OPERATION];
+    Lpf2HubPropertyReference propId = (Lpf2HubPropertyReference)message[(byte)Lpf2MessageByte::PROPERTY];
     if (propId >= Lpf2HubPropertyReference::END)
     {
         LPF2_LOG_E("Invalid HUB property requested.");
@@ -476,6 +550,17 @@ Lpf2HubEmulation::Lpf2HubEmulation(std::string hubName, Lpf2HubType hubType)
 {
     setHubName(hubName);
     _hubType = hubType;
+}
+
+void Lpf2HubEmulation::reset()
+{
+    LPF2_LOG_D("Resetting props.");
+    for (uint8_t i = 0; i < (uint8_t)Lpf2HubPropertyReference::END; i++)
+    {
+        resetHubProperty((Lpf2HubPropertyReference)i);
+        updateHubPropertyEnabled[i] = false;
+    }
+    resetHubAlerts();
 }
 
 void Lpf2HubEmulation::setWritePortCallback(WritePortCallback callback)
@@ -558,7 +643,9 @@ void Lpf2HubEmulation::writeValue(Lpf2MessageType messageType, std::vector<uint8
         pCharacteristic->notify();
     }
 
-    LPF2_LOG_D("write message (%d): %s", message.size(), LegoinoCommon::HexString(message).c_str());
+    LPF2_DEBUG_EXPR_D(
+        std::string hexMessage = toCommaSeparatedHex(message);
+        LPF2_LOG_D("write message (%d): %s", message.size(), hexMessage.c_str()););
 }
 
 void Lpf2HubEmulation::setHubButton(bool pressed)
@@ -650,12 +737,7 @@ void Lpf2HubEmulation::setHubHardwareVersion(Lpf2Version version)
 
 void Lpf2HubEmulation::start()
 {
-    LPF2_LOG_D("Resetting hub props.");
-    for (uint8_t i = 0; i < (uint8_t)Lpf2HubPropertyReference::END; i++)
-    {
-        resetHubProperty((Lpf2HubPropertyReference)i);
-        updateHubPropertyEnabled[i] = false;
-    }
+    reset();
     LPF2_LOG_D("Starting BLE");
 
     NimBLEDevice::init(getHubName());

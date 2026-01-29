@@ -14,54 +14,51 @@
 #define LPF2_CURRENT_MAX 2444
 #define LPF2_CURRENT_MAX_RAW 4095
 
-struct Lpf2Version
+class Lpf2Version
 {
-  int Build;
-  int Major;
-  int Minor;
-  int Bugfix;
+public:
+    int Build;
+    int Major;
+    int Minor;
+    int Bugfix;
 };
 
-enum struct Lpf2HubType
+enum class Lpf2HubType
 {
-  UNKNOWNHUB = 0,
-  BOOST_MOVE_HUB = 2,
-  POWERED_UP_HUB = 3,
-  POWERED_UP_REMOTE = 4,
-  DUPLO_TRAIN_HUB = 5,
-  CONTROL_PLUS_HUB = 6,
-  MARIO_HUB = 7,
+    UNKNOWNHUB = 0,
+    BOOST_MOVE_HUB = 2,
+    POWERED_UP_HUB = 3,
+    POWERED_UP_REMOTE = 4,
+    DUPLO_TRAIN_HUB = 5,
+    CONTROL_PLUS_HUB = 6,
+    MARIO_HUB = 7,
 };
 
 enum Lpf2BLEManufacturerData
 {
-  DUPLO_TRAIN_HUB_ID = 32,   //0x20
-  BOOST_MOVE_HUB_ID = 64,    //0x40
-  POWERED_UP_HUB_ID = 65,    //0x41
-  POWERED_UP_REMOTE_ID = 66, //0x42
-  MARIO_HUB_ID = 67,         //0x32
-  CONTROL_PLUS_HUB_ID = 128, //0x80
+    DUPLO_TRAIN_HUB_ID = 32,   // 0x20
+    BOOST_MOVE_HUB_ID = 64,    // 0x40
+    POWERED_UP_HUB_ID = 65,    // 0x41
+    POWERED_UP_REMOTE_ID = 66, // 0x42
+    MARIO_HUB_ID = 67,         // 0x32
+    CONTROL_PLUS_HUB_ID = 128, // 0x80
 };
 
-enum struct Lpf2MessageHeader
+enum class Lpf2MessageHeader
 {
-  LENGTH = 0x00,
-  HUB_ID = 0x01,
-  MESSAGE_TYPE = 0x02,
+    LENGTH = 0x00,
+    HUB_ID = 0x01,
+    MESSAGE_TYPE = 0x02,
 };
 
-enum struct Lpf2PortOutputMessage
+enum class Lpf2MessageByte
 {
-  PORT_ID = 0x03,
-  STARTUP_AND_COMPLETION = 0x04,
-  SUB_COMMAND = 0x05,
-};
-
-enum struct Lpf2HubPropertyMessage
-{
-  PROPERTY = 0x03,
-  OPERATION = 0x04,
-  PAYLOAD = 0x05,
+    PROPERTY = 0x03,
+    PORT_ID = 0x03,
+    OPERATION = 0x04,
+    STARTUP_AND_COMPLETION = 0x04,
+    PAYLOAD = 0x05,
+    SUB_COMMAND = 0x05,
 };
 
 enum class Lpf2DeviceType
@@ -112,261 +109,277 @@ enum Lpf2ModeNum
     COLOR_DISTANCE_SENSOR__RGB_I = 5,
 };
 
-
-enum struct Lpf2MessageType
+enum class Lpf2MessageType
 {
-  HUB_PROPERTIES = 0x01,
-  HUB_ACTIONS = 0x02,
-  HUB_ALERTS = 0x03,
-  HUB_ATTACHED_IO = 0x04,
-  GENERIC_ERROR_MESSAGES = 0x05,
-  HW_NETWORK_COMMANDS = 0x08,
-  FW_UPDATE_GO_INTO_BOOT_MODE = 0x10,
-  FW_UPDATE_LOCK_MEMORY = 0x11,
-  FW_UPDATE_LOCK_STATUS_REQUEST = 0x12,
-  FW_LOCK_STATUS = 0x13,
-  PORT_INFORMATION_REQUEST = 0x21,
-  PORT_MODE_INFORMATION_REQUEST = 0x22,
-  PORT_INPUT_FORMAT_SETUP_SINGLE = 0x41,
-  PORT_INPUT_FORMAT_SETUP_COMBINEDMODE = 0x42,
-  PORT_INFORMATION = 0x43,
-  PORT_MODE_INFORMATION = 0x44,
-  PORT_VALUE_SINGLE = 0x45,
-  PORT_VALUE_COMBINEDMODE = 0x46,
-  PORT_INPUT_FORMAT_SINGLE = 0x47,
-  PORT_INPUT_FORMAT_COMBINEDMODE = 0x48,
-  VIRTUAL_PORT_SETUP = 0x61,
-  PORT_OUTPUT_COMMAND = 0x81,
-  PORT_OUTPUT_COMMAND_FEEDBACK = 0x82,
+    HUB_PROPERTIES = 0x01,
+    HUB_ACTIONS = 0x02,
+    HUB_ALERTS = 0x03,
+    HUB_ATTACHED_IO = 0x04,
+    GENERIC_ERROR_MESSAGES = 0x05,
+    HW_NETWORK_COMMANDS = 0x08,
+    FW_UPDATE_GO_INTO_BOOT_MODE = 0x10,
+    FW_UPDATE_LOCK_MEMORY = 0x11,
+    FW_UPDATE_LOCK_STATUS_REQUEST = 0x12,
+    FW_LOCK_STATUS = 0x13,
+    PORT_INFORMATION_REQUEST = 0x21,
+    PORT_MODE_INFORMATION_REQUEST = 0x22,
+    PORT_INPUT_FORMAT_SETUP_SINGLE = 0x41,
+    PORT_INPUT_FORMAT_SETUP_COMBINEDMODE = 0x42,
+    PORT_INFORMATION = 0x43,
+    PORT_MODE_INFORMATION = 0x44,
+    PORT_VALUE_SINGLE = 0x45,
+    PORT_VALUE_COMBINEDMODE = 0x46,
+    PORT_INPUT_FORMAT_SINGLE = 0x47,
+    PORT_INPUT_FORMAT_COMBINEDMODE = 0x48,
+    VIRTUAL_PORT_SETUP = 0x61,
+    PORT_OUTPUT_COMMAND = 0x81,
+    PORT_OUTPUT_COMMAND_FEEDBACK = 0x82,
 };
 
-enum struct Lpf2HubPropertyReference
+enum class Lpf2HubPropertyReference
 {
-  ADVERTISING_NAME = 0x01,
-  BUTTON = 0x02,
-  FW_VERSION = 0x03,
-  HW_VERSION = 0x04,
-  RSSI = 0x05,
-  BATTERY_VOLTAGE = 0x06,
-  BATTERY_TYPE = 0x07,
-  MANUFACTURER_NAME = 0x08,
-  RADIO_FIRMWARE_VERSION = 0x09,
-  LEGO_WIRELESS_PROTOCOL_VERSION = 0x0A,
-  SYSTEM_TYPE_ID = 0x0B,
-  HW_NETWORK_ID = 0x0C,
-  PRIMARY_MAC_ADDRESS = 0x0D,
-  SECONDARY_MAC_ADDRESS = 0x0E,
-  HARDWARE_NETWORK_FAMILY = 0x0F,
-  END,
+    ADVERTISING_NAME = 0x01,
+    BUTTON = 0x02,
+    FW_VERSION = 0x03,
+    HW_VERSION = 0x04,
+    RSSI = 0x05,
+    BATTERY_VOLTAGE = 0x06,
+    BATTERY_TYPE = 0x07,
+    MANUFACTURER_NAME = 0x08,
+    RADIO_FIRMWARE_VERSION = 0x09,
+    LEGO_WIRELESS_PROTOCOL_VERSION = 0x0A,
+    SYSTEM_TYPE_ID = 0x0B,
+    HW_NETWORK_ID = 0x0C,
+    PRIMARY_MAC_ADDRESS = 0x0D,
+    SECONDARY_MAC_ADDRESS = 0x0E,
+    HARDWARE_NETWORK_FAMILY = 0x0F,
+    END,
 };
 
-enum struct Lpf2BatteryType
+enum class Lpf2HubAlertType
 {
-  NORMAL = 0x00,
-  RECHARGEABLE = 0x01,
+    LOW_BATTERY = 0x01,
+    HIGH_CURRENT = 0x02,
+    LOW_SIGNAL_STRENGTH = 0x03,
+    OVER_POWER_CONITION = 0x04,
+    END,
 };
 
-enum struct Lpf2ButtonState
+enum class Lpf2HubAlertOperation
 {
-  PRESSED = 0x01,
-  RELEASED = 0x00,
-  UP = 0x01,
-  DOWN = 0xff,
-  STOP = 0x7f,
+    ENABLE_UPDATES_DOWNSTREAM = 0x01,
+    DISABLE_UPDATES_DOWNSTREAM = 0x02,
+    REQUEST_UPDATE_DOWNSTREAM = 0x03,
+    UPDATE_UPSTREAM = 0x04,
 };
 
-enum struct Lpf2HubPropertyOperation
+enum class Lpf2BatteryType
 {
-  SET_DOWNSTREAM = 0x01,
-  ENABLE_UPDATES_DOWNSTREAM = 0x02,
-  DISABLE_UPDATES_DOWNSTREAM = 0x03,
-  RESET_DOWNSTREAM = 0x04,
-  REQUEST_UPDATE_DOWNSTREAM = 0x05,
-  UPDATE_UPSTREAM = 0x06,
+    NORMAL = 0x00,
+    RECHARGEABLE = 0x01,
+};
+
+enum class Lpf2ButtonState
+{
+    PRESSED = 0x01,
+    RELEASED = 0x00,
+    UP = 0x01,
+    DOWN = 0xff,
+    STOP = 0x7f,
+};
+
+enum class Lpf2HubPropertyOperation
+{
+    SET_DOWNSTREAM = 0x01,
+    ENABLE_UPDATES_DOWNSTREAM = 0x02,
+    DISABLE_UPDATES_DOWNSTREAM = 0x03,
+    RESET_DOWNSTREAM = 0x04,
+    REQUEST_UPDATE_DOWNSTREAM = 0x05,
+    UPDATE_UPSTREAM = 0x06,
 };
 
 enum Lpf2ActionType
 {
-  SWITCH_OFF_HUB = 0x01,
-  DISCONNECT = 0x02,
-  VCC_PORT_CONTROL_ON = 0x03,
-  VCC_PORT_CONTROL_OFF = 0x04,
-  ACTIVATE_BUSY_INDICATION = 0x05,
-  RESET_BUSY_INDICATION = 0x06,
-  SHUTDOWN = 0x2F,
-  HUB_WILL_SWITCH_OFF = 0x30,
-  HUB_WILL_DISCONNECT = 0x31,
-  HUB_WILL_GO_INTO_BOOT_MODE = 0x32,
+    SWITCH_OFF_HUB = 0x01,
+    DISCONNECT = 0x02,
+    VCC_PORT_CONTROL_ON = 0x03,
+    VCC_PORT_CONTROL_OFF = 0x04,
+    ACTIVATE_BUSY_INDICATION = 0x05,
+    RESET_BUSY_INDICATION = 0x06,
+    SHUTDOWN = 0x2F,
+    HUB_WILL_SWITCH_OFF = 0x30,
+    HUB_WILL_DISCONNECT = 0x31,
+    HUB_WILL_GO_INTO_BOOT_MODE = 0x32,
 };
 
 enum Lpf2Event
 {
-  DETACHED_IO = 0x00,
-  ATTACHED_IO = 0x01,
-  ATTACHED_VIRTUAL_IO = 0x02,
+    DETACHED_IO = 0x00,
+    ATTACHED_IO = 0x01,
+    ATTACHED_VIRTUAL_IO = 0x02,
 };
 
 enum Lpf2Color
 {
-  BLACK = 0,
-  PINK = 1,
-  PURPLE = 2,
-  BLUE = 3,
-  LIGHTBLUE = 4,
-  CYAN = 5,
-  GREEN = 6,
-  YELLOW = 7,
-  ORANGE = 8,
-  RED = 9,
-  WHITE = 10,
-  NUM_COLORS,
-  NONE = 255,
+    BLACK = 0,
+    PINK = 1,
+    PURPLE = 2,
+    BLUE = 3,
+    LIGHTBLUE = 4,
+    CYAN = 5,
+    GREEN = 6,
+    YELLOW = 7,
+    ORANGE = 8,
+    RED = 9,
+    WHITE = 10,
+    NUM_COLORS,
+    NONE = 255,
 };
 
 static const char *Lpf2_COLOR_STRING[NUM_COLORS + 1] = {
     "black", "pink", "purple", "blue", "lightblue", "cyan", "green", "yellow", "orange", "red", "white", "none"};
 
-enum struct Lpf2DuploTrainBaseSound
+enum class Lpf2DuploTrainBaseSound
 {
-  BRAKE = 3,
-  STATION_DEPARTURE = 5,
-  WATER_REFILL = 7,
-  HORN = 9,
-  STEAM = 10,
+    BRAKE = 3,
+    STATION_DEPARTURE = 5,
+    WATER_REFILL = 7,
+    HORN = 9,
+    STEAM = 10,
 };
 
-//https://github.com/bricklife/LEGO-Mario-Reveng/blob/master/IOType-0x4a.md
-enum struct Lpf2MarioPant
+// https://github.com/bricklife/LEGO-Mario-Reveng/blob/master/IOType-0x4a.md
+enum class Lpf2MarioPant
 {
-  NONE = 0x00,
-  PROPELLER = 0x0A,
-  TANOOKI = 0x0C,
-  CAT = 0x11,
-  FIRE = 0x12,
-  PENGUIN = 0x14,
-  NORMAL = 0x21,
-  BUILDER = 0x22,
+    NONE = 0x00,
+    PROPELLER = 0x0A,
+    TANOOKI = 0x0C,
+    CAT = 0x11,
+    FIRE = 0x12,
+    PENGUIN = 0x14,
+    NORMAL = 0x21,
+    BUILDER = 0x22,
 };
 
-//https://github.com/bricklife/LEGO-Mario-Reveng/blob/master/IOType-0x49.md
-enum struct Lpf2MarioBarcode
+// https://github.com/bricklife/LEGO-Mario-Reveng/blob/master/IOType-0x49.md
+enum class Lpf2MarioBarcode
 {
-  NONE = 0xFF00,
-  GOOMBA = 0x0200,
-  REFRESH = 0x1400,
-  QUESTION = 0x2900,
-  CLOUD = 0x2E00,
-  BAT = 0x7900,
-  STAR = 0x7B00,
-  KINGBOO = 0x8800,
-  BOWSERJR = 0x9900,
-  BOWSERGOAL = 0xB700,
-  START = 0xB800,
+    NONE = 0xFF00,
+    GOOMBA = 0x0200,
+    REFRESH = 0x1400,
+    QUESTION = 0x2900,
+    CLOUD = 0x2E00,
+    BAT = 0x7900,
+    STAR = 0x7B00,
+    KINGBOO = 0x8800,
+    BOWSERJR = 0x9900,
+    BOWSERGOAL = 0xB700,
+    START = 0xB800,
 };
 
-//https://github.com/bricklife/LEGO-Mario-Reveng/blob/master/IOType-0x49.md
-enum struct Lpf2MarioColor
+// https://github.com/bricklife/LEGO-Mario-Reveng/blob/master/IOType-0x49.md
+enum class Lpf2MarioColor
 {
-  NONE = 0xFFFF,
-  WHITE = 0x1300,
-  RED = 0x1500,
-  BLUE = 0x1700,
-  YELLOW = 0x1800,
-  BLACK = 0x1A00,
-  GREEN = 0x2500,
-  BROWN = 0x6A00,
-  PURPLE = 0x0C01,
-  UNKNOWN = 0x3801,
-  CYAN = 0x4201,
+    NONE = 0xFFFF,
+    WHITE = 0x1300,
+    RED = 0x1500,
+    BLUE = 0x1700,
+    YELLOW = 0x1800,
+    BLACK = 0x1A00,
+    GREEN = 0x2500,
+    BROWN = 0x6A00,
+    PURPLE = 0x0C01,
+    UNKNOWN = 0x3801,
+    CYAN = 0x4201,
 };
 
-//https://github.com/sharpbrick/powered-up
-enum struct Lpf2MarioGesture
+// https://github.com/sharpbrick/powered-up
+enum class Lpf2MarioGesture
 {
-  NONE = 0x0000,
-  BUMP = 0x0001,
-  SHAKE = 0x0010,
-  TURNING = 0x0100,
-  FASTMOVE = 0x0200,
-  TRANSLATION = 0x0400,
-  HIGHFALLCRASH = 0x0800,
-  DIRECTIONCHANGE = 0x1000,
-  REVERSE = 0x2000,
-  JUMP = 0x8000,
+    NONE = 0x0000,
+    BUMP = 0x0001,
+    SHAKE = 0x0010,
+    TURNING = 0x0100,
+    FASTMOVE = 0x0200,
+    TRANSLATION = 0x0400,
+    HIGHFALLCRASH = 0x0800,
+    DIRECTIONCHANGE = 0x1000,
+    REVERSE = 0x2000,
+    JUMP = 0x8000,
 };
 
-enum struct Lpf2BrakingStyle
+enum class Lpf2BrakingStyle
 {
-  FLOAT = 0,
-  HOLD = 126,
-  BRAKE = 127,
+    FLOAT = 0,
+    HOLD = 126,
+    BRAKE = 127,
 };
 
-enum struct Lpf2ControlPlusHubPort
+enum class Lpf2ControlPlusHubPort
 {
-  A = 0x00,
-  B = 0x01,
-  C = 0x02,
-  D = 0x03,
-  LED = 0x32,
-  CURRENT = 0x3B,
-  VOLTAGE = 0x3C,
-  ACCELEROMETER = 0x61,
-  GYRO = 0x62,
-  TILT = 0x63,
-  TEMP = 61,
-  TEMP2 = 96,
-  GESTURE = 100,
+    A = 0x00,
+    B = 0x01,
+    C = 0x02,
+    D = 0x03,
+    LED = 0x32,
+    CURRENT = 0x3B,
+    VOLTAGE = 0x3C,
+    ACCELEROMETER = 0x61,
+    GYRO = 0x62,
+    TILT = 0x63,
+    TEMP = 61,
+    TEMP2 = 96,
+    GESTURE = 100,
 };
 
-enum struct Lpf2DuploTrainHubPort
+enum class Lpf2DuploTrainHubPort
 {
-  MOTOR = 0x00,
-  LED = 0x11,
-  SPEAKER = 0x01,
-  COLOR = 0x12,
-  SPEEDOMETER = 0x13,
-  VOLTAGE = 0x14,
+    MOTOR = 0x00,
+    LED = 0x11,
+    SPEAKER = 0x01,
+    COLOR = 0x12,
+    SPEEDOMETER = 0x13,
+    VOLTAGE = 0x14,
 };
 
-enum struct Lpf2MoveHubPort
+enum class Lpf2MoveHubPort
 {
-  A = 0x00,
-  B = 0x01,
-  AB = 0x10,
-  C = 0x02,
-  D = 0x03,
-  LED = 0x32,
-  TILT = 0x3A,
-  CURRENT = 0x3B,
-  VOLTAGE = 0x3C,
+    A = 0x00,
+    B = 0x01,
+    AB = 0x10,
+    C = 0x02,
+    D = 0x03,
+    LED = 0x32,
+    TILT = 0x3A,
+    CURRENT = 0x3B,
+    VOLTAGE = 0x3C,
 };
 
-enum struct Lpf2PoweredUpHubPort
+enum class Lpf2PoweredUpHubPort
 {
-  A = 0x00,
-  B = 0x01,
-  LED = 0x32,
-  CURRENT = 0x3B,
-  VOLTAGE = 0x3C,
+    A = 0x00,
+    B = 0x01,
+    LED = 0x32,
+    CURRENT = 0x3B,
+    VOLTAGE = 0x3C,
 };
 
-enum struct Lpf2PoweredUpRemoteHubPort
+enum class Lpf2PoweredUpRemoteHubPort
 {
-  LEFT = 0x00,
-  RIGHT = 0x01,
-  LED = 0x34,
-  VOLTAGE = 0x3B,
-  RSSI = 0x3C,
+    LEFT = 0x00,
+    RIGHT = 0x01,
+    LED = 0x34,
+    VOLTAGE = 0x3B,
+    RSSI = 0x3C,
 };
 
-//https://github.com/bricklife/LEGO-Mario-Reveng/blob/master/IOType-0x4a.md
-enum struct Lpf2MarioHubPort
+// https://github.com/bricklife/LEGO-Mario-Reveng/blob/master/IOType-0x4a.md
+enum class Lpf2MarioHubPort
 {
-  GESTURE = 0x00,
-  BARCODE = 0x01,
-  PANTS = 0x02,
-  VOLTAGE = 0x06,
+    GESTURE = 0x00,
+    BARCODE = 0x01,
+    PANTS = 0x02,
+    VOLTAGE = 0x06,
 };
 
 #endif
