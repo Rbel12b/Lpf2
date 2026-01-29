@@ -265,6 +265,8 @@ void Lpf2PortLocal::resetDevice()
     modes = views = 0;
     comboNum = 0;
     modeData.resize(0);
+    modeCombos.clear();
+    modeCombos.resize(16);
     for (size_t i = 0; i < 16; i++)
     {
         modeCombos[i] = 0;

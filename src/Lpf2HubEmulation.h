@@ -1,13 +1,12 @@
-#if defined(ESP32)
-
-#ifndef Lpf2HubEmulation_h
-#define Lpf2HubEmulation_h
+#ifndef _LPF2_HUB_EMULATION_H_
+#define _LPF2_HUB_EMULATION_H_
 
 #include "config.h"
+#include "Lpf2Const.h"
 #include <NimBLEDevice.h>
-#include "Lpf2Hub.h"
+#include <unordered_map>
 
-typedef void (*WritePortCallback)(byte port, byte value);
+class Lpf2Port;
 
 class Lpf2HubEmulation
 {
@@ -23,9 +22,12 @@ private:
 
     Lpf2HubType _hubType = Lpf2HubType::UNKNOWNHUB;
 
-    // List of connected devices
-    Device connectedDevices[13];
-    int numberOfConnectedDevices = 0;
+    std::unordered_map<Lpf2PortNum, Lpf2Port*> attachedPorts;
+    /**
+     * @brief a map that contains if a port has a device attached,
+     * used to determine when to send IO attached/detached messages
+     */
+    std::unordered_map<Lpf2PortNum, bool> connectedDevices;
 
     bool updateHubPropertyEnabled[(unsigned int)Lpf2HubPropertyReference::END] = {false};
     std::vector<uint8_t> hubProperty[(unsigned int)Lpf2HubPropertyReference::END];
@@ -50,12 +52,28 @@ private:
     std::vector<uint8_t> packVersion(Lpf2Version version);
     Lpf2Version unPackVersion(std::vector<uint8_t> version);
 
+    void checkPort(Lpf2Port* port);
+
 public:
     Lpf2HubEmulation();
     Lpf2HubEmulation(std::string hubName, Lpf2HubType hubType);
+
+    /**
+     * @brief reset Hub properties, does not detach ports!
+     */
     void reset();
+
+    /**
+     * Starts BLE advertising
+     */
     void start();
-    void setWritePortCallback(WritePortCallback callback);
+
+    /**
+     * @brief call this periodically to check if
+     * attached ports have devices attached or not
+     */
+    void update();
+
     void setHubRssi(int8_t rssi);
     void setHubBatteryLevel(uint8_t batteryLevel);
     void setHubBatteryType(Lpf2BatteryType batteryType);
@@ -68,13 +86,14 @@ public:
     void setHubHardwareVersion(Lpf2Version version);
     void setHubButton(bool pressed);
 
-    void attachDevice(byte port, Lpf2DeviceType deviceType);
-    void detachDevice(byte port);
-    byte getDeviceTypeForPort(byte port);
+    /**
+     * @brief Attach a port object, the class will take care of the devices atached/detached.
+     * @param portNum The port number that will be assigned to the port.
+     * @param port The port object, it's lifetime must exceed the Lpf2HubEmulation instance's lifetime, or must live till something calls reset().
+     */
+    void attachPort(Lpf2PortNum portNum, Lpf2Port* port);
 
     void writeValue(Lpf2MessageType messageType, std::vector<uint8_t> payload, bool notify = true);
-    // std::vector<uint8_t> getPortModeInformationRequestPayload(Lpf2DeviceType deviceType, byte port, byte mode, byte modeInformationType);
-    // std::vector<uint8_t> getPortInformationPayload(Lpf2DeviceType deviceType, byte port, byte informationType);
 
     void onMessageReceived(std::vector<uint8_t> message);
 
@@ -82,9 +101,6 @@ public:
     bool isSubscribed = false;
     bool isPortInitialized = false;
     BLECharacteristic *pCharacteristic;
-    WritePortCallback writePortCallback = nullptr;
 };
 
-#endif // Lpf2HubEmulation_h
-
-#endif // ESP32
+#endif // _LPF2_HUB_EMULATION_H_

@@ -5,7 +5,6 @@
 #include "config.h"
 #include "Lpf2Const.h"
 
-#define MEASUREMENTS 20
 class Lpf2Port
 {
 public:
@@ -42,10 +41,21 @@ public:
         return modeCombos[combo];
     }
 
+    /**
+     * @returns mode bitmask
+     */
+    uint16_t getInputModes() const { return inModes; }
+    /**
+     * @returns mode bitmask
+     */
+    uint16_t getOutputModes() const { return outModes; }
+    uint8_t getCapatibilities() const { return caps; }
+
     virtual bool deviceConnected() = 0;
 
     std::vector<Lpf2Mode> modeData;
 
+    Lpf2PortNum portNum; // just a reference for some external code. (e.g. you can set it and use it, but only if Lpf2HubEmulation does not use it!!!)
 protected:
     static uint8_t getDataSize(uint8_t format);
     static Lpf2ModeNum getDefaultMode(Lpf2DeviceType id);
@@ -67,7 +77,10 @@ protected:
     Lpf2DeviceType m_deviceType = Lpf2DeviceType::UNKNOWNDEVICE;
     uint8_t modes, views;
     uint32_t baud = 2400;
-    uint16_t modeCombos[16];
+    std::vector<uint16_t> modeCombos;
+    uint8_t caps;
+    /* bitmask */
+    uint16_t inModes, outModes;
     uint8_t comboNum = 0;
 };
 

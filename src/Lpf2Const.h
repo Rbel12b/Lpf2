@@ -114,7 +114,7 @@ enum class Lpf2MessageType
     HUB_PROPERTIES = 0x01,
     HUB_ACTIONS = 0x02,
     HUB_ALERTS = 0x03,
-    HUB_ATTACHED_IO = 0x04, // up
+    HUB_ATTACHED_IO = 0x04,        // up
     GENERIC_ERROR_MESSAGES = 0x05, // up
     HW_NETWORK_COMMANDS = 0x08,
     FW_UPDATE_GO_INTO_BOOT_MODE = 0x10,
@@ -125,11 +125,11 @@ enum class Lpf2MessageType
     PORT_MODE_INFORMATION_REQUEST = 0x22,
     PORT_INPUT_FORMAT_SETUP_SINGLE = 0x41,
     PORT_INPUT_FORMAT_SETUP_COMBINEDMODE = 0x42,
-    PORT_INFORMATION = 0x43, // up
-    PORT_MODE_INFORMATION = 0x44, // up
-    PORT_VALUE_SINGLE = 0x45, // up
-    PORT_VALUE_COMBINEDMODE = 0x46, // up
-    PORT_INPUT_FORMAT_SINGLE = 0x47, // up
+    PORT_INFORMATION = 0x43,               // up
+    PORT_MODE_INFORMATION = 0x44,          // up
+    PORT_VALUE_SINGLE = 0x45,              // up
+    PORT_VALUE_COMBINEDMODE = 0x46,        // up
+    PORT_INPUT_FORMAT_SINGLE = 0x47,       // up
     PORT_INPUT_FORMAT_COMBINEDMODE = 0x48, // up
     VIRTUAL_PORT_SETUP = 0x61,
     PORT_OUTPUT_COMMAND = 0x81,
@@ -317,7 +317,7 @@ enum class Lpf2BrakingStyle
 
 using Lpf2PortNum = uint8_t;
 
-enum class Lpf2ControlPlusHubPort: Lpf2PortNum
+enum class Lpf2ControlPlusHubPort : Lpf2PortNum
 {
     A = 0x00,
     B = 0x01,
@@ -334,7 +334,7 @@ enum class Lpf2ControlPlusHubPort: Lpf2PortNum
     GESTURE = 100,
 };
 
-enum class Lpf2DuploTrainHubPort: Lpf2PortNum
+enum class Lpf2DuploTrainHubPort : Lpf2PortNum
 {
     MOTOR = 0x00,
     LED = 0x11,
@@ -344,7 +344,7 @@ enum class Lpf2DuploTrainHubPort: Lpf2PortNum
     VOLTAGE = 0x14,
 };
 
-enum class Lpf2MoveHubPort: Lpf2PortNum
+enum class Lpf2MoveHubPort : Lpf2PortNum
 {
     A = 0x00,
     B = 0x01,
@@ -357,7 +357,7 @@ enum class Lpf2MoveHubPort: Lpf2PortNum
     VOLTAGE = 0x3C,
 };
 
-enum class Lpf2PoweredUpHubPort: Lpf2PortNum
+enum class Lpf2PoweredUpHubPort : Lpf2PortNum
 {
     A = 0x00,
     B = 0x01,
@@ -366,7 +366,7 @@ enum class Lpf2PoweredUpHubPort: Lpf2PortNum
     VOLTAGE = 0x3C,
 };
 
-enum class Lpf2PoweredUpRemoteHubPort: Lpf2PortNum
+enum class Lpf2PoweredUpRemoteHubPort : Lpf2PortNum
 {
     LEFT = 0x00,
     RIGHT = 0x01,
@@ -376,7 +376,7 @@ enum class Lpf2PoweredUpRemoteHubPort: Lpf2PortNum
 };
 
 // https://github.com/bricklife/LEGO-Mario-Reveng/blob/master/IOType-0x4a.md
-enum class Lpf2MarioHubPort: Lpf2PortNum
+enum class Lpf2MarioHubPort : Lpf2PortNum
 {
     GESTURE = 0x00,
     BARCODE = 0x01,
@@ -385,9 +385,49 @@ enum class Lpf2MarioHubPort: Lpf2PortNum
 };
 
 // Data formats
-#define   DATA8                         0x00    // 8-bit signed integer
-#define   DATA16                        0x01    // 16-bit little-endian signed integer
-#define   DATA32                        0x02    // 32-bit little-endian signed integer
-#define   DATAF                         0x03    // 32-bit little-endian IEEE 754 floating point
+#define DATA8 0x00  // 8-bit signed integer
+#define DATA16 0x01 // 16-bit little-endian signed integer
+#define DATA32 0x02 // 32-bit little-endian signed integer
+#define DATAF 0x03  // 32-bit little-endian IEEE 754 floating point
+
+class Lpf2Mode
+{
+public:
+    std::string name;
+    float min = 0.0f, max = 1023.0f;
+    float PCTmin = 0.0f, PCTmax = 100.0f;
+    float SImin = 0.0f, SImax = 1023.0f;
+    std::string unit;
+    struct Mapping
+    {
+        uint8_t val;
+
+        bool nullSupport() const { return val & (1 << 7); }
+        bool mapping2() const { return val & (1 << 6); }
+        bool m_abs() const { return val & (1 << 4); }
+        bool m_rel() const { return val & (1 << 3); }
+        bool m_dis() const { return val & (1 << 2); }
+    };
+    Mapping in, out;
+    uint8_t data_sets = 0, format = 0, figures = 0, decimals = 0;
+    std::vector<uint8_t> rawData;
+    struct Flags
+    {
+        uint8_t bytes[6] = {0, 0, 0, 0, 0, 0};
+
+        bool speed() const { return bytes[0] & (1 << 0); }
+        bool apos() const { return bytes[0] & (1 << 1); }
+        bool pos() const { return bytes[0] & (1 << 2); }
+        bool power() const { return bytes[0] & (1 << 4); }
+        bool motor() const { return bytes[0] & (1 << 5); }
+        bool pin1() const { return bytes[0] & (1 << 6); }
+        bool pin2() const { return bytes[0] & (1 << 7); }
+
+        bool calib() const { return bytes[1] & (1 << 6); }
+
+        bool power12() const { return bytes[4] & (1 << 0); }
+    };
+    Flags flags;
+};
 
 #endif

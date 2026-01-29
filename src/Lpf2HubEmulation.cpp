@@ -1,8 +1,8 @@
-#if defined(ESP32)
-
 #include "./log/log.h"
+#include "Lpf2Hub.h"
 #include "Lpf2HubEmulation.h"
 #include "Util/hexUtils.h"
+#include "Lpf2Port.h"
 
 class Lpf2HubServerCallbacks : public NimBLEServerCallbacks
 {
@@ -399,16 +399,49 @@ unimplemented:
 
 void Lpf2HubEmulation::handlePortInformationRequestMessage(std::vector<uint8_t> message)
 {
-    //   // handle port information requests and respond dependent on the device type
-    //   else if (msgReceived[(byte)Lpf2MessageHeader::MESSAGE_TYPE] == (byte)MessageType::PORT_INFORMATION_REQUEST)
-    //   {
-    //     byte port = msgReceived[0x03];
-    //     byte deviceType = _lpf2HubEmulation->getDeviceTypeForPort(port);
-    //     byte informationType = msgReceived[0x04];
-    //     std::string payload = _lpf2HubEmulation->getPortInformationPayload((DeviceType)deviceType, port, informationType);
-    //     _lpf2HubEmulation->writeValue(MessageType::PORT_INFORMATION, payload);
-    //   }
-    Lpf2PortNum port = (Lpf2PortNum)message[(uint8_t)Lpf2MessageByte::PORT_ID]; 
+    Lpf2PortNum portNum = (Lpf2PortNum)message[(uint8_t)Lpf2MessageByte::PORT_ID];
+    if (attachedPorts.find(portNum) == attachedPorts.end())
+    {
+        LPF2_LOG_W("Port information request for unattached port %d", portNum);
+        return;
+    }
+    Lpf2Port* port = attachedPorts[portNum];
+    Lpf2DeviceType deviceType = port->getDeviceType();
+    uint8_t informationType = message[(uint8_t)Lpf2MessageByte::OPERATION];
+
+    std::vector<uint8_t> payload;
+    payload.push_back((uint8_t)portNum);
+    payload.push_back((uint8_t)informationType);
+
+    switch (informationType)
+    {
+    case 0x01:
+        {
+            payload.push_back(port->getCapatibilities());
+            payload.push_back(port->getModeCount());
+            payload.push_back(port->getInputModes() >> 8);
+            payload.push_back(port->getInputModes() & 0xF);
+            payload.push_back(port->getOutputModes() >> 8);
+            payload.push_back(port->getOutputModes() & 0xF);
+        }
+        break;
+    
+    case 0x02:
+        {
+            for (uint8_t i = 0; i < port->getModeComboCount() && i < 16; i++)
+            {
+                payload.push_back(port->getModeCombo(i) >> 8);
+                payload.push_back(port->getModeCombo(i) & 0xF);
+            }
+        }
+        break;
+    
+    default:
+        LPF2_LOG_E("Invalid port information request type: %i", informationType);
+        return;
+    }
+
+    writeValue(Lpf2MessageType::PORT_INFORMATION, payload);
 }
 
 std::vector<uint8_t> Lpf2HubEmulation::packVersion(Lpf2Version version)
@@ -432,6 +465,34 @@ Lpf2Version Lpf2HubEmulation::unPackVersion(std::vector<uint8_t> version)
     v.Minor = version[3] & 0x0F;
     v.Major = (version[3] >> 4) & 0x0F;
     return v;
+}
+
+void Lpf2HubEmulation::checkPort(Lpf2Port *port)
+{
+    Lpf2PortNum portNum = port->portNum;
+    if (connectedDevices[portNum] == port->deviceConnected())
+        return;
+    connectedDevices[portNum] = port->deviceConnected();
+
+    if (connectedDevices[portNum])
+    {
+        LPF2_LOG_I("Device connected to port %d", portNum);
+        std::vector<uint8_t> payload;
+        payload.push_back((uint8_t)portNum);
+        payload.push_back((uint8_t)Lpf2Event::ATTACHED_IO);
+        payload.push_back((uint8_t)port->getDeviceType());
+        payload.push_back(0x00);
+        payload.insert(payload.end(), {0x00, 0x00, 0x00, 0x10, 0x00, 0x00, 0x00, 0x10}); // version numbers
+        writeValue(Lpf2MessageType::HUB_ATTACHED_IO, payload);
+    }
+    else
+    {
+        LPF2_LOG_I("Device disconnected from port %d", portNum);
+        std::vector<uint8_t> payload;
+        payload.push_back((char)portNum);
+        payload.push_back((char)Lpf2Event::DETACHED_IO);
+        writeValue(Lpf2MessageType::HUB_ATTACHED_IO, payload);
+    }
 }
 
 void Lpf2HubEmulation::handleHubPropertyMessage(std::vector<uint8_t> message)
@@ -505,68 +566,20 @@ void Lpf2HubEmulation::reset()
     resetHubAlerts();
 }
 
-void Lpf2HubEmulation::setWritePortCallback(WritePortCallback callback)
+void Lpf2HubEmulation::attachPort(Lpf2PortNum portNum, Lpf2Port *port)
 {
-    writePortCallback = callback;
-}
-
-void Lpf2HubEmulation::attachDevice(byte port, Lpf2DeviceType deviceType)
-{
-    std::vector<uint8_t> payload;
-    payload.push_back((char)port);
-    payload.push_back((char)Lpf2Event::ATTACHED_IO);
-    payload.push_back((char)deviceType);
-    payload.insert(payload.end(), {0x00, 0x00, 0x00, 0x00, 0x10, 0x00, 0x00, 0x00, 0x10}); // version numbers
-    writeValue(Lpf2MessageType::HUB_ATTACHED_IO, payload);
-
-    Device newDevice = {port, (byte)deviceType};
-    connectedDevices[numberOfConnectedDevices] = newDevice;
-    numberOfConnectedDevices++;
-}
-
-void Lpf2HubEmulation::detachDevice(byte port)
-{
-    std::vector<uint8_t> payload;
-    payload.push_back((char)port);
-    payload.push_back((char)Lpf2Event::DETACHED_IO);
-    writeValue(Lpf2MessageType::HUB_ATTACHED_IO, payload);
-
-    LPF2_LOG_D("port: %x", port);
-
-    bool hasReachedRemovedIndex = false;
-    for (int i = 0; i < numberOfConnectedDevices; i++)
+    if (attachedPorts.find(portNum) != attachedPorts.end())
     {
-        if (hasReachedRemovedIndex)
-        {
-            connectedDevices[i - 1] = connectedDevices[i];
-        }
-        if (!hasReachedRemovedIndex && connectedDevices[i].PortNumber == port)
-        {
-            hasReachedRemovedIndex = true;
-        }
+        LPF2_LOG_W("Port %d is already attached, overwriting!", portNum);
     }
-    numberOfConnectedDevices--;
-}
-
-/**
- * @brief Get the device type of a specific connected device on a defined port in the connectedDevices array
- * @param [in] port number
- * @return device type of the connected device
- */
-byte Lpf2HubEmulation::getDeviceTypeForPort(byte portNumber)
-{
-    LPF2_LOG_D("Number of connected devices: %u", numberOfConnectedDevices);
-    for (int idx = 0; idx < numberOfConnectedDevices; idx++)
+    if (!port)
     {
-        LPF2_LOG_V("device %d, port number: %u, device type: %u, callback address: 0x%x", idx, connectedDevices[idx].PortNumber, connectedDevices[idx].DeviceType);
-        if (connectedDevices[idx].PortNumber == portNumber)
-        {
-            LPF2_LOG_D("device on port %u has type %u", portNumber, connectedDevices[idx].DeviceType);
-            return connectedDevices[idx].DeviceType;
-        }
+        LPF2_LOG_E("Cannot attach null port to port %d", portNum);
+        return;
     }
-    LPF2_LOG_W("no device found for port number %u", portNumber);
-    return (byte)Lpf2DeviceType::UNKNOWNDEVICE;
+    connectedDevices[portNum] = false;
+    attachedPorts[portNum] = port;
+    port->portNum = portNum;
 }
 
 void Lpf2HubEmulation::writeValue(Lpf2MessageType messageType, std::vector<uint8_t> payload, bool notify)
@@ -599,6 +612,17 @@ void Lpf2HubEmulation::setHubButton(bool pressed)
     }
     property[0] = uint8_t(pressed ? Lpf2ButtonState::PRESSED : Lpf2ButtonState::RELEASED);
     updateHubProperty(Lpf2HubPropertyReference::BUTTON);
+}
+
+void Lpf2HubEmulation::update()
+{
+    if (!isSubscribed)
+        return;
+    std::for_each(attachedPorts.begin(), attachedPorts.end(),
+                  [this](auto &pair)
+                  {
+                      this->checkPort(pair.second);
+                  });
 }
 
 void Lpf2HubEmulation::setHubRssi(int8_t rssi)
@@ -757,5 +781,3 @@ void Lpf2HubEmulation::start()
     NimBLEDevice::startAdvertising();
     LPF2_LOG_D("Characteristic defined! Now you can connect with your PoweredUp App!");
 }
-
-#endif // ESP32
