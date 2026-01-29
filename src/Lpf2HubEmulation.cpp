@@ -107,7 +107,7 @@ void Lpf2HubEmulation::onMessageReceived(std::vector<uint8_t> message)
         handlePortInformationRequestMessage(message);
         break;
     case Lpf2MessageType::PORT_MODE_INFORMATION_REQUEST:
-        LPF2_LOG_W("PORT_MODE_INFORMATION_REQUEST not implemented yet");
+        handlePortModeInformationRequestMessage(message);
         break;
     case Lpf2MessageType::PORT_INPUT_FORMAT_SETUP_COMBINEDMODE:
         LPF2_LOG_W("PORT_INPUT_FORMAT_SETUP_COMBINEDMODE not implemented yet");
@@ -122,17 +122,6 @@ void Lpf2HubEmulation::onMessageReceived(std::vector<uint8_t> message)
     default:
         goto unimplemented;
     }
-
-    //   // handle port mode information requests and respond dependent on the device type
-    //   if (msgReceived[(byte)Lpf2MessageHeader::MESSAGE_TYPE] == (byte)MessageType::PORT_MODE_INFORMATION_REQUEST)
-    //   {
-    //     byte port = msgReceived[0x03];
-    //     byte deviceType = _lpf2HubEmulation->getDeviceTypeForPort(port);
-    //     byte mode = msgReceived[0x04];
-    //     byte modeInformationType = msgReceived[0x05];
-    //     std::string payload = _lpf2HubEmulation->getPortModeInformationRequestPayload((DeviceType)deviceType, port, mode, modeInformationType);
-    //     _lpf2HubEmulation->writeValue(MessageType::PORT_MODE_INFORMATION, payload);
-    //   }
 
     //   // It's a port out command:
     //   // execute and send feedback to the App
@@ -442,6 +431,99 @@ void Lpf2HubEmulation::handlePortInformationRequestMessage(std::vector<uint8_t> 
     }
 
     writeValue(Lpf2MessageType::PORT_INFORMATION, payload);
+}
+
+void Lpf2HubEmulation::handlePortModeInformationRequestMessage(std::vector<uint8_t> message)
+{
+    Lpf2PortNum portNum = (Lpf2PortNum)message[(uint8_t)Lpf2MessageByte::PORT_ID];
+    if (attachedPorts.find(portNum) == attachedPorts.end())
+    {
+        LPF2_LOG_W("Port information request for unattached port %d", portNum);
+        return;
+    }
+    Lpf2Port* port = attachedPorts[portNum];
+    Lpf2DeviceType deviceType = port->getDeviceType();
+    uint8_t modeNum = message[(uint8_t)Lpf2MessageByte::OPERATION];
+    Lpf2ModeInfoType modeInfoType = (Lpf2ModeInfoType)message[(uint8_t)Lpf2MessageByte::SUB_COMMAND];
+
+    if (modeNum >= port->getModes().size())
+    {
+        LPF2_LOG_E("Invalid mode number requested: %i", modeNum);
+        return;
+    }
+    auto &mode = port->getModes()[modeNum];
+
+    std::vector<uint8_t> payload;
+    payload.push_back((uint8_t)portNum);
+    payload.push_back(modeNum);
+    payload.push_back((uint8_t)modeInfoType);
+
+    switch (modeInfoType)
+    {
+    case Lpf2ModeInfoType::NAME:
+        // Mode name, without null termination
+        payload.insert(payload.end(), mode.name.begin(), mode.name.end());
+        break;
+
+    case Lpf2ModeInfoType::RAW:
+        payload.resize(3 + 8);
+        std::memcpy(&payload[3], &mode.min, 4);
+        std::memcpy(&payload[7], &mode.max, 4);
+        break;
+
+    case Lpf2ModeInfoType::PCT:
+        payload.resize(3 + 8);
+        std::memcpy(&payload[3], &mode.PCTmin, 4);
+        std::memcpy(&payload[7], &mode.PCTmax, 4);
+        break;
+
+    case Lpf2ModeInfoType::SI:
+        payload.resize(3 + 8);
+        std::memcpy(&payload[3], &mode.SImin, 4);
+        std::memcpy(&payload[7], &mode.SImax, 4);
+        break;
+
+    case Lpf2ModeInfoType::SYMBOL:
+        if (mode.unit.length() == 0)
+        {
+            payload.push_back('\0');
+        }
+        else
+        {
+            payload.insert(payload.end(), mode.unit.begin(), mode.unit.end());
+        }
+
+    case Lpf2ModeInfoType::MAPPING:
+        payload.push_back(mode.in.val);
+        payload.push_back(mode.out.val);
+        break;
+
+    case Lpf2ModeInfoType::MOTOR_BIAS:
+        payload.push_back(0);
+        break;
+
+    case Lpf2ModeInfoType::CAPS:
+        payload.push_back(mode.flags.bytes[5]);
+        payload.push_back(mode.flags.bytes[4]);
+        payload.push_back(mode.flags.bytes[3]);
+        payload.push_back(mode.flags.bytes[2]);
+        payload.push_back(mode.flags.bytes[1]);
+        payload.push_back(mode.flags.bytes[0]);
+        break;
+
+    case Lpf2ModeInfoType::VALUE:
+        payload.push_back(mode.data_sets);
+        payload.push_back(mode.format);
+        payload.push_back(mode.figures);
+        payload.push_back(mode.decimals);
+        break;
+
+    default:
+        LPF2_LOG_E("Invalid Port Mode Info requested.");
+        break;
+    }
+
+    writeValue(Lpf2MessageType::PORT_MODE_INFORMATION, payload);
 }
 
 std::vector<uint8_t> Lpf2HubEmulation::packVersion(Lpf2Version version)
