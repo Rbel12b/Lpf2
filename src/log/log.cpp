@@ -1,4 +1,4 @@
-#include "log.h"
+#include "./log.h"
 
 #ifdef LPF2_LOG_IMPL
 

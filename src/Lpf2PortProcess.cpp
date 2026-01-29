@@ -318,19 +318,19 @@ void Lpf2Port::enterUartState()
     m_startRec = m_start;
 }
 
-ModeNum Lpf2Port::getDefaultMode(Lpf2DeviceType id)
+Lpf2ModeNum Lpf2Port::getDefaultMode(Lpf2DeviceType id)
 {
 
     if (deviceIsAbsMotor(id))
     {
-        return ModeNum::MOTOR__CALIB;
+        return Lpf2ModeNum::MOTOR__CALIB;
     }
 
     switch (id)
     {
     case Lpf2DeviceType::COLOR_DISTANCE_SENSOR:
-        return ModeNum::COLOR_DISTANCE_SENSOR__RGB_I;
+        return Lpf2ModeNum::COLOR_DISTANCE_SENSOR__RGB_I;
     default:
-        return ModeNum::_DEFAULT;
+        return Lpf2ModeNum::_DEFAULT;
     }
 }

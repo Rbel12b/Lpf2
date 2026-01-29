@@ -37,7 +37,7 @@ void Lpf2Port::doAnalogID()
         }
         float ch0diff = ch0max - ch0min;
         float ch1diff = ch1max - ch1min;
-        LPF2_LOG_D("Analog ID results: ch0min=%.2f ch0max=%.2f ch0diff=%.2f | ch1min=%.2f ch1max=%.2f ch1diff=%.2f",
+        LPF2_LOG_V("Analog ID results: ch0min=%.2f ch0max=%.2f ch0diff=%.2f | ch1min=%.2f ch1max=%.2f ch1diff=%.2f",
                    ch0min, ch0max, ch0diff,
                    ch1min, ch1max, ch1diff);
 
