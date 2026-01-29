@@ -5,22 +5,8 @@
 #include "../config.h"
 #include "../Lpf2Device.h"
 
-enum class Lpf2ColorIDX
-{
-    BLACK = 0,
-    PINK = 1,
-    PURPLE = 2,
-    BLUE = 3,
-    LIGHTBLUE = 4,
-    CYAN = 5,
-    GREEN = 6,
-    YELLOW = 7,
-    ORANGE = 8,
-    RED = 9,
-    WHITE = 10,
-    NUM_COLORS,
-    NONE = 255
-};
+using Lpf2ColorIDX = Lpf2Color;
+
 
 class TechnicColorSensorControl
 {
@@ -53,10 +39,14 @@ public:
 
     Lpf2ColorIDX getColorIdx() override;
 
-    bool hasCapability(CapabilityId id) const override;
-    void *getCapability(CapabilityId id) override;
+    bool hasCapability(Lpf2DeviceCapabilityId id) const override;
+    void *getCapability(Lpf2DeviceCapabilityId id) override;
 
-    const static CapabilityId CAP;
+
+    inline static const Lpf2DeviceCapabilityId CAP =
+        Lpf2CapabilityRegistry::registerCapability("technic_color_sensor");
+
+    static void registerFactory(Lpf2DeviceRegistry& reg);
 };
 
 class TechnicColorSensorFactory : public Lpf2DeviceFactory

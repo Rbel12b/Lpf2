@@ -7,7 +7,7 @@
 #include <map>
 #include <string>
 
-using CapabilityId = uint16_t;
+using Lpf2DeviceCapabilityId = uint32_t;
 
 class Lpf2Device
 {
@@ -19,10 +19,10 @@ public:
     virtual void poll() = 0;
     virtual const char *name() const = 0;
 
-    virtual bool hasCapability(CapabilityId id) const = 0;
-    virtual void *getCapability(CapabilityId id) = 0;
+    virtual bool hasCapability(Lpf2DeviceCapabilityId id) const = 0;
+    virtual void *getCapability(Lpf2DeviceCapabilityId id) = 0;
 
-    const static CapabilityId CAP;
+    const static Lpf2DeviceCapabilityId CAP;
 
 protected:
     Lpf2Port &port_;
@@ -50,6 +50,8 @@ public:
         static Lpf2DeviceRegistry inst;
         return inst;
     }
+
+    static void registerDefaultFactories();
 
     void registerFactory(const Lpf2DeviceFactory *factory)
     {
@@ -79,42 +81,18 @@ private:
     size_t count_ = 0;
 };
 
-class CapabilityRegistry
+class Lpf2CapabilityRegistry
 {
 public:
-    static CapabilityRegistry &instance()
+    static constexpr uint32_t fnv1a(const char *s, uint32_t h = 2166136261u)
     {
-        static CapabilityRegistry inst;
-        return inst;
+        return *s ? fnv1a(s + 1, (h ^ uint32_t(*s)) * 16777619u) : h;
     }
 
-    CapabilityId registerCapability(const char *name)
+    static constexpr Lpf2DeviceCapabilityId registerCapability(const char *const name)
     {
-        if (name == nullptr)
-        {
-            return 0;
-        }
-        auto it = std::find_if(names_.begin(), names_.end(),
-                               [name](const auto &pair)
-                               { return std::string(pair.second) == name; });
-        if (it != names_.end())
-        {
-            return it->first;
-        }
-        CapabilityId id = nextId_++;
-        names_[id] = name;
-        return id;
+        return fnv1a(name);
     }
-
-    const char *name(CapabilityId id) const
-    {
-        auto it = names_.find(id);
-        return it != names_.end() ? it->second : "unknown";
-    }
-
-private:
-    CapabilityId nextId_ = 1;
-    std::map<CapabilityId, const char *> names_;
 };
 
 #endif

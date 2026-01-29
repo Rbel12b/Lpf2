@@ -42,12 +42,16 @@ public:
     void setLight(uint8_t l1, uint8_t l2, uint8_t l3, uint8_t l4);
     float getDistance();
 
-    const static int LIGHT_MODE;
+    inline static const int LIGHT_MODE = 5;
 
-    bool hasCapability(CapabilityId id) const override;
-    void *getCapability(CapabilityId id) override;
+    bool hasCapability(Lpf2DeviceCapabilityId id) const override;
+    void *getCapability(Lpf2DeviceCapabilityId id) override;
 
-    const static CapabilityId CAP;
+
+    inline static const Lpf2DeviceCapabilityId CAP =
+        Lpf2CapabilityRegistry::registerCapability("technic_distance_sensor");
+
+    static void registerFactory(Lpf2DeviceRegistry& reg);
 };
 
 class TechnicDistanceSensorFactory : public Lpf2DeviceFactory

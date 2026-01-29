@@ -1,17 +1,13 @@
 #include "ColorSensor.h"
 
-const CapabilityId TechnicColorSensor::CAP =
-    CapabilityRegistry::instance().registerCapability("technic_color_sensor");
-
 namespace
 {
     TechnicColorSensorFactory factory;
+}
 
-    const bool registered = []
-    {
-        Lpf2DeviceRegistry::instance().registerFactory(&factory);
-        return true;
-    }();
+void TechnicColorSensor::registerFactory(Lpf2DeviceRegistry& reg)
+{
+    reg.registerFactory(&factory);
 }
 
 Lpf2ColorIDX TechnicColorSensor::getColorIdx()
@@ -19,12 +15,12 @@ Lpf2ColorIDX TechnicColorSensor::getColorIdx()
     return Lpf2ColorIDX((int)port_.getValue(0, 0));
 }
 
-bool TechnicColorSensor::hasCapability(CapabilityId id) const
+bool TechnicColorSensor::hasCapability(Lpf2DeviceCapabilityId id) const
 {
     return id == CAP;
 }
 
-void *TechnicColorSensor::getCapability(CapabilityId id)
+void *TechnicColorSensor::getCapability(Lpf2DeviceCapabilityId id)
 {
     if (id == CAP)
         return static_cast<TechnicColorSensorControl *>(this);
