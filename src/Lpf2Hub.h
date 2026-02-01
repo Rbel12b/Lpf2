@@ -14,9 +14,13 @@
 #include "NimBLEDevice.h"
 #include "Lpf2Const.h"
 #include "Util/RateLimiter.h"
+#include "Lpf2Remote/Lpf2PortRemote.h"
+#include "unordered_map"
 
 class Lpf2Hub
 {
+    std::unordered_map<Lpf2PortNum, Lpf2PortRemote*> remotePorts;
+    std::unordered_map<Lpf2PortNum, Lpf2DeviceType> attachedPorts; // Ports with attached devices
 
     std::vector<uint8_t> hubProperty[(unsigned int)Lpf2HubPropertyType::END];
     void updateHubProperty(Lpf2HubPropertyType propId, std::vector<uint8_t> data, bool sendUpdate);
@@ -28,6 +32,8 @@ class Lpf2Hub
 
     void handleHubPropertyMessage(const std::vector<uint8_t> &message);
     void handleGenericErrorMessage(const std::vector<uint8_t> &message);
+    void handleAttachedIOMessage(const std::vector<uint8_t> &message);
+    void handlePortInfoMessage(const std::vector<uint8_t> &message);
 
     void requestInfos();
 
@@ -38,9 +44,11 @@ class Lpf2Hub
 
     void pending(Lpf2MessageType msgType);
 
+    Lpf2PortRemote *_getPort(Lpf2PortNum portNum);
+
 public:
-    // constructor
     Lpf2Hub();
+    ~Lpf2Hub();
 
     // initializer methods
     void init();
