@@ -52,6 +52,8 @@ public:
 
     virtual bool deviceConnected() = 0;
 
+    std::string getInfoStr();
+
     std::vector<Lpf2Mode> modeData;
 
     Lpf2PortNum portNum; // just a reference for some external code. (e.g. you can set it and use it, but only if Lpf2HubEmulation does not use it!!!)
