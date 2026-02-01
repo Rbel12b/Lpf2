@@ -1,153 +1,119 @@
 /*
  * Lpf2Hub.h - Arduino base class for controlling Powered UP and Boost controllers
- * 
+ *
  * (c) Copyright 2020 - Cornelius Munz
  * Released under MIT License
- * 
-*/
+ *
+ */
 
-#if defined(ESP32)
+#ifndef _LPF2_HUB_H_
+#define _LPF2_HUB_H_
 
-#ifndef Lpf2Hub_h
-#define Lpf2Hub_h
-
+#include "config.h"
 #include "Arduino.h"
 #include "NimBLEDevice.h"
 #include "Lpf2Const.h"
-
-using namespace std::placeholders;
-
-typedef void (*HubPropertyChangeCallback)(void *hub, Lpf2HubPropertyReference hubProperty, uint8_t *pData);
-typedef void (*PortValueChangeCallback)(void *hub, byte portNumber, Lpf2DeviceType deviceType, uint8_t *pData);
-
-struct Device
-{
-  byte PortNumber;
-  byte DeviceType;
-  PortValueChangeCallback Callback;
-};
+#include "Util/RateLimiter.h"
 
 class Lpf2Hub
 {
 
+    std::vector<uint8_t> hubProperty[(unsigned int)Lpf2HubPropertyType::END];
+    void updateHubProperty(Lpf2HubPropertyType propId, std::vector<uint8_t> data, bool sendUpdate);
+    void sendHubPropertyUpdate(Lpf2HubPropertyType propId);
+    void enableHubProperty(Lpf2HubPropertyType propId);
+    void disableHubProperty(Lpf2HubPropertyType propId);
+    void resetHubProperty(Lpf2HubPropertyType propId);
+    void requestHubPropertyUpdate(Lpf2HubPropertyType propId);
+    void handleHubPropertyMessage(std::vector<uint8_t> message);
+
+    void requestInfos();
+
 public:
-  // constructor
-  Lpf2Hub();
+    // constructor
+    Lpf2Hub();
 
-  // initializer methods
-  void init();
-  void init(uint32_t scanDuration);
-  void init(std::string deviceAddress);
-  void init(std::string deviceAddress, uint32_t scanDuration);
+    // initializer methods
+    void init();
+    void init(uint32_t scanDuration);
+    void init(std::string deviceAddress);
+    void init(std::string deviceAddress, uint32_t scanDuration);
 
-  // hub related methods
-  bool connectHub();
-  bool isConnected();
-  bool isConnecting();
-  bool isScanning();
-  NimBLEAddress getHubAddress();
-  Lpf2HubType getHubType();
-  std::string getHubName();
-  void setHubName(char name[]);
-  void shutDownHub();
-  void activateHubPropertyUpdate(Lpf2HubPropertyReference hubProperty, HubPropertyChangeCallback hubPropertyChangeCallback = nullptr);
-  void deactivateHubPropertyUpdate(Lpf2HubPropertyReference hubProperty);
-  void requestHubPropertyUpdate(Lpf2HubPropertyReference hubProperty, HubPropertyChangeCallback hubPropertyChangeCallback = nullptr);
+    void update();
 
-  // port and device related methods
-  int getDeviceIndexForPortNumber(byte portNumber);
-  byte getDeviceTypeForPortNumber(byte portNumber);
-  byte getPortForDeviceType(byte deviceType);
-  byte getModeForDeviceType(byte deviceType);
-  void registerPortDevice(byte portNumber, byte deviceType);
-  void deregisterPortDevice(byte portNumber);
-  void activatePortDevice(byte portNumber, byte deviceType, PortValueChangeCallback portValueChangeCallback = nullptr);
-  void activatePortDevice(byte portNumber, PortValueChangeCallback portValueChangeCallback = nullptr);
-  void deactivatePortDevice(byte portNumber, byte deviceType);
-  void deactivatePortDevice(byte portNumber);
-  std::vector<Device> getConnectedDevices();
+    // hub related methods
+    bool connectHub();
+    bool isConnected();
+    bool isConnecting();
+    bool isScanning();
+    NimBLEAddress getHubAddress();
+    Lpf2HubType getHubType();
+    void setHubName(std::string name);
+    void shutDownHub();
 
-  // write (set) operations on port devices
-  void WriteValue(byte command[], int size);
+    /**
+     * @brief returns true if all infomation requests were sent, and answered (or timed out).
+     */
+    bool infoReady();
 
-  void setLedColor(Lpf2Color color);
-  void setLedRGBColor(char red, char green, char blue);
-  void setLedHSVColor(int hue, double saturation, double value);
+    /**
+     * @brief Internal, do not use!
+     */
+    void setHubNameProp(std::string name);
+    /**
+     * @brief returns all available information sent by the hub (Hub properties, port modes ...)
+     */
+    std::string getAllInfoStr();
+    std::string getHubPropStr(Lpf2HubPropertyType propId);
 
-  void stopBasicMotor(byte port);
-  void setBasicMotorSpeed(byte port, int speed);
+    /* HUB props*/
 
-  void setAccelerationProfile(byte port, int16_t time);
-  void setDecelerationProfile(byte port, int16_t time);
-  void stopTachoMotor(byte port);
-  void setTachoMotorSpeed(byte port, int speed, byte maxPower = 100, Lpf2BrakingStyle brakingStyle = Lpf2BrakingStyle::BRAKE);
-  void setTachoMotorSpeedForTime(byte port, int speed, int16_t time, byte maxPower = 100, Lpf2BrakingStyle brakingStyle = Lpf2BrakingStyle::BRAKE);
-  void setTachoMotorSpeedForDegrees(byte port, int speed, int32_t degrees, byte maxPower = 100, Lpf2BrakingStyle brakingStyle = Lpf2BrakingStyle::BRAKE);
-  void setTachoMotorSpeedsForDegrees(int speedLeft, int speedRight, int32_t degrees, byte maxPower = 100, Lpf2BrakingStyle brakingStyle = Lpf2BrakingStyle::BRAKE);
+    std::string getHubName();
+    Lpf2BatteryType getBatteryType();
 
-  void setAbsoluteMotorPosition(byte port, int speed, int32_t position, byte maxPower = 100, Lpf2BrakingStyle brakingStyle = Lpf2BrakingStyle::BRAKE);
-  void setAbsoluteMotorEncoderPosition(byte port, int32_t position);
+    // write (set) operations on port devices
+    void writeValue(Lpf2MessageType type, const std::vector<uint8_t> &data);
 
-  void playSound(byte sound);
-  void playTone(byte number);
-  void setMarioVolume(byte volume);
+    // BLE specific stuff
+    void notifyCallback(NimBLERemoteCharacteristic *pBLERemoteCharacteristic, uint8_t *pData, size_t length, bool isNotify);
+    enum class RequestState
+    {
+        HUB_PROP,
+        PORT_INFO,
+        PORT_MODE
+    };
 
-  // parse methods to read in the message content of the charachteristic value
-  void parseDeviceInfo(uint8_t *pData);
-  void parsePortMessage(uint8_t *pData);
-  void parseSensorMessage(uint8_t *pData);
-  double parseVoltageSensor(uint8_t *pData);
-  double parseCurrentSensor(uint8_t *pData);
-  double parseDistance(uint8_t *data);
-  int parseColor(uint8_t *data);
-  int parseReflectivity(uint8_t *pData);
-  int parseTachoMotor(uint8_t *data);
-  int parseSpeedometer(uint8_t *pData);
-  int parseBoostTiltSensorX(uint8_t *data);
-  int parseBoostTiltSensorY(uint8_t *data);
-  int parseControlPlusHubTiltSensorX(uint8_t *pData);
-  int parseControlPlusHubTiltSensorY(uint8_t *pData);
-  int parseControlPlusHubTiltSensorZ(uint8_t *pData);
-  Lpf2MarioPant parseMarioPant(uint8_t *pData);
-  Lpf2MarioGesture parseMarioGesture(uint8_t *pData);
-  Lpf2MarioBarcode parseMarioBarcode(uint8_t *pData);
-  Lpf2MarioColor parseMarioColor(uint8_t *pData);
-  Lpf2ButtonState parseRemoteButton(uint8_t *pData);
-  void parsePortAction(uint8_t *pData);
-  uint8_t parseSystemTypeId(uint8_t *pData);
-  byte parseBatteryType(uint8_t *pData);
-  uint8_t parseBatteryLevel(uint8_t *pData);
-  int parseRssi(uint8_t *pData);
-  Lpf2Version parseVersion(uint8_t *pData);
-  Lpf2ButtonState parseHubButton(uint8_t *pData);
-  std::string parseHubAdvertisingName(uint8_t *pData);
-
-  // BLE specific stuff
-  void notifyCallback(NimBLERemoteCharacteristic *pBLERemoteCharacteristic, uint8_t *pData, size_t length, bool isNotify);
-  BLEUUID _bleUuid;
-  BLEUUID _charachteristicUuid;
-  BLEAddress *_pServerAddress;
-  BLEAddress *_requestedDeviceAddress = nullptr;
-  BLERemoteCharacteristic *_pRemoteCharacteristic;
-  BLEScan *pBLEScan;
-  Lpf2HubType _hubType;
-  std::string _hubName;
-  boolean _isConnecting;
-  boolean _isConnected;
+    BLEUUID _bleUuid;
+    BLEUUID _charachteristicUuid;
+    BLEAddress *_pServerAddress;
+    BLEAddress *_requestedDeviceAddress = nullptr;
+    BLERemoteCharacteristic *_pRemoteCharacteristic;
+    BLEScan *pBLEScan;
+    Lpf2HubType _hubType;
+    bool _isConnecting = false;
+    bool _isConnected = false;
 
 private:
-  // Notification callbacks
-  HubPropertyChangeCallback _hubPropertyChangeCallback = nullptr;
-  NimBLEScanCallbacks *_advertiseDeviceCallback = nullptr;
+    struct
+    {
+        union
+        {
+            Lpf2HubPropertyType propId;
+            Lpf2PortNum portNum;
+        };
+        uint8_t mode;
+        RequestState state;
+        bool finishedRequests = false;
+    } m_dataRequestState;
 
-  // List of connected devices
-  Device connectedDevices[13];
-  int numberOfConnectedDevices = 0;
+    RateLimiter m_rateLimiter;
 
-  //BLE settings
-  uint32_t _scanDuration = 10;
+
+    // Notification callback
+    NimBLEScanCallbacks *_advertiseDeviceCallback = nullptr;
+
+    // BLE settings
+    uint32_t _scanDuration = 10;
 };
 
 #endif // Lpf2Hub_h
-
-#endif // ESP32
