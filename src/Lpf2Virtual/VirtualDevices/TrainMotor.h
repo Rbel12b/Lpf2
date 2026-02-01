@@ -22,9 +22,9 @@ private:
         {
             {
                 "LPF2-TRAIN",
-                -100.0f, 100.0f,    // RAW -100–100
-                -100.0f, 100.0f,    // PCT -100–100
-                -100.0f, 100.0f,    // SI  -100–100
+                -100.0f, 100.0f,    // RAW -100 – 100
+                -100.0f, 100.0f,    // PCT -100 – 100
+                100.0f, 1023.0f,    // SI   100 – 1023
                 "\0",               // unit
                 0x00, 0x18,         // input mapping, output mapping
                 1, DATA8, 4, 0,     // datasets, format, figures, decimals

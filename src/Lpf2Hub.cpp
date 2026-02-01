@@ -532,8 +532,8 @@ void Lpf2Hub::handlePortModeInfoMessage(const std::vector<uint8_t> &message)
         {
             break;
         }
-        mode.out.val = message[6];
-        mode.in.val = message[7];
+        mode.in.val = message[6];
+        mode.out.val = message[7];
         break;
     }
     case Lpf2ModeInfoType::MOTOR_BIAS:
@@ -597,7 +597,8 @@ void Lpf2Hub::requestInfos()
         else
         {
             requestHubPropertyUpdate(m_dataRequestState.propId);
-            // enableHubProperty(m_dataRequestState.propId);
+            if (m_dataRequestState.propId != Lpf2HubPropertyType::RSSI)
+                enableHubProperty(m_dataRequestState.propId);
             LPF2_LOG_D("Requested prop update: %i", (uint8_t)m_dataRequestState.propId);
             m_dataRequestState.propId = Lpf2HubPropertyType((uint8_t)m_dataRequestState.propId + 1);
         }
