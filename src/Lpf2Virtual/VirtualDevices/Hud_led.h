@@ -34,9 +34,9 @@ private:
             },
             {
                 "RGB O",
-                -100.0f, 100.0f,// raw -100–100
-                -100.0f, 100.0f,// PCT -100–100
-                -100.0f, 100.0f,// SI -100–100
+                0.0f, 255.0f,// raw -100–100
+                0.0f, 100.0f,// PCT -100–100
+                255.0f, 100.0f,// SI -100–100
                 "\0",           // unit
                 0x00, 0x18,     // input mapping, output mapping
                 1, DATA8, 4, 0, // datasets, format, figures, decimals
