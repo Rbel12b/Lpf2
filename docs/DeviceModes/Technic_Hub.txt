@@ -9,7 +9,7 @@ Secondary MAC: 0x90:0x84:0x2b:0x9d:0xf3:0x51
 HW network id: 0x00
 System type ID: 0x80
 HW network family: 0x00
-RSSI: 0x63
+RSSI: 0x64
 Battery type: Normal
 Battery voltage: 100
 Button state: Released
@@ -17,7 +17,7 @@ Devices:
 Device: 0x36
 InModes: 0x0001
 OutModes: 0x0000
-Caps: 0x34
+Caps: 0xE4
 Combos:
         0x0000  0x0000  0x0000  0x0000  0x0000  0x0000  0x0000  0x0000
 Mode 0:
@@ -33,15 +33,15 @@ Mode 0:
         format: 0x00
         Figures: 1
         Decimals: 0
-        in: 0x00 (null: 0, mapping 2.0: 0, m_abs: 0, m_rel: 0, m_dis: 0)
-        out: 0x44 (null: 0, mapping 2.0: 1, m_abs: 0, m_rel: 0, m_dis: 1)
+        in: 0x44 (null: 0, mapping 2.0: 1, m_abs: 0, m_rel: 0, m_dis: 1)
+        out: 0x00 (null: 0, mapping 2.0: 0, m_abs: 0, m_rel: 0, m_dis: 0)
         Flags: 0x000000000000 (speed: 0, apos: 0, power: 0, motor: 0, pin1: 0, pin2: 0, calib: 0, power12: 0)
         Raw:
 
 Device: 0x3B
 InModes: 0x0003
 OutModes: 0x0004
-Caps: 0x78
+Caps: 0xA0
 Combos:
         0x0000  0x0000  0x0000  0x0000  0x0000  0x0000  0x0000  0x0000
 Mode 0:
@@ -57,8 +57,8 @@ Mode 0:
         format: 0x01
         Figures: 3
         Decimals: 0
-        in: 0x00 (null: 0, mapping 2.0: 0, m_abs: 0, m_rel: 0, m_dis: 0)
-        out: 0x50 (null: 0, mapping 2.0: 1, m_abs: 1, m_rel: 0, m_dis: 0)
+        in: 0x50 (null: 0, mapping 2.0: 1, m_abs: 1, m_rel: 0, m_dis: 0)
+        out: 0x00 (null: 0, mapping 2.0: 0, m_abs: 0, m_rel: 0, m_dis: 0)
         Flags: 0x000000000000 (speed: 0, apos: 0, power: 0, motor: 0, pin1: 0, pin2: 0, calib: 0, power12: 0)
         Raw:
 Mode 1:
@@ -74,8 +74,8 @@ Mode 1:
         format: 0x02
         Figures: 3
         Decimals: 0
-        in: 0x00 (null: 0, mapping 2.0: 0, m_abs: 0, m_rel: 0, m_dis: 0)
-        out: 0x08 (null: 0, mapping 2.0: 0, m_abs: 0, m_rel: 1, m_dis: 0)
+        in: 0x08 (null: 0, mapping 2.0: 0, m_abs: 0, m_rel: 1, m_dis: 0)
+        out: 0x00 (null: 0, mapping 2.0: 0, m_abs: 0, m_rel: 0, m_dis: 0)
         Flags: 0x000000000000 (speed: 0, apos: 0, power: 0, motor: 0, pin1: 0, pin2: 0, calib: 0, power12: 0)
         Raw:
 Mode 2:
@@ -91,15 +91,15 @@ Mode 2:
         format: 0x00
         Figures: 3
         Decimals: 0
-        in: 0x10 (null: 0, mapping 2.0: 0, m_abs: 1, m_rel: 0, m_dis: 0)
-        out: 0x00 (null: 0, mapping 2.0: 0, m_abs: 0, m_rel: 0, m_dis: 0)
+        in: 0x00 (null: 0, mapping 2.0: 0, m_abs: 0, m_rel: 0, m_dis: 0)
+        out: 0x10 (null: 0, mapping 2.0: 0, m_abs: 1, m_rel: 0, m_dis: 0)
         Flags: 0x000000000000 (speed: 0, apos: 0, power: 0, motor: 0, pin1: 0, pin2: 0, calib: 0, power12: 0)
         Raw:
 
 Device: 0x3A
 InModes: 0x0001
 OutModes: 0x0000
-Caps: 0x78
+Caps: 0x0C
 Combos:
         0x0000  0x0000  0x0000  0x0000  0x0000  0x0000  0x0000  0x0000
 Mode 0:
@@ -115,186 +115,15 @@ Mode 0:
         format: 0x01
         Figures: 3
         Decimals: 0
-        in: 0x00 (null: 0, mapping 2.0: 0, m_abs: 0, m_rel: 0, m_dis: 0)
-        out: 0x50 (null: 0, mapping 2.0: 1, m_abs: 1, m_rel: 0, m_dis: 0)
-        Flags: 0x000000000000 (speed: 0, apos: 0, power: 0, motor: 0, pin1: 0, pin2: 0, calib: 0, power12: 0)
-        Raw:
-
-Device: 0x15
-InModes: 0x0003
-OutModes: 0x0000
-Caps: 0x0C
-Combos:
-        0x0000  0x0000  0x0000  0x0000  0x0000  0x0000  0x0000  0x0000
-Mode 0:
-        name: CUR L
-        unit: mA
-        min: 0.000000
-        max: 4095.000000
-        PCT min: 0.000000
-        PCT max: 100.000000
-        SI min: 4175.000000
-        SI max: 1023.000000
-        Data sets: 1
-        format: 0x01
-        Figures: 4
-        Decimals: 0
-        in: 0x00 (null: 0, mapping 2.0: 0, m_abs: 0, m_rel: 0, m_dis: 0)
-        out: 0x10 (null: 0, mapping 2.0: 0, m_abs: 1, m_rel: 0, m_dis: 0)
-        Flags: 0x000000000000 (speed: 0, apos: 0, power: 0, motor: 0, pin1: 0, pin2: 0, calib: 0, power12: 0)
-        Raw:
-Mode 1:
-        name: 
-        unit: mA
-        min: 0.000000
-        max: 4095.000000
-        PCT min: 0.000000
-        PCT max: 100.000000
-        SI min: 4175.000000
-        SI max: 1023.000000
-        Data sets: 1
-        format: 0x01
-        Figures: 4
-        Decimals: 0
-        in: 0x00 (null: 0, mapping 2.0: 0, m_abs: 0, m_rel: 0, m_dis: 0)
-        out: 0x10 (null: 0, mapping 2.0: 0, m_abs: 1, m_rel: 0, m_dis: 0)
-        Flags: 0x000000000000 (speed: 0, apos: 0, power: 0, motor: 0, pin1: 0, pin2: 0, calib: 0, power12: 0)
-        Raw:
-
-Device: 0x17
-InModes: 0x0000
-OutModes: 0x0003
-Caps: 0x78
-Combos:
-        0x0000  0x0000  0x0000  0x0000  0x0000  0x0000  0x0000  0x0000
-Mode 0:
-        name: COL O
-        unit: 
-        min: 0.000000
-        max: 10.000000
-        PCT min: 0.000000
-        PCT max: 100.000000
-        SI min: 10.000000
-        SI max: 1023.000000
-        Data sets: 1
-        format: 0x00
-        Figures: 1
-        Decimals: 0
-        in: 0x44 (null: 0, mapping 2.0: 1, m_abs: 0, m_rel: 0, m_dis: 1)
+        in: 0x50 (null: 0, mapping 2.0: 1, m_abs: 1, m_rel: 0, m_dis: 0)
         out: 0x00 (null: 0, mapping 2.0: 0, m_abs: 0, m_rel: 0, m_dis: 0)
-        Flags: 0x000000000000 (speed: 0, apos: 0, power: 0, motor: 0, pin1: 0, pin2: 0, calib: 0, power12: 0)
-        Raw:
-Mode 1:
-        name: 
-        unit: 
-        min: 0.000000
-        max: 255.000000
-        PCT min: 0.000000
-        PCT max: 100.000000
-        SI min: 255.000000
-        SI max: 1023.000000
-        Data sets: 3
-        format: 0x00
-        Figures: 3
-        Decimals: 0
-        in: 0x10 (null: 0, mapping 2.0: 0, m_abs: 1, m_rel: 0, m_dis: 0)
-        out: 0x00 (null: 0, mapping 2.0: 0, m_abs: 0, m_rel: 0, m_dis: 0)
-        Flags: 0x000000000000 (speed: 0, apos: 0, power: 0, motor: 0, pin1: 0, pin2: 0, calib: 0, power12: 0)
-        Raw:
-
-Device: 0x14
-InModes: 0x0003
-OutModes: 0x0000
-Caps: 0x34
-Combos:
-        0x0000  0x0000  0x0000  0x0000  0x0000  0x0000  0x0000  0x0000
-Mode 0:
-        name: VLT L
-        unit: mV
-        min: 0.000000
-        max: 4095.000000
-        PCT min: 0.000000
-        PCT max: 100.000000
-        SI min: 9615.000000
-        SI max: 1023.000000
-        Data sets: 1
-        format: 0x01
-        Figures: 4
-        Decimals: 0
-        in: 0x00 (null: 0, mapping 2.0: 0, m_abs: 0, m_rel: 0, m_dis: 0)
-        out: 0x10 (null: 0, mapping 2.0: 0, m_abs: 1, m_rel: 0, m_dis: 0)
-        Flags: 0x000000000000 (speed: 0, apos: 0, power: 0, motor: 0, pin1: 0, pin2: 0, calib: 0, power12: 0)
-        Raw:
-Mode 1:
-        name: 
-        unit: mV
-        min: 0.000000
-        max: 4095.000000
-        PCT min: 0.000000
-        PCT max: 100.000000
-        SI min: 9615.000000
-        SI max: 1023.000000
-        Data sets: 1
-        format: 0x01
-        Figures: 4
-        Decimals: 0
-        in: 0x00 (null: 0, mapping 2.0: 0, m_abs: 0, m_rel: 0, m_dis: 0)
-        out: 0x10 (null: 0, mapping 2.0: 0, m_abs: 1, m_rel: 0, m_dis: 0)
-        Flags: 0x000000000000 (speed: 0, apos: 0, power: 0, motor: 0, pin1: 0, pin2: 0, calib: 0, power12: 0)
-        Raw:
-
-Device: 0x3C
-InModes: 0x0001
-OutModes: 0x0000
-Caps: 0x78
-Combos:
-        0x0000  0x0000  0x0000  0x0000  0x0000  0x0000  0x0000  0x0000
-Mode 0:
-        name: TEMP
-        unit: DEG
-        min: -900.000000
-        max: 900.000000
-        PCT min: -100.000000
-        PCT max: 100.000000
-        SI min: 90.000000
-        SI max: 1023.000000
-        Data sets: 1
-        format: 0x01
-        Figures: 5
-        Decimals: 1
-        in: 0x00 (null: 0, mapping 2.0: 0, m_abs: 0, m_rel: 0, m_dis: 0)
-        out: 0x50 (null: 0, mapping 2.0: 1, m_abs: 1, m_rel: 0, m_dis: 0)
-        Flags: 0x000000000000 (speed: 0, apos: 0, power: 0, motor: 0, pin1: 0, pin2: 0, calib: 0, power12: 0)
-        Raw:
-
-Device: 0x3C
-InModes: 0x0001
-OutModes: 0x0000
-Caps: 0x78
-Combos:
-        0x0000  0x0000  0x0000  0x0000  0x0000  0x0000  0x0000  0x0000
-Mode 0:
-        name: TEMP
-        unit: DEG
-        min: -900.000000
-        max: 900.000000
-        PCT min: -100.000000
-        PCT max: 100.000000
-        SI min: 90.000000
-        SI max: 1023.000000
-        Data sets: 1
-        format: 0x01
-        Figures: 5
-        Decimals: 1
-        in: 0x00 (null: 0, mapping 2.0: 0, m_abs: 0, m_rel: 0, m_dis: 0)
-        out: 0x50 (null: 0, mapping 2.0: 1, m_abs: 1, m_rel: 0, m_dis: 0)
         Flags: 0x000000000000 (speed: 0, apos: 0, power: 0, motor: 0, pin1: 0, pin2: 0, calib: 0, power12: 0)
         Raw:
 
 Device: 0x39
 InModes: 0x0003
 OutModes: 0x0000
-Caps: 0x01
+Caps: 0x0C
 Combos:
         0x0000  0x0000  0x0000  0x0000  0x0000  0x0000  0x0000  0x0000
 Mode 0:
@@ -310,8 +139,8 @@ Mode 0:
         format: 0x01
         Figures: 3
         Decimals: 0
-        in: 0x00 (null: 0, mapping 2.0: 0, m_abs: 0, m_rel: 0, m_dis: 0)
-        out: 0x50 (null: 0, mapping 2.0: 1, m_abs: 1, m_rel: 0, m_dis: 0)
+        in: 0x50 (null: 0, mapping 2.0: 1, m_abs: 1, m_rel: 0, m_dis: 0)
+        out: 0x00 (null: 0, mapping 2.0: 0, m_abs: 0, m_rel: 0, m_dis: 0)
         Flags: 0x000000000000 (speed: 0, apos: 0, power: 0, motor: 0, pin1: 0, pin2: 0, calib: 0, power12: 0)
         Raw:
 Mode 1:
@@ -327,7 +156,202 @@ Mode 1:
         format: 0x00
         Figures: 0
         Decimals: 0
+        in: 0x50 (null: 0, mapping 2.0: 1, m_abs: 1, m_rel: 0, m_dis: 0)
+        out: 0x00 (null: 0, mapping 2.0: 0, m_abs: 0, m_rel: 0, m_dis: 0)
+        Flags: 0x000000000000 (speed: 0, apos: 0, power: 0, motor: 0, pin1: 0, pin2: 0, calib: 0, power12: 0)
+        Raw:
+
+Device: 0x17
+InModes: 0x0000
+OutModes: 0x0003
+Caps: 0x0C
+Combos:
+        0x0000  0x0000  0x0000  0x0000  0x0000  0x0000  0x0000  0x0000
+Mode 0:
+        name: COL O
+        unit: 
+        min: 0.000000
+        max: 10.000000
+        PCT min: 0.000000
+        PCT max: 100.000000
+        SI min: 10.000000
+        SI max: 1023.000000
+        Data sets: 1
+        format: 0x00
+        Figures: 1
+        Decimals: 0
         in: 0x00 (null: 0, mapping 2.0: 0, m_abs: 0, m_rel: 0, m_dis: 0)
-        out: 0x50 (null: 0, mapping 2.0: 1, m_abs: 1, m_rel: 0, m_dis: 0)
+        out: 0x44 (null: 0, mapping 2.0: 1, m_abs: 0, m_rel: 0, m_dis: 1)
+        Flags: 0x000000000000 (speed: 0, apos: 0, power: 0, motor: 0, pin1: 0, pin2: 0, calib: 0, power12: 0)
+        Raw:
+Mode 1:
+        name: 
+        unit: 
+        min: 0.000000
+        max: 255.000000
+        PCT min: 0.000000
+        PCT max: 100.000000
+        SI min: 255.000000
+        SI max: 1023.000000
+        Data sets: 3
+        format: 0x00
+        Figures: 3
+        Decimals: 0
+        in: 0x00 (null: 0, mapping 2.0: 0, m_abs: 0, m_rel: 0, m_dis: 0)
+        out: 0x10 (null: 0, mapping 2.0: 0, m_abs: 1, m_rel: 0, m_dis: 0)
+        Flags: 0x000000000000 (speed: 0, apos: 0, power: 0, motor: 0, pin1: 0, pin2: 0, calib: 0, power12: 0)
+        Raw:
+
+Device: 0x02
+InModes: 0x0000
+OutModes: 0x0001
+Caps: 0x00
+Combos:
+        0x0000  0x0000  0x0000  0x0000  0x0000  0x0000  0x0000  0x0000
+Mode 0:
+        name: LPF2-TRAIN
+        unit: 
+        min: -100.000000
+        max: 100.000000
+        PCT min: -100.000000
+        PCT max: 100.000000
+        SI min: 100.000000
+        SI max: 1023.000000
+        Data sets: 1
+        format: 0x00
+        Figures: 4
+        Decimals: 0
+        in: 0x00 (null: 0, mapping 2.0: 0, m_abs: 0, m_rel: 0, m_dis: 0)
+        out: 0x18 (null: 0, mapping 2.0: 0, m_abs: 1, m_rel: 1, m_dis: 0)
+        Flags: 0x000000000000 (speed: 0, apos: 0, power: 0, motor: 0, pin1: 0, pin2: 0, calib: 0, power12: 0)
+        Raw:
+
+Device: 0x15
+InModes: 0x0003
+OutModes: 0x0000
+Caps: 0x78
+Combos:
+        0x0000  0x0000  0x0000  0x0000  0x0000  0x0000  0x0000  0x0000
+Mode 0:
+        name: CUR L
+        unit: mA
+        min: 0.000000
+        max: 4095.000000
+        PCT min: 0.000000
+        PCT max: 100.000000
+        SI min: 4175.000000
+        SI max: 1023.000000
+        Data sets: 1
+        format: 0x01
+        Figures: 4
+        Decimals: 0
+        in: 0x10 (null: 0, mapping 2.0: 0, m_abs: 1, m_rel: 0, m_dis: 0)
+        out: 0x00 (null: 0, mapping 2.0: 0, m_abs: 0, m_rel: 0, m_dis: 0)
+        Flags: 0x000000000000 (speed: 0, apos: 0, power: 0, motor: 0, pin1: 0, pin2: 0, calib: 0, power12: 0)
+        Raw:
+Mode 1:
+        name: 
+        unit: mA
+        min: 0.000000
+        max: 4095.000000
+        PCT min: 0.000000
+        PCT max: 100.000000
+        SI min: 4175.000000
+        SI max: 1023.000000
+        Data sets: 1
+        format: 0x01
+        Figures: 4
+        Decimals: 0
+        in: 0x10 (null: 0, mapping 2.0: 0, m_abs: 1, m_rel: 0, m_dis: 0)
+        out: 0x00 (null: 0, mapping 2.0: 0, m_abs: 0, m_rel: 0, m_dis: 0)
+        Flags: 0x000000000000 (speed: 0, apos: 0, power: 0, motor: 0, pin1: 0, pin2: 0, calib: 0, power12: 0)
+        Raw:
+
+Device: 0x14
+InModes: 0x0003
+OutModes: 0x0000
+Caps: 0x98
+Combos:
+        0x0000  0x0000  0x0000  0x0000  0x0000  0x0000  0x0000  0x0000
+Mode 0:
+        name: VLT L
+        unit: mV
+        min: 0.000000
+        max: 4095.000000
+        PCT min: 0.000000
+        PCT max: 100.000000
+        SI min: 9615.000000
+        SI max: 1023.000000
+        Data sets: 1
+        format: 0x01
+        Figures: 4
+        Decimals: 0
+        in: 0x10 (null: 0, mapping 2.0: 0, m_abs: 1, m_rel: 0, m_dis: 0)
+        out: 0x00 (null: 0, mapping 2.0: 0, m_abs: 0, m_rel: 0, m_dis: 0)
+        Flags: 0x000000000000 (speed: 0, apos: 0, power: 0, motor: 0, pin1: 0, pin2: 0, calib: 0, power12: 0)
+        Raw:
+Mode 1:
+        name: 
+        unit: mV
+        min: 0.000000
+        max: 4095.000000
+        PCT min: 0.000000
+        PCT max: 100.000000
+        SI min: 9615.000000
+        SI max: 1023.000000
+        Data sets: 1
+        format: 0x01
+        Figures: 4
+        Decimals: 0
+        in: 0x10 (null: 0, mapping 2.0: 0, m_abs: 1, m_rel: 0, m_dis: 0)
+        out: 0x00 (null: 0, mapping 2.0: 0, m_abs: 0, m_rel: 0, m_dis: 0)
+        Flags: 0x000000000000 (speed: 0, apos: 0, power: 0, motor: 0, pin1: 0, pin2: 0, calib: 0, power12: 0)
+        Raw:
+
+Device: 0x3C
+InModes: 0x0001
+OutModes: 0x0000
+Caps: 0x78
+Combos:
+        0x0000  0x0000  0x0000  0x0000  0x0000  0x0000  0x0000  0x0000
+Mode 0:
+        name: TEMP
+        unit: DEG
+        min: -900.000000
+        max: 900.000000
+        PCT min: -100.000000
+        PCT max: 100.000000
+        SI min: 90.000000
+        SI max: 1023.000000
+        Data sets: 1
+        format: 0x01
+        Figures: 5
+        Decimals: 1
+        in: 0x50 (null: 0, mapping 2.0: 1, m_abs: 1, m_rel: 0, m_dis: 0)
+        out: 0x00 (null: 0, mapping 2.0: 0, m_abs: 0, m_rel: 0, m_dis: 0)
+        Flags: 0x000000000000 (speed: 0, apos: 0, power: 0, motor: 0, pin1: 0, pin2: 0, calib: 0, power12: 0)
+        Raw:
+
+Device: 0x3C
+InModes: 0x0001
+OutModes: 0x0000
+Caps: 0x14
+Combos:
+        0x0000  0x0000  0x0000  0x0000  0x0000  0x0000  0x0000  0x0000
+Mode 0:
+        name: TEMP
+        unit: DEG
+        min: -900.000000
+        max: 900.000000
+        PCT min: -100.000000
+        PCT max: 100.000000
+        SI min: 90.000000
+        SI max: 1023.000000
+        Data sets: 1
+        format: 0x01
+        Figures: 5
+        Decimals: 1
+        in: 0x50 (null: 0, mapping 2.0: 1, m_abs: 1, m_rel: 0, m_dis: 0)
+        out: 0x00 (null: 0, mapping 2.0: 0, m_abs: 0, m_rel: 0, m_dis: 0)
         Flags: 0x000000000000 (speed: 0, apos: 0, power: 0, motor: 0, pin1: 0, pin2: 0, calib: 0, power12: 0)
         Raw:
