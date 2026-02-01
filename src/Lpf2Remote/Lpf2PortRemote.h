@@ -34,7 +34,7 @@ public:
         modeCombos.resize(8);
     }
     /* --- For internl use only! --- */
-    void setCaps(uint8_t _caps) { _caps = _caps; }
+    void setCaps(uint8_t _caps) { caps = _caps; }
     /* --- For internl use only! --- */
     void setInModes(uint16_t _inModes) { inModes = _inModes; }
     /* --- For internl use only! --- */

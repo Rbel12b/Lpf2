@@ -517,7 +517,7 @@ void Lpf2Hub::handlePortModeInfoMessage(const std::vector<uint8_t> &message)
         case Lpf2ModeInfoType::SI:
         {
             mode.SImin = min;
-            mode.SImin = max;
+            mode.SImax = max;
         }
         }
     }
