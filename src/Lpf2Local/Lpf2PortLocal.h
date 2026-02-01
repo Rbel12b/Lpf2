@@ -77,11 +77,14 @@ private:
     uint8_t process(unsigned long now);
 
     void doAnalogID();
+    
+    size_t getSpeed() const { return baud; }
 
 private:
     LPF2_STATUS m_status = LPF2_STATUS::STATUS_ERR;
     LPF2_STATUS m_new_status = LPF2_STATUS::STATUS_ERR;
     LPF2_STATUS m_lastStatus = LPF2_STATUS::STATUS_ERR;
+    uint32_t baud = 2400;
     bool m_deviceConnected = false; // do not rely on this, use deviceConnected() instead
     bool nextModeExt = false;
     bool m_dumb = false;

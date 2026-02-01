@@ -553,7 +553,7 @@ void Lpf2HubEmulation::checkPort(Lpf2Port *port)
         LPF2_LOG_I("Device connected to port %d", portNum);
         std::vector<uint8_t> payload;
         payload.push_back((uint8_t)portNum);
-        payload.push_back((uint8_t)Lpf2Event::ATTACHED_IO);
+        payload.push_back((uint8_t)Lpf2IOEvent::ATTACHED_IO);
         payload.push_back((uint8_t)port->getDeviceType());
         payload.push_back(0x00);
         payload.insert(payload.end(), {0x00, 0x00, 0x00, 0x10, 0x00, 0x00, 0x00, 0x10}); // version numbers
@@ -564,7 +564,7 @@ void Lpf2HubEmulation::checkPort(Lpf2Port *port)
         LPF2_LOG_I("Device disconnected from port %d", portNum);
         std::vector<uint8_t> payload;
         payload.push_back((char)portNum);
-        payload.push_back((char)Lpf2Event::DETACHED_IO);
+        payload.push_back((char)Lpf2IOEvent::DETACHED_IO);
         writeValue(Lpf2MessageType::HUB_ATTACHED_IO, payload);
     }
 }
