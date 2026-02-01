@@ -34,6 +34,7 @@ class Lpf2Hub
     void handleGenericErrorMessage(const std::vector<uint8_t> &message);
     void handleAttachedIOMessage(const std::vector<uint8_t> &message);
     void handlePortInfoMessage(const std::vector<uint8_t> &message);
+    void handlePortModeInfoMessage(const std::vector<uint8_t> &message);
 
     void requestInfos();
 
@@ -45,6 +46,12 @@ class Lpf2Hub
     void pending(Lpf2MessageType msgType);
 
     Lpf2PortRemote *_getPort(Lpf2PortNum portNum);
+
+    /**
+     * @brief check the lenght of a message, and prints an error to the log
+     * @returns true if the message is smaller than the given length
+     */
+    bool checkLenght(const std::vector<uint8_t> &message, size_t lenght);
 
 public:
     Lpf2Hub();
@@ -67,6 +74,8 @@ public:
     Lpf2HubType getHubType();
     void setHubName(std::string name);
     void shutDownHub();
+
+    Lpf2Port *getPort(Lpf2PortNum portNum);
 
     /**
      * @brief returns true if all infomation requests were sent, and answered (or timed out).
@@ -129,6 +138,7 @@ private:
             Lpf2PortNum portNum;
         };
         uint8_t mode;
+        uint8_t info;
         DataRequestingState state;
         bool finishedRequests = false;
     } m_dataRequestState;

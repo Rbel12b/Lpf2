@@ -170,6 +170,11 @@ void Lpf2Hub::notifyCallback(
         handlePortInfoMessage(data);
         break;
     }
+    case Lpf2MessageType::PORT_MODE_INFORMATION:
+    {
+        handlePortModeInfoMessage(data);
+        break;
+    }
     default:
     {
         LPF2_LOG_E("Unimplemented: %i", data[2]);
@@ -272,9 +277,8 @@ void Lpf2Hub::requestHubPropertyUpdate(Lpf2HubPropertyType propId)
 
 void Lpf2Hub::handleHubPropertyMessage(const std::vector<uint8_t> &message)
 {
-    if (message.size() < 6)
+    if (checkLenght(message, 6))
     {
-        LPF2_LOG_E("Unexpected message length: %i", message.size());
         return;
     }
     Lpf2HubPropertyOperation op = (Lpf2HubPropertyOperation)message[(byte)Lpf2MessageByte::OPERATION];
@@ -311,9 +315,8 @@ unimplemented:
 
 void Lpf2Hub::handleGenericErrorMessage(const std::vector<uint8_t> &message)
 {
-    if (message.size() < 5)
+    if (checkLenght(message, 5))
     {
-        LPF2_LOG_E("Unexpected message length: %i", message.size());
         return;
     }
     Lpf2GenericErrorType errorType = (Lpf2GenericErrorType)message[(byte)Lpf2MessageByte::OPERATION];
@@ -342,9 +345,8 @@ unimplemented:
 
 void Lpf2Hub::handleAttachedIOMessage(const std::vector<uint8_t> &message)
 {
-    if (message.size() < 5)
+    if (checkLenght(message, 5))
     {
-        LPF2_LOG_E("Unexpected message length: %i", message.size());
         return;
     }
     Lpf2PortNum portNum = (Lpf2PortNum)message[(byte)Lpf2MessageByte::PORT_ID];
@@ -354,9 +356,8 @@ void Lpf2Hub::handleAttachedIOMessage(const std::vector<uint8_t> &message)
     {
     case Lpf2IOEvent::ATTACHED_IO:
     {
-        if (message.size() < 15)
+        if (checkLenght(message, 15))
         {
-            LPF2_LOG_E("Unexpected message length: %i", message.size());
             return;
         }
         if (attachedPorts.count(portNum) && attachedPorts[portNum] != Lpf2DeviceType::UNKNOWNDEVICE)
@@ -410,9 +411,8 @@ unimplemented:
 
 void Lpf2Hub::handlePortInfoMessage(const std::vector<uint8_t> &message)
 {
-    if (message.size() < 7)
+    if (checkLenght(message, 5))
     {
-        LPF2_LOG_E("Unexpected message length: %i", message.size());
         return;
     }
     Lpf2PortNum portNum = (Lpf2PortNum)message[(byte)Lpf2MessageByte::PORT_ID];
@@ -425,13 +425,14 @@ void Lpf2Hub::handlePortInfoMessage(const std::vector<uint8_t> &message)
 
     auto &port = *_getPort(portNum);
 
+    LPF2_LOG_D("Received port info: portNum: 0x%02X, infoType: %i", (int)portNum, infoType);
+
     switch (infoType)
     {
     case 0x01:
     {
-        if (message.size() < 11)
+        if (checkLenght(message, 11))
         {
-            LPF2_LOG_E("Unexpected message length: %i", message.size());
             return;
         }
         port.setCaps(message[5]);
@@ -459,8 +460,127 @@ unimplemented:
     return;
 }
 
+void Lpf2Hub::handlePortModeInfoMessage(const std::vector<uint8_t> &message)
+{
+    if (checkLenght(message, 7))
+    {
+        return;
+    }
+    Lpf2PortNum portNum = (Lpf2PortNum)message[(byte)Lpf2MessageByte::PORT_ID];
+    uint8_t modeNum = message[(byte)Lpf2MessageByte::OPERATION];
+    Lpf2ModeInfoType infoType = (Lpf2ModeInfoType)message[(byte)Lpf2MessageByte::PAYLOAD];
+
+    if (pendingRequest.msgType == Lpf2MessageType::PORT_MODE_INFORMATION_REQUEST)
+    {
+        pendingRequest.valid = false;
+    }
+
+    auto &port = *_getPort(portNum);
+    if (port.getModes_mod().size() <= modeNum)
+    {
+        port.getModes_mod().resize(modeNum + 1);
+    }
+    auto &mode = port.getModes_mod()[modeNum];
+
+    LPF2_LOG_D("Received mode port info: portNum: 0x%02X, mode: %i, infoType: %i", (int)portNum, modeNum, (int)infoType);
+
+    switch (infoType)
+    {
+    case Lpf2ModeInfoType::NAME:
+    {
+        mode.name.assign(message.begin() + 6, message.end());
+    }
+    case Lpf2ModeInfoType::RAW:
+    case Lpf2ModeInfoType::PCT:
+    case Lpf2ModeInfoType::SI:
+    {
+        if (checkLenght(message, 14))
+        {
+            break;
+        }
+        float min, max;
+        std::memcpy(&min, message.data() + 6, 4);
+        std::memcpy(&max, message.data() + 10, 4);
+
+        switch (infoType)
+        {
+        case Lpf2ModeInfoType::RAW:
+        {
+            mode.min = min;
+            mode.max = max;
+        }
+        case Lpf2ModeInfoType::PCT:
+        {
+            mode.PCTmin = min;
+            mode.PCTmax = max;
+        }
+        case Lpf2ModeInfoType::SI:
+        {
+            mode.SImin = min;
+            mode.SImin = max;
+        }
+        }
+    }
+    case Lpf2ModeInfoType::SYMBOL:
+    {
+        mode.unit.assign(message.begin() + 6, message.end());
+        break;
+    }
+    case Lpf2ModeInfoType::MAPPING:
+    {
+        if (checkLenght(message, 8))
+        {
+            break;
+        }
+        mode.out.val = message[6];
+        mode.in.val = message[7];
+        break;
+    }
+    case Lpf2ModeInfoType::MOTOR_BIAS:
+    {
+        mode.motor_bias = message[6];
+        break;
+    }
+    case Lpf2ModeInfoType::CAPS:
+    {
+        if (checkLenght(message, 12))
+        {
+            return;
+        }
+        mode.flags.bytes[5] = message[6];
+        mode.flags.bytes[4] = message[7];
+        mode.flags.bytes[3] = message[8];
+        mode.flags.bytes[2] = message[9];
+        mode.flags.bytes[1] = message[10];
+        mode.flags.bytes[0] = message[11];
+        break;
+    }
+    case Lpf2ModeInfoType::VALUE:
+    {
+        if (checkLenght(message, 10))
+        {
+            return;
+        }
+        mode.data_sets = message[6];
+        mode.format = message[7];
+        mode.figures = message[8];
+        mode.decimals = message[9];
+        break;
+    }
+    default:
+        goto unimplemented;
+    }
+    return;
+unimplemented:
+    LPF2_LOG_E("Unimplemented!");
+    return;
+}
+
 void Lpf2Hub::requestInfos()
 {
+    if (pendingRequest.valid)
+        return;
+
     if (!m_rateLimiter.okayToSend())
         return;
 
@@ -470,9 +590,9 @@ void Lpf2Hub::requestInfos()
     {
     case DataRequestingState::HUB_PROP:
     {
-        if (m_dataRequestState.propId >= Lpf2HubPropertyType::END)
+        if (m_dataRequestState.propId >= Lpf2HubPropertyType::HARDWARE_NETWORK_FAMILY) // Hub usually don't reply to this
         {
-            m_dataRequestState.state = DataRequestingState::PORT_INFO;
+            m_dataRequestState.finishedRequests = true;
         }
         else
         {
@@ -488,6 +608,10 @@ void Lpf2Hub::requestInfos()
     {
         if (isPending_warn())
             return;
+
+        LPF2_LOG_D("Requesting port info: infoType: %i, portNum: 0x%02X",
+                   m_dataRequestState.mode + 1, (int)m_dataRequestState.portNum);
+
         if (m_dataRequestState.mode == 0)
         {
             std::vector<uint8_t> payload;
@@ -505,8 +629,56 @@ void Lpf2Hub::requestInfos()
             pending(Lpf2MessageType::PORT_INFORMATION_REQUEST);
             writeValue(Lpf2MessageType::PORT_INFORMATION_REQUEST, payload);
             m_dataRequestState.mode = 0;
+            m_dataRequestState.info = 0;
             m_dataRequestState.state = DataRequestingState::PORT_MODE;
         }
+        break;
+    }
+
+    case DataRequestingState::PORT_MODE:
+    {
+        if (isPending_warn())
+            return;
+
+        LPF2_LOG_D("Requesting port mode info: mode: %i, infoType: %i, portNum: 0x%02X",
+                   m_dataRequestState.mode, m_dataRequestState.info, (int)m_dataRequestState.portNum);
+
+        std::vector<uint8_t> payload;
+        payload.push_back((uint8_t)m_dataRequestState.portNum);
+        payload.push_back(m_dataRequestState.mode);
+        payload.push_back(m_dataRequestState.info);
+        pending(Lpf2MessageType::PORT_MODE_INFORMATION_REQUEST);
+        writeValue(Lpf2MessageType::PORT_MODE_INFORMATION_REQUEST, payload);
+
+        if (m_dataRequestState.info == 0x80)
+        {
+            m_dataRequestState.mode++;
+            m_dataRequestState.info = 0;
+        }
+
+        auto &port = *_getPort(m_dataRequestState.portNum);
+        if (m_dataRequestState.mode >= port.getModeCount())
+        {
+            port.setDevType(attachedPorts[m_dataRequestState.portNum]);
+            m_dataRequestState.mode = 0;
+            m_dataRequestState.info = 0;
+            m_dataRequestState.finishedRequests = true;
+        }
+
+        if (m_dataRequestState.info == 0x08)
+        {
+            m_dataRequestState.info = 0x80;
+        }
+        else if (m_dataRequestState.info == 0x05)
+        {
+            // Skip these
+            m_dataRequestState.info = 0x80;
+        }
+        else
+        {
+            m_dataRequestState.info++;
+        }
+        break;
     }
 
     default:
@@ -537,15 +709,31 @@ Lpf2PortRemote *Lpf2Hub::_getPort(Lpf2PortNum portNum)
     if (!remotePorts.count(portNum))
     {
         remotePorts[portNum] = nullptr;
+        LPF2_LOG_D("Adding new NULL port.");
     }
     Lpf2PortRemote *pPort = remotePorts[portNum];
-    if (!pPort)
+    if (pPort == nullptr)
     {
-        remotePorts[portNum] = new Lpf2PortRemote();
-        remotePorts[portNum]->setRemote(this);
+        pPort = new Lpf2PortRemote();
+        if (!pPort)
+        {
+            LPF2_LOG_E("Failed to allocate port.");
+        }
+        LPF2_LOG_D("Initializing port.");
         remotePorts[portNum] = pPort;
+        remotePorts[portNum]->setRemote(this);
     }
     return pPort;
+}
+
+bool Lpf2Hub::checkLenght(const std::vector<uint8_t> &message, size_t lenght)
+{
+    if (message.size() < lenght)
+    {
+        LPF2_LOG_E("Unexpected message length: %i", message.size());
+        return true;
+    }
+    return false;
 }
 
 void Lpf2Hub::setHubNameProp(std::string name)
@@ -563,9 +751,8 @@ Lpf2Hub::Lpf2Hub()
 
 Lpf2Hub::~Lpf2Hub()
 {
-    std::for_each(remotePorts.begin(), remotePorts.end(), [](std::pair<Lpf2PortNum, Lpf2PortRemote*> pair) {
-        delete pair.second;
-    });
+    std::for_each(remotePorts.begin(), remotePorts.end(), [](std::pair<Lpf2PortNum, Lpf2PortRemote *> pair)
+                  { delete pair.second; });
 };
 
 /**
@@ -650,7 +837,8 @@ void Lpf2Hub::update()
         requestInfos();
     }
 
-    std::for_each(attachedPorts.begin(), attachedPorts.end(), [this](std::pair<Lpf2PortNum, Lpf2DeviceType> attachedPort) {
+    std::for_each(attachedPorts.begin(), attachedPorts.end(), [this](std::pair<Lpf2PortNum, Lpf2DeviceType> attachedPort)
+                  {
         if (!remotePorts.count(attachedPort.first))
         {
             remotePorts[attachedPort.first] = new Lpf2PortRemote();
@@ -660,15 +848,17 @@ void Lpf2Hub::update()
         {
             return;
         }
+
         if (attachedPort.second != Lpf2DeviceType::UNKNOWNDEVICE &&
             !(remotePorts[attachedPort.first]->deviceConnected()))
         {
+            LPF2_LOG_D("Starting requests for: port: 0x%02X, dev: 0x%02X",
+                (int)attachedPort.first, (int)attachedPort.second);
             m_dataRequestState.portNum = attachedPort.first;
             m_dataRequestState.state = DataRequestingState::PORT_INFO;
             m_dataRequestState.finishedRequests = false;
             m_dataRequestState.mode = 0;
-        }
-    });
+        } });
 }
 
 /**
@@ -687,6 +877,11 @@ NimBLEAddress Lpf2Hub::getHubAddress()
 void Lpf2Hub::shutDownHub()
 {
     writeValue(Lpf2MessageType::HUB_ACTIONS, {(uint8_t)Lpf2HubActionType::SWITCH_OFF_HUB});
+}
+
+Lpf2Port *Lpf2Hub::getPort(Lpf2PortNum portNum)
+{
+    return static_cast<Lpf2Port *>(_getPort(portNum));
 }
 
 bool Lpf2Hub::infoReady()
@@ -851,7 +1046,7 @@ std::string Lpf2Hub::getAllInfoStr()
     oss << "Battery type: " << getHubPropStr(Lpf2HubPropertyType::BATTERY_TYPE) << "\n";
     oss << "Battery voltage: " << getHubPropStr(Lpf2HubPropertyType::BATTERY_VOLTAGE) << "\n";
     oss << "Button state: " << getHubPropStr(Lpf2HubPropertyType::BUTTON) << "\n";
-    // TODO: expand for ports
+    oss << "Devices:" << "\n";
     return oss.str();
 }
 
