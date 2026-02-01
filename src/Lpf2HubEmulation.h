@@ -29,11 +29,11 @@ private:
      */
     std::unordered_map<Lpf2PortNum, bool> connectedDevices;
 
-    bool updateHubPropertyEnabled[(unsigned int)Lpf2HubPropertyReference::END] = {false};
-    std::vector<uint8_t> hubProperty[(unsigned int)Lpf2HubPropertyReference::END];
-    void updateHubProperty(Lpf2HubPropertyReference propRef);
-    void sendHubPropertyUpdate(Lpf2HubPropertyReference propRef);
-    void resetHubProperty(Lpf2HubPropertyReference propRef);
+    bool updateHubPropertyEnabled[(unsigned int)Lpf2HubPropertyType::END] = {false};
+    std::vector<uint8_t> hubProperty[(unsigned int)Lpf2HubPropertyType::END];
+    void updateHubProperty(Lpf2HubPropertyType propId);
+    void sendHubPropertyUpdate(Lpf2HubPropertyType propId);
+    void resetHubProperty(Lpf2HubPropertyType propId);
     void handleHubPropertyMessage(std::vector<uint8_t> message);
 
     bool hubAlertEnabled[(unsigned int)Lpf2HubAlertType::END] = {false};
@@ -49,9 +49,6 @@ private:
 
     void handlePortInformationRequestMessage(std::vector<uint8_t> message);
     void handlePortModeInformationRequestMessage(std::vector<uint8_t> message);
-
-    std::vector<uint8_t> packVersion(Lpf2Version version);
-    Lpf2Version unPackVersion(std::vector<uint8_t> version);
 
     void checkPort(Lpf2Port* port);
 

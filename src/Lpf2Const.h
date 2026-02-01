@@ -136,7 +136,7 @@ enum class Lpf2MessageType
     PORT_OUTPUT_COMMAND_FEEDBACK = 0x82, // up
 };
 
-enum class Lpf2HubPropertyReference
+enum class Lpf2HubPropertyType
 {
     ADVERTISING_NAME = 0x01,
     BUTTON = 0x02,
@@ -154,6 +154,17 @@ enum class Lpf2HubPropertyReference
     SECONDARY_MAC_ADDRESS = 0x0E,
     HARDWARE_NETWORK_FAMILY = 0x0F,
     END,
+};
+
+enum class Lpf2HubActionType
+{
+    SWITCH_OFF_HUB = 0x01,
+    DISCONNECT = 0x02,
+    VCC_PORT_CONTROL_ON = 0x02,
+    VCC_PORT_CONTROL_OFF = 0x03,
+    ACTIVATE_BUSY_INDICATION = 0x05,
+    RESET_BUSY_INDICATION = 0x05,
+    FAST_POWER_DOWN = 0x2F, // Not recommended!
 };
 
 enum class Lpf2HubAlertType
