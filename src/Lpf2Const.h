@@ -223,7 +223,7 @@ enum class Lpf2ActionType
     HUB_WILL_GO_INTO_BOOT_MODE = 0x32,
 };
 
-enum class Lpf2Event
+enum class Lpf2IOEvent
 {
     DETACHED_IO = 0x00,
     ATTACHED_IO = 0x01,
@@ -362,12 +362,12 @@ enum class Lpf2ControlPlusHubPort : Lpf2PortNum
     LED = 0x32,
     CURRENT = 0x3B,
     VOLTAGE = 0x3C,
+    TEMP = 0x3D,
+    TEMP2 = 0x60,
     ACCELEROMETER = 0x61,
     GYRO = 0x62,
     TILT = 0x63,
-    TEMP = 61,
-    TEMP2 = 96,
-    GESTURE = 100,
+    GESTURE = 0x64,
 };
 
 enum class Lpf2DuploTrainHubPort : Lpf2PortNum

@@ -28,15 +28,14 @@ public:
     virtual void setPower(uint8_t pin1, uint8_t pin2) = 0;
 
     Lpf2DeviceType getDeviceType() const { return m_deviceType; }
-    size_t getSpeed() const { return baud; }
-    uint8_t getModeCount() const { return modes; }
+    uint8_t getModeCount() const { return modeData.size(); }
     uint8_t getViewCount() const { return views; }
     const std::vector<Lpf2Mode> &getModes() const { return modeData; }
-    uint8_t getModeComboCount() const { return comboNum; }
+    uint8_t getModeComboCount() const { return modeCombos.size(); }
 
     uint16_t getModeCombo(uint8_t combo) const
     {
-        if (combo >= comboNum || combo >= 16)
+        if (combo >= modeCombos.size() || combo >= 16)
             return 0;
         return modeCombos[combo];
     }
@@ -76,7 +75,6 @@ protected:
 protected:
     Lpf2DeviceType m_deviceType = Lpf2DeviceType::UNKNOWNDEVICE;
     uint8_t modes, views;
-    uint32_t baud = 2400;
     std::vector<uint16_t> modeCombos;
     uint8_t caps;
     /* bitmask */

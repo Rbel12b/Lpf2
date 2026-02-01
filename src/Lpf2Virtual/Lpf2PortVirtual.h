@@ -4,7 +4,6 @@
 
 #include "config.h"
 #include "Lpf2Port.h"
-#include "Util/mutex.h"
 #include "Lpf2VirtualDevice.h"
 #include <memory>
 

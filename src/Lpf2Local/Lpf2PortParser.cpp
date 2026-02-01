@@ -1,5 +1,6 @@
 #include "Lpf2PortLocal.h"
 #include <cstring>
+#include "../Util/Values.h"
 
 void Lpf2PortLocal::parseMessage(const Lpf2Message &msg)
 {
@@ -51,7 +52,7 @@ void Lpf2PortLocal::parseMessage(const Lpf2Message &msg)
     {
         if (m_status == LPF2_STATUS::STATUS_DATA_START)
         {
-            LPF2_LOG_I("Device connected, type: %i", (int)m_deviceType);
+            LPF2_LOG_I("Device connected, type: 0x%02X", (int)m_deviceType);
             m_status = LPF2_STATUS::STATUS_DATA_RECEIVED;
         }
         m_startRec = millis();
@@ -283,7 +284,7 @@ void Lpf2PortLocal::parseMessageInfo(const Lpf2Message &msg)
     }
     default:
     {
-        LPF2_LOG_W("Unknown info: 0x%02X", msg.data[0]);
+        LPF2_LOG_W("Unknown info: 0x%02X, msg: %s", msg.data[0], Lpf2Utils::bytes_to_hexString(msg.data).c_str());
         break;
     }
     }
