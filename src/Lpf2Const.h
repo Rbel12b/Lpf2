@@ -447,6 +447,7 @@ public:
     Mapping in, out;
     uint8_t data_sets = 0, format = 0, figures = 0, decimals = 0;
     std::vector<uint8_t> rawData;
+    uint8_t motor_bias;
     struct Flags
     {
         uint8_t bytes[6] = {0, 0, 0, 0, 0, 0};

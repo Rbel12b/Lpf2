@@ -28,6 +28,9 @@ private:
                 "\0",               // unit
                 0x00, 0x18,         // input mapping, output mapping
                 1, DATA8, 4, 0,     // datasets, format, figures, decimals
+                {},                 // raw data
+                0x00,               // motor bias
+                Lpf2Mode::Flags{{0x00}}
             }
         };
 };
