@@ -260,6 +260,18 @@ enum class Lpf2ModeInfoType
     VALUE = 0x80
 };
 
+enum class Lpf2GenericErrorType
+{
+    ACK = 0x01,
+    NACK = 0x02, // https://lego.github.io/lego-ble-wireless-protocol-docs/#error-codes - MACK ???
+    BUFFER_OVERFLOW = 0x03,
+    TIMEOUT = 0x04,
+    CMD_NOT_RECOGNIZED = 0x05,
+    INVALID_USE = 0x06, // parameters
+    OVERCURRENT = 0x07,
+    INTERNAL_ERROR = 0x08,
+};
+
 static const char *Lpf2_COLOR_STRING[(uint8_t)Lpf2Color::NUM_COLORS + 1] = {
     "black", "pink", "purple", "blue", "lightblue", "cyan", "green", "yellow", "orange", "red", "white", "none"};
 

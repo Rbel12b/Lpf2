@@ -25,9 +25,18 @@ class Lpf2Hub
     void disableHubProperty(Lpf2HubPropertyType propId);
     void resetHubProperty(Lpf2HubPropertyType propId);
     void requestHubPropertyUpdate(Lpf2HubPropertyType propId);
-    void handleHubPropertyMessage(std::vector<uint8_t> message);
+
+    void handleHubPropertyMessage(const std::vector<uint8_t> &message);
+    void handleGenericErrorMessage(const std::vector<uint8_t> &message);
 
     void requestInfos();
+
+    /**
+     * @biref returns true if another request is still pending, and writes a warning message to the log.
+     */
+    bool isPending_warn();
+
+    void pending(Lpf2MessageType msgType);
 
 public:
     // constructor
@@ -65,6 +74,7 @@ public:
      */
     std::string getAllInfoStr();
     std::string getHubPropStr(Lpf2HubPropertyType propId);
+    static std::string getHubPropStr(Lpf2HubPropertyType propId, std::vector<uint8_t> prop);
 
     /* HUB props*/
 
@@ -76,12 +86,21 @@ public:
 
     // BLE specific stuff
     void notifyCallback(NimBLERemoteCharacteristic *pBLERemoteCharacteristic, uint8_t *pData, size_t length, bool isNotify);
-    enum class RequestState
+
+    enum class DataRequestingState
     {
         HUB_PROP,
         PORT_INFO,
         PORT_MODE
     };
+
+    class PendingRequest
+    {
+    public:
+        bool valid = false;
+        size_t sentTime = 0;
+        Lpf2MessageType msgType;
+    } pendingRequest;
 
     BLEUUID _bleUuid;
     BLEUUID _charachteristicUuid;
@@ -102,7 +121,7 @@ private:
             Lpf2PortNum portNum;
         };
         uint8_t mode;
-        RequestState state;
+        DataRequestingState state;
         bool finishedRequests = false;
     } m_dataRequestState;
 

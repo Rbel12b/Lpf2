@@ -155,6 +155,11 @@ void Lpf2Hub::notifyCallback(
         handleHubPropertyMessage(data);
         break;
     }
+    case Lpf2MessageType::GENERIC_ERROR_MESSAGES:
+    {
+        handleGenericErrorMessage(data);
+        break;
+    }
     default:
     {
         LPF2_LOG_E("Unimplemented: %i", data[2]);
@@ -182,6 +187,10 @@ void Lpf2Hub::sendHubPropertyUpdate(Lpf2HubPropertyType propId)
         LPF2_LOG_E("Invalid HUB property.");
         return;
     }
+    if (propId != Lpf2HubPropertyType::ADVERTISING_NAME || propId != Lpf2HubPropertyType::HW_NETWORK_ID || propId != Lpf2HubPropertyType::HARDWARE_NETWORK_FAMILY)
+        return;
+    if (isPending_warn())
+        return;
     auto &prop = hubProperty[(uint8_t)propId];
     std::vector<uint8_t> payload;
     payload.push_back((uint8_t)propId);
@@ -197,6 +206,10 @@ void Lpf2Hub::enableHubProperty(Lpf2HubPropertyType propId)
         LPF2_LOG_E("Invalid HUB property.");
         return;
     }
+    if (propId != Lpf2HubPropertyType::ADVERTISING_NAME || propId != Lpf2HubPropertyType::BUTTON || propId != Lpf2HubPropertyType::RSSI || propId != Lpf2HubPropertyType::BATTERY_VOLTAGE)
+        return;
+    if (isPending_warn())
+        return;
     std::vector<uint8_t> payload;
     payload.push_back((uint8_t)propId);
     payload.push_back((uint8_t)Lpf2HubPropertyOperation::ENABLE_UPDATES_DOWNSTREAM);
@@ -210,6 +223,10 @@ void Lpf2Hub::disableHubProperty(Lpf2HubPropertyType propId)
         LPF2_LOG_E("Invalid HUB property.");
         return;
     }
+    if (propId != Lpf2HubPropertyType::ADVERTISING_NAME || propId != Lpf2HubPropertyType::BUTTON || propId != Lpf2HubPropertyType::RSSI || propId != Lpf2HubPropertyType::BATTERY_VOLTAGE)
+        return;
+    if (isPending_warn())
+        return;
     std::vector<uint8_t> payload;
     payload.push_back((uint8_t)propId);
     payload.push_back((uint8_t)Lpf2HubPropertyOperation::DISABLE_UPDATES_DOWNSTREAM);
@@ -223,6 +240,10 @@ void Lpf2Hub::resetHubProperty(Lpf2HubPropertyType propId)
         LPF2_LOG_E("Invalid HUB property.");
         return;
     }
+    if (propId != Lpf2HubPropertyType::ADVERTISING_NAME || propId != Lpf2HubPropertyType::HW_NETWORK_ID)
+        return;
+    if (isPending_warn())
+        return;
     std::vector<uint8_t> payload;
     payload.push_back((uint8_t)propId);
     payload.push_back((uint8_t)Lpf2HubPropertyOperation::RESET_DOWNSTREAM);
@@ -236,13 +257,16 @@ void Lpf2Hub::requestHubPropertyUpdate(Lpf2HubPropertyType propId)
         LPF2_LOG_E("Invalid HUB property.");
         return;
     }
+    if (isPending_warn())
+        return;
     std::vector<uint8_t> payload;
     payload.push_back((uint8_t)propId);
     payload.push_back((uint8_t)Lpf2HubPropertyOperation::REQUEST_UPDATE_DOWNSTREAM);
+    pending(Lpf2MessageType::HUB_PROPERTIES);
     writeValue(Lpf2MessageType::HUB_PROPERTIES, payload);
 }
 
-void Lpf2Hub::handleHubPropertyMessage(std::vector<uint8_t> message)
+void Lpf2Hub::handleHubPropertyMessage(const std::vector<uint8_t>& message)
 {
     if (message.size() < 6)
     {
@@ -257,6 +281,11 @@ void Lpf2Hub::handleHubPropertyMessage(std::vector<uint8_t> message)
         return;
     }
     auto &prop = hubProperty[(uint8_t)propId];
+
+    if (pendingRequest.msgType == Lpf2MessageType::HUB_PROPERTIES)
+    {
+        pendingRequest.valid = false;
+    }
 
     switch (op)
     {
@@ -276,6 +305,37 @@ unimplemented:
     return;
 }
 
+void Lpf2Hub::handleGenericErrorMessage(const std::vector<uint8_t> &message)
+{
+    if (message.size() < 5)
+    {
+        LPF2_LOG_E("Unexpected message length: %i", message.size());
+        return;
+    }
+    Lpf2GenericErrorType errorType = (Lpf2GenericErrorType)message[(byte)Lpf2MessageByte::OPERATION];
+    Lpf2MessageType msgType = (Lpf2MessageType)message[(byte)Lpf2MessageByte::PROPERTY];
+
+    if (pendingRequest.msgType == msgType)
+    {
+        pendingRequest.valid = false;
+    }
+
+    switch (errorType)
+    {
+    case Lpf2GenericErrorType::ACK:
+    {
+        LPF2_LOG_V("Acknowledged message of type: %i", (int)msgType);
+        break;
+    }
+    default:
+        goto unimplemented;
+    }
+    return;
+unimplemented:
+    LPF2_LOG_E("Unimplemented: errorType: %i, msgType: %i", (int)errorType, (int)msgType);
+    return;
+}
+
 void Lpf2Hub::requestInfos()
 {
     if (!m_rateLimiter.okayToSend())
@@ -285,17 +345,17 @@ void Lpf2Hub::requestInfos()
 
     switch (m_dataRequestState.state)
     {
-    case RequestState::HUB_PROP:
+    case DataRequestingState::HUB_PROP:
         if (m_dataRequestState.propId >= Lpf2HubPropertyType::END)
         {
-            m_dataRequestState.state = RequestState::PORT_INFO;
+            m_dataRequestState.state = DataRequestingState::PORT_INFO;
         }
         else
         {
             requestHubPropertyUpdate(m_dataRequestState.propId);
             enableHubProperty(m_dataRequestState.propId);
-            m_dataRequestState.propId = Lpf2HubPropertyType((uint8_t)m_dataRequestState.propId + 1);
             LPF2_LOG_D("Requested prop update: %i", (uint8_t)m_dataRequestState.propId);
+            m_dataRequestState.propId = Lpf2HubPropertyType((uint8_t)m_dataRequestState.propId + 1);
         }
         break;
     
@@ -303,6 +363,23 @@ void Lpf2Hub::requestInfos()
         m_dataRequestState.finishedRequests = true;
         break;
     }
+}
+
+bool Lpf2Hub::isPending_warn()
+{
+    if (pendingRequest.valid)
+    {
+        LPF2_LOG_W("Another request is still pending.");
+        return true;
+    };
+    return false;
+}
+
+void Lpf2Hub::pending(Lpf2MessageType msgType)
+{
+    pendingRequest.sentTime = LPF2_GET_TIME();
+    pendingRequest.msgType = msgType;
+    pendingRequest.valid = true;
 }
 
 void Lpf2Hub::setHubNameProp(std::string name)
@@ -383,6 +460,15 @@ void Lpf2Hub::init(std::string deviceAddress, uint32_t scanDuration)
 void Lpf2Hub::update()
 {
     if (!isConnected())
+        return;
+
+    if (pendingRequest.valid && LPF2_GET_TIME() - pendingRequest.sentTime >= 200)
+    {
+        LPF2_LOG_E("Request timed out: msgType: %i", (int)pendingRequest.msgType);
+        pendingRequest.valid = false;
+    }
+
+    if (pendingRequest.valid)
         return;
 
     if (!m_dataRequestState.finishedRequests)
@@ -513,6 +599,8 @@ bool Lpf2Hub::connectHub()
     _isConnected = true;
     _isConnecting = false;
     m_dataRequestState.finishedRequests = false;
+    m_dataRequestState.propId = Lpf2HubPropertyType::ADVERTISING_NAME;
+    vTaskDelay(200);
     return true;
 }
 
@@ -581,12 +669,17 @@ std::string Lpf2Hub::getHubPropStr(Lpf2HubPropertyType propId)
         return "";
     }
     auto &prop = hubProperty[(uint8_t)propId];
+    return getHubPropStr(propId, prop);
+}
+
+std::string Lpf2Hub::getHubPropStr(Lpf2HubPropertyType propId, std::vector<uint8_t> prop)
+{
     std::string str;
     switch (propId)
     {
     case Lpf2HubPropertyType::ADVERTISING_NAME:
     {
-        str = getHubName();
+        str.assign(prop.begin(), prop.end());
         break;
     }
     case Lpf2HubPropertyType::BATTERY_TYPE:

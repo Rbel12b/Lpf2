@@ -75,10 +75,10 @@ public:
 void Lpf2HubEmulation::onMessageReceived(std::vector<uint8_t> message)
 {
     Lpf2MessageType type = (Lpf2MessageType)message[(byte)Lpf2MessageHeader::MESSAGE_TYPE];
-    LPF2_DEBUG_EXPR_D(
+    LPF2_DEBUG_EXPR_V(
         std::string hexMessage = Lpf2Utils::bytes_to_hexString(message);
         LPF2_LOG_D("message received (%d): %s", message.size(), hexMessage.c_str()););
-    LPF2_LOG_D("message type: %d", (byte)type);
+    LPF2_LOG_V("message type: %d", (byte)type);
 
     switch (type)
     {
@@ -190,7 +190,16 @@ void Lpf2HubEmulation::updateHubProperty(Lpf2HubPropertyType propId)
 
 void Lpf2HubEmulation::sendHubPropertyUpdate(Lpf2HubPropertyType propId)
 {
+    if (propId == Lpf2HubPropertyType::HARDWARE_NETWORK_FAMILY)
+    {
+        // Real hubs returned erros in my tests.
+        std::vector<uint8_t> payload;
+        payload.push_back((uint8_t)Lpf2MessageType::HUB_PROPERTIES);
+        payload.push_back((uint8_t)Lpf2GenericErrorType::CMD_NOT_RECOGNIZED);
+        writeValue(Lpf2MessageType::GENERIC_ERROR_MESSAGES, payload);
+    }
     auto &prop = hubProperty[(uint8_t)propId];
+    LPF2_LOG_D("Sent prop update: %s", Lpf2Hub::getHubPropStr(propId, prop).c_str());
     std::vector<uint8_t> payload;
     payload.push_back((uint8_t)propId);
     payload.push_back((uint8_t)Lpf2HubPropertyOperation::UPDATE_UPSTREAM);
@@ -206,6 +215,7 @@ void Lpf2HubEmulation::resetHubProperty(Lpf2HubPropertyType propId)
         return;
     }
     auto &prop = hubProperty[(uint8_t)propId];
+    // These values were extracted from a real LEGO Technic Hub (except MAC, and rssi)
     switch (propId)
     {
     case Lpf2HubPropertyType::ADVERTISING_NAME:
@@ -224,7 +234,7 @@ void Lpf2HubEmulation::resetHubProperty(Lpf2HubPropertyType propId)
     case Lpf2HubPropertyType::BATTERY_VOLTAGE:
     {
         prop.resize(1);
-        prop[0] = 0x64;
+        prop[0] = 100;
         break;
     }
     case Lpf2HubPropertyType::BUTTON:
@@ -252,7 +262,7 @@ void Lpf2HubEmulation::resetHubProperty(Lpf2HubPropertyType propId)
     case Lpf2HubPropertyType::HW_NETWORK_ID:
     {
         prop.resize(1);
-        prop[0] = 0x01;
+        prop[0] = 0x00;
         break;
     }
     case Lpf2HubPropertyType::HW_VERSION:
@@ -281,44 +291,30 @@ void Lpf2HubEmulation::resetHubProperty(Lpf2HubPropertyType propId)
     }
     case Lpf2HubPropertyType::PRIMARY_MAC_ADDRESS:
     {
-        prop.resize(0);
-        auto mac = ESP.getEfuseMac();
-        prop.push_back((char)((mac >> 40) & 0xFF));
-        prop.push_back((char)((mac >> 32) & 0xFF));
-        prop.push_back((char)((mac >> 24) & 0xFF));
-        prop.push_back((char)((mac >> 16) & 0xFF));
-        prop.push_back((char)((mac >> 8) & 0xFF));
-        prop.push_back((char)(mac & 0xFF));
+        prop.assign({0x90, 0x84, 0x2b, 0x63, 0xf3, 0x51});
         break;
     }
     case Lpf2HubPropertyType::RADIO_FIRMWARE_VERSION:
     {
         prop.resize(0);
-        std::string str = "2_02_01";
+        std::string str = "3_02_00_v1.1";
         prop.insert(prop.end(), str.begin(), str.end());
         break;
     }
     case Lpf2HubPropertyType::RSSI:
     {
         prop.resize(1);
-        prop[0] = 0xC8;
+        prop[0] = 0x63; // Random value
         break;
     }
     case Lpf2HubPropertyType::SECONDARY_MAC_ADDRESS:
     {
-        prop.resize(0);
-        auto mac = ESP.getEfuseMac();
-        prop.push_back((char)((mac >> 40) & 0xFF));
-        prop.push_back((char)((mac >> 32) & 0xFF));
-        prop.push_back((char)((mac >> 24) & 0xFF));
-        prop.push_back((char)((mac >> 16) & 0xFF));
-        prop.push_back((char)((mac >> 8) & 0xFF));
-        prop.push_back((char)(mac & 0xFF));
+        prop.assign({0x90, 0x84, 0x2b, 0x9d, 0xf3, 0x51});
     }
     case Lpf2HubPropertyType::SYSTEM_TYPE_ID:
     {
         prop.resize(1);
-        prop[0] = 0x00;
+        prop[0] = 0x80;
         break;
     }
 
@@ -377,16 +373,19 @@ void Lpf2HubEmulation::handleHubAlertsMessage(std::vector<uint8_t> message)
     {
     case Lpf2HubAlertOperation::ENABLE_UPDATES_DOWNSTREAM:
     {
+        LPF2_LOG_D("Enable Hub alert: %i", (int)alertType);
         hubAlertEnabled[(uint8_t)alertType] = true;
         break;
     }
     case Lpf2HubAlertOperation::DISABLE_UPDATES_DOWNSTREAM:
     {
+        LPF2_LOG_D("Disable Hub alert: %i", (int)alertType);
         hubAlertEnabled[(uint8_t)alertType] = false;
         break;
     }
     case Lpf2HubAlertOperation::REQUEST_UPDATE_DOWNSTREAM:
     {
+        LPF2_LOG_D("Request Hub alert update: %i", (int)alertType);
         sendHubAlertUpdate(alertType);
         break;
     }
@@ -407,7 +406,7 @@ void Lpf2HubEmulation::handlePortInformationRequestMessage(std::vector<uint8_t> 
         LPF2_LOG_W("Port information request for unattached port %d", portNum);
         return;
     }
-    Lpf2Port* port = attachedPorts[portNum];
+    Lpf2Port *port = attachedPorts[portNum];
     Lpf2DeviceType deviceType = port->getDeviceType();
     uint8_t informationType = message[(uint8_t)Lpf2MessageByte::OPERATION];
 
@@ -415,29 +414,31 @@ void Lpf2HubEmulation::handlePortInformationRequestMessage(std::vector<uint8_t> 
     payload.push_back((uint8_t)portNum);
     payload.push_back((uint8_t)informationType);
 
+    LPF2_LOG_D("Requested port info: port: 0x%02X, infoType: %i", (uint8_t)portNum, (uint8_t)informationType);
+
     switch (informationType)
     {
     case 0x01:
-        {
-            payload.push_back(port->getCapatibilities());
-            payload.push_back(port->getModeCount());
-            payload.push_back(port->getInputModes() >> 8);
-            payload.push_back(port->getInputModes() & 0xF);
-            payload.push_back(port->getOutputModes() >> 8);
-            payload.push_back(port->getOutputModes() & 0xF);
-        }
-        break;
-    
+    {
+        payload.push_back(port->getCapatibilities());
+        payload.push_back(port->getModeCount());
+        payload.push_back(port->getInputModes() >> 8);
+        payload.push_back(port->getInputModes() & 0xF);
+        payload.push_back(port->getOutputModes() >> 8);
+        payload.push_back(port->getOutputModes() & 0xF);
+    }
+    break;
+
     case 0x02:
+    {
+        for (uint8_t i = 0; i < port->getModeComboCount() && i < 16; i++)
         {
-            for (uint8_t i = 0; i < port->getModeComboCount() && i < 16; i++)
-            {
-                payload.push_back(port->getModeCombo(i) >> 8);
-                payload.push_back(port->getModeCombo(i) & 0xF);
-            }
+            payload.push_back(port->getModeCombo(i) >> 8);
+            payload.push_back(port->getModeCombo(i) & 0xF);
         }
-        break;
-    
+    }
+    break;
+
     default:
         LPF2_LOG_E("Invalid port information request type: %i", informationType);
         return;
@@ -454,7 +455,7 @@ void Lpf2HubEmulation::handlePortModeInformationRequestMessage(std::vector<uint8
         LPF2_LOG_W("Port information request for unattached port %d", portNum);
         return;
     }
-    Lpf2Port* port = attachedPorts[portNum];
+    Lpf2Port *port = attachedPorts[portNum];
     Lpf2DeviceType deviceType = port->getDeviceType();
     uint8_t modeNum = message[(uint8_t)Lpf2MessageByte::OPERATION];
     Lpf2ModeInfoType modeInfoType = (Lpf2ModeInfoType)message[(uint8_t)Lpf2MessageByte::SUB_COMMAND];
@@ -464,6 +465,7 @@ void Lpf2HubEmulation::handlePortModeInformationRequestMessage(std::vector<uint8
         LPF2_LOG_E("Invalid mode number requested: %i", modeNum);
         return;
     }
+    LPF2_LOG_D("Requested port mode info: port: 0x%02X, modeNum: %i, modeInfoType: %i", (uint8_t)portNum, (uint8_t)modeNum, (uint8_t)modeInfoType);
     auto &mode = port->getModes()[modeNum];
 
     std::vector<uint8_t> payload;
@@ -585,11 +587,13 @@ void Lpf2HubEmulation::handleHubPropertyMessage(std::vector<uint8_t> message)
     {
     case Lpf2HubPropertyOperation::REQUEST_UPDATE_DOWNSTREAM:
     {
+        LPF2_LOG_D("Requested Hub prop update: %i", (int)propId);
         sendHubPropertyUpdate(propId);
         break;
     }
     case Lpf2HubPropertyOperation::SET_DOWNSTREAM:
     {
+        LPF2_LOG_D("Set Hub prop: %i", (int)propId);
         if (message.size() < 5)
         {
             LPF2_LOG_E("Unexpected message length: %i", message.size());
@@ -602,16 +606,19 @@ void Lpf2HubEmulation::handleHubPropertyMessage(std::vector<uint8_t> message)
     }
     case Lpf2HubPropertyOperation::DISABLE_UPDATES_DOWNSTREAM:
     {
+        LPF2_LOG_D("Disable Hub prop: %i", (int)propId);
         updateHubPropertyEnabled[(uint8_t)propId] = false;
         break;
     }
     case Lpf2HubPropertyOperation::ENABLE_UPDATES_DOWNSTREAM:
     {
+        LPF2_LOG_D("Enable Hub prop: %i", (int)propId);
         updateHubPropertyEnabled[(uint8_t)propId] = true;
         break;
     }
     case Lpf2HubPropertyOperation::RESET_DOWNSTREAM:
     {
+        LPF2_LOG_D("Reset Hub prop: %i", (int)propId);
         resetHubProperty(propId);
         break;
     }
@@ -675,9 +682,9 @@ void Lpf2HubEmulation::writeValue(Lpf2MessageType messageType, std::vector<uint8
         pCharacteristic->notify();
     }
 
-    LPF2_DEBUG_EXPR_D(
+    LPF2_DEBUG_EXPR_V(
         std::string hexMessage = Lpf2Utils::bytes_to_hexString(message);
-        LPF2_LOG_D("write message (%d): %s", message.size(), hexMessage.c_str()););
+        LPF2_LOG_V("write message (%d): %s", message.size(), hexMessage.c_str()););
 }
 
 void Lpf2HubEmulation::setHubButton(bool pressed)
@@ -700,6 +707,7 @@ void Lpf2HubEmulation::update()
                   {
                       this->checkPort(pair.second);
                   });
+    // _pService->
 }
 
 void Lpf2HubEmulation::setHubRssi(int8_t rssi)
