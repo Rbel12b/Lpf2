@@ -9,6 +9,16 @@ FORMAT_MAP = {
     "0x03": "DATAF",
 }
 
+def parse_flags(line):
+    # line: "Flags: 0x040500000000 (....)"
+    hexval = line.split()[1]  # 0x040500000000
+    value = int(hexval, 16)
+
+    # Convert to 6 bytes, big-endian
+    bytes_be = value.to_bytes(6, byteorder="big")
+
+    return ", ".join(f"0x{b:02X}" for b in bytes_be)
+
 def parse_float(line):
     return float(line.split(":")[1].strip())
 
@@ -31,7 +41,7 @@ def emit_mode(m):
             {m['datasets']}, {fmt}, {m['figures']}, {m['decimals']},
             {{}},
             0x00,
-            Lpf2Mode::Flags{{{{{m['flags']}}}}}
+            Lpf2Mode::Flags{{{{ {m['flags']} }}}}
         }}"""
 
 def main(path):
@@ -93,7 +103,7 @@ def main(path):
             elif line.startswith("out:"):
                 current_mode["out"] = line.split()[1]
             elif line.startswith("Flags:"):
-                current_mode["flags"] = "0x00"
+                current_mode["flags"] = parse_flags(line)
 
     if current_device:
         devices.append(current_device)
