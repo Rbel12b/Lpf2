@@ -6,52 +6,59 @@
 
 std::string Lpf2Port::getInfoStr()
 {
-    std::string str;
-    printf("Device: 0x%02X\n", (unsigned int)getDeviceType());
-    printf("InModes: 0x%04X\n", getInputModes());
-    printf("OutModes: 0x%04X\n", getOutputModes());
-    printf("Caps: 0x%02X\n", getCapatibilities());
-    printf("Combos:\n");
+    std::ostringstream oss;
+    oss << std::hex << std::uppercase;
+    
+    oss << "Device: 0x" << std::setw(2) << std::setfill('0') << static_cast<unsigned int>(getDeviceType()) << "\n";
+    oss << std::dec << "InModes: 0x" << std::hex << std::setw(4) << std::setfill('0') << getInputModes() << "\n";
+    oss << "OutModes: 0x" << std::hex << std::setw(4) << std::setfill('0') << getOutputModes() << "\n";
+    oss << "Caps: 0x" << std::hex << std::setw(2) << std::setfill('0') << static_cast<unsigned int>(getCapatibilities()) << "\n";
+    oss << std::dec << "Combos:\n";
     for (int i = 0; i < getModeComboCount(); i++)
     {
-        printf("\t0x%04X", getModeCombo(i));
+        oss << "\t0x" << std::hex << std::setw(4) << std::setfill('0') << getModeCombo(i);
     }
-    printf("\n");
+    oss << "\n";
     for (int i = 0; i < getModes().size(); i++)
     {
         auto &mode = getModes()[i];
-
-        printf("Mode %i:\n", i);
-        printf("\tname: %s\n", mode.name.c_str());
-        printf("\tunit: %s\n", mode.unit.c_str());
-        printf("\tmin: %f\n", (double)mode.min);
-        printf("\tmax: %f\n", (double)mode.max);
-        printf("\tPCT min: %f\n", mode.PCTmin);
-        printf("\tPCT max: %f\n", mode.PCTmax);
-        printf("\tSI min: %f\n", (double)mode.SImin);
-        printf("\tSI max: %f\n", (double)mode.SImax);
-        printf("\tData sets: %i\n", mode.data_sets);
-        printf("\tformat: 0x%02X\n", mode.format);
-        printf("\tFigures: %i\n", mode.figures);
-        printf("\tDecimals: %i\n", mode.decimals);
+        oss << std::dec << "Mode " << i << ":\n";
+        oss << "\tname: " << mode.name << "\n";
+        oss << "\tunit: " << mode.unit << "\n";
+        oss << std::fixed << std::setprecision(6) << "\tmin: " << static_cast<double>(mode.min) << "\n";
+        oss << "\tmax: " << static_cast<double>(mode.max) << "\n";
+        oss << "\tPCT min: " << mode.PCTmin << "\n";
+        oss << "\tPCT max: " << mode.PCTmax << "\n";
+        oss << "\tSI min: " << static_cast<double>(mode.SImin) << "\n";
+        oss << "\tSI max: " << static_cast<double>(mode.SImax) << "\n";
+        oss << std::dec << "\tData sets: " << static_cast<int>(mode.data_sets) << "\n";
+        oss << "\tformat: 0x" << std::hex << std::setw(2) << std::setfill('0')
+            << static_cast<unsigned int>(mode.format) << "\n";
+        oss << std::dec << "\tFigures: " << static_cast<int>(mode.figures) << "\n";
+        oss << "\tDecimals: " << static_cast<int>(mode.decimals) << "\n";
         auto in = mode.in;
-        printf("\tin: 0x%02X (null: %i, mapping 2.0: %i, m_abs: %i, m_rel: %i, m_dis: %i)\n",
-               in.val, in.nullSupport(), in.mapping2(), in.m_abs(), in.m_rel(), in.m_dis());
+        oss << "\tin: 0x" << std::hex << std::setw(2) << std::setfill('0') << static_cast<unsigned int>(in.val)
+            << " (null: " << in.nullSupport() << ", mapping 2.0: " << in.mapping2() << ", m_abs: " << in.m_abs()
+            << ", m_rel: " << in.m_rel() << ", m_dis: " << in.m_dis() << ")\n";
         auto out = mode.out;
-        printf("\tout: 0x%02X (null: %i, mapping 2.0: %i, m_abs: %i, m_rel: %i, m_dis: %i)\n",
-               out.val, out.nullSupport(), out.mapping2(), out.m_abs(), out.m_rel(), out.m_dis());
+        oss << "\tout: 0x" << std::hex << std::setw(2) << std::setfill('0') << static_cast<unsigned int>(out.val)
+            << " (null: " << out.nullSupport() << ", mapping 2.0: " << out.mapping2() << ", m_abs: " << out.m_abs()
+            << ", m_rel: " << out.m_rel() << ", m_dis: " << out.m_dis() << ")\n";
         auto flags = mode.flags;
-        uint64_t val;
+        uint64_t val = 0;
         memcpy(&val, flags.bytes, 6);
-        printf("\tFlags: 0x%012llX (speed: %i, apos: %i, power: %i, motor: %i, pin1: %i, pin2: %i, calib: %i, power12: %i)\n",
-               val, flags.speed(), flags.apos(), flags.power(), flags.motor(), flags.pin1(), flags.pin2(), flags.calib(), flags.power12());
-        printf("\tRaw:");
+        oss << "\tFlags: 0x" << std::hex << std::setw(12) << std::setfill('0') << val << " (speed: " << flags.speed()
+            << ", apos: " << flags.apos() << ", power: " << flags.power() << ", motor: " << flags.motor()
+            << ", pin1: " << flags.pin1() << ", pin2: " << flags.pin2() << ", calib: " << flags.calib()
+            << ", power12: " << flags.power12() << ")\n";
+        oss << "\tRaw:";
         for (int n = 0; n < mode.rawData.size(); n++)
         {
-            printf(" 0x%02X", mode.rawData[n]);
+            oss << " 0x" << std::hex << std::setw(2) << std::setfill('0') << static_cast<unsigned int>(mode.rawData[n]);
         }
-        printf("\n");
+        oss << "\n";
     }
+    return oss.str();
 }
 
 uint8_t Lpf2Port::getDataSize(uint8_t format)

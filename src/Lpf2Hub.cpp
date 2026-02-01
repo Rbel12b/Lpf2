@@ -597,7 +597,7 @@ void Lpf2Hub::requestInfos()
         else
         {
             requestHubPropertyUpdate(m_dataRequestState.propId);
-            enableHubProperty(m_dataRequestState.propId);
+            // enableHubProperty(m_dataRequestState.propId);
             LPF2_LOG_D("Requested prop update: %i", (uint8_t)m_dataRequestState.propId);
             m_dataRequestState.propId = Lpf2HubPropertyType((uint8_t)m_dataRequestState.propId + 1);
         }
@@ -886,7 +886,7 @@ Lpf2Port *Lpf2Hub::getPort(Lpf2PortNum portNum)
 
 bool Lpf2Hub::infoReady()
 {
-    return m_dataRequestState.finishedRequests;
+    return m_dataRequestState.finishedRequests && !pendingRequest.valid;
 }
 
 /**
@@ -1047,6 +1047,10 @@ std::string Lpf2Hub::getAllInfoStr()
     oss << "Battery voltage: " << getHubPropStr(Lpf2HubPropertyType::BATTERY_VOLTAGE) << "\n";
     oss << "Button state: " << getHubPropStr(Lpf2HubPropertyType::BUTTON) << "\n";
     oss << "Devices:" << "\n";
+    std::for_each(remotePorts.begin(), remotePorts.end(), [&oss](std::pair<Lpf2PortNum, Lpf2PortRemote *> pair) {
+        oss << pair.second->getInfoStr();
+        oss << "\n";
+    });
     return oss.str();
 }
 
