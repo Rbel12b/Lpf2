@@ -1,7 +1,7 @@
 #include "./log/log.h"
 #include "Lpf2Hub.h"
 #include "Lpf2HubEmulation.h"
-#include "Util/hexUtils.h"
+#include "Util/Values.h"
 #include "Lpf2Port.h"
 
 class Lpf2HubServerCallbacks : public NimBLEServerCallbacks
@@ -76,7 +76,7 @@ void Lpf2HubEmulation::onMessageReceived(std::vector<uint8_t> message)
 {
     Lpf2MessageType type = (Lpf2MessageType)message[(byte)Lpf2MessageHeader::MESSAGE_TYPE];
     LPF2_DEBUG_EXPR_D(
-        std::string hexMessage = bytes_to_hexString(message);
+        std::string hexMessage = Lpf2Utils::bytes_to_hexString(message);
         LPF2_LOG_D("message received (%d): %s", message.size(), hexMessage.c_str()););
     LPF2_LOG_D("message type: %d", (byte)type);
 
@@ -181,95 +181,105 @@ unimplemented:
     return;
 }
 
-void Lpf2HubEmulation::updateHubProperty(Lpf2HubPropertyReference propRef)
+void Lpf2HubEmulation::updateHubProperty(Lpf2HubPropertyType propId)
 {
-    if (!updateHubPropertyEnabled[(uint8_t)propRef])
+    if (!updateHubPropertyEnabled[(uint8_t)propId])
         return;
-    sendHubPropertyUpdate(propRef);
+    sendHubPropertyUpdate(propId);
 }
 
-void Lpf2HubEmulation::sendHubPropertyUpdate(Lpf2HubPropertyReference propRef)
+void Lpf2HubEmulation::sendHubPropertyUpdate(Lpf2HubPropertyType propId)
 {
-    auto &prop = hubProperty[(uint8_t)propRef];
+    auto &prop = hubProperty[(uint8_t)propId];
     std::vector<uint8_t> payload;
-    payload.push_back((uint8_t)propRef);
+    payload.push_back((uint8_t)propId);
     payload.push_back((uint8_t)Lpf2HubPropertyOperation::UPDATE_UPSTREAM);
     payload.insert(payload.end(), prop.begin(), prop.end());
     writeValue(Lpf2MessageType::HUB_PROPERTIES, payload);
 }
 
-void Lpf2HubEmulation::resetHubProperty(Lpf2HubPropertyReference propRef)
+void Lpf2HubEmulation::resetHubProperty(Lpf2HubPropertyType propId)
 {
-    if (propRef >= Lpf2HubPropertyReference::END)
+    if (propId >= Lpf2HubPropertyType::END)
     {
         LPF2_LOG_E("Invalid HUB property requested.");
         return;
     }
-    auto &prop = hubProperty[(uint8_t)propRef];
-    switch (propRef)
+    auto &prop = hubProperty[(uint8_t)propId];
+    switch (propId)
     {
-    case Lpf2HubPropertyReference::ADVERTISING_NAME:
+    case Lpf2HubPropertyType::ADVERTISING_NAME:
     {
         prop.resize(0);
-        std::string name = "Hub";
+        std::string name = "Technic Hub";
         prop.insert(prop.end(), name.begin(), name.end());
+        break;
     }
-    case Lpf2HubPropertyReference::BATTERY_TYPE:
+    case Lpf2HubPropertyType::BATTERY_TYPE:
     {
         prop.resize(1);
         prop[0] = (uint8_t)Lpf2BatteryType::NORMAL;
+        break;
     }
-    case Lpf2HubPropertyReference::BATTERY_VOLTAGE:
+    case Lpf2HubPropertyType::BATTERY_VOLTAGE:
     {
         prop.resize(1);
         prop[0] = 0x64;
+        break;
     }
-    case Lpf2HubPropertyReference::BUTTON:
+    case Lpf2HubPropertyType::BUTTON:
     {
         prop.resize(1);
         prop[0] = (uint8_t)Lpf2ButtonState::RELEASED;
+        break;
     }
-    case Lpf2HubPropertyReference::FW_VERSION:
+    case Lpf2HubPropertyType::FW_VERSION:
     {
         Lpf2Version version;
-        version.Major = 0;
-        version.Minor = 0;
+        version.Major = 1;
+        version.Minor = 2;
         version.Bugfix = 0;
-        version.Build = 529;
-        prop = packVersion(version);
+        version.Build = 0;
+        prop = Lpf2Utils::packVersion(version);
+        break;
     }
-    case Lpf2HubPropertyReference::HARDWARE_NETWORK_FAMILY:
+    case Lpf2HubPropertyType::HARDWARE_NETWORK_FAMILY:
     {
         prop.resize(1);
         prop[0] = 0x00;
+        break;
     }
-    case Lpf2HubPropertyReference::HW_NETWORK_ID:
+    case Lpf2HubPropertyType::HW_NETWORK_ID:
     {
         prop.resize(1);
         prop[0] = 0x01;
+        break;
     }
-    case Lpf2HubPropertyReference::HW_VERSION:
+    case Lpf2HubPropertyType::HW_VERSION:
     {
         Lpf2Version version;
         version.Major = 0;
-        version.Minor = 0;
+        version.Minor = 8;
         version.Bugfix = 0;
-        version.Build = 1;
-        prop = packVersion(version);
+        version.Build = 0;
+        prop = Lpf2Utils::packVersion(version);
+        break;
     }
-    case Lpf2HubPropertyReference::LEGO_WIRELESS_PROTOCOL_VERSION:
+    case Lpf2HubPropertyType::LEGO_WIRELESS_PROTOCOL_VERSION:
     {
         prop.resize(2);
         prop[0] = 0x00;
         prop[1] = 0x03;
+        break;
     }
-    case Lpf2HubPropertyReference::MANUFACTURER_NAME:
+    case Lpf2HubPropertyType::MANUFACTURER_NAME:
     {
         prop.resize(0);
         std::string str = "LEGO System A/S";
         prop.insert(prop.end(), str.begin(), str.end());
+        break;
     }
-    case Lpf2HubPropertyReference::PRIMARY_MAC_ADDRESS:
+    case Lpf2HubPropertyType::PRIMARY_MAC_ADDRESS:
     {
         prop.resize(0);
         auto mac = ESP.getEfuseMac();
@@ -279,19 +289,22 @@ void Lpf2HubEmulation::resetHubProperty(Lpf2HubPropertyReference propRef)
         prop.push_back((char)((mac >> 16) & 0xFF));
         prop.push_back((char)((mac >> 8) & 0xFF));
         prop.push_back((char)(mac & 0xFF));
+        break;
     }
-    case Lpf2HubPropertyReference::RADIO_FIRMWARE_VERSION:
+    case Lpf2HubPropertyType::RADIO_FIRMWARE_VERSION:
     {
         prop.resize(0);
         std::string str = "2_02_01";
         prop.insert(prop.end(), str.begin(), str.end());
+        break;
     }
-    case Lpf2HubPropertyReference::RSSI:
+    case Lpf2HubPropertyType::RSSI:
     {
         prop.resize(1);
         prop[0] = 0xC8;
+        break;
     }
-    case Lpf2HubPropertyReference::SECONDARY_MAC_ADDRESS:
+    case Lpf2HubPropertyType::SECONDARY_MAC_ADDRESS:
     {
         prop.resize(0);
         auto mac = ESP.getEfuseMac();
@@ -302,12 +315,12 @@ void Lpf2HubEmulation::resetHubProperty(Lpf2HubPropertyReference propRef)
         prop.push_back((char)((mac >> 8) & 0xFF));
         prop.push_back((char)(mac & 0xFF));
     }
-    case Lpf2HubPropertyReference::SYSTEM_TYPE_ID:
+    case Lpf2HubPropertyType::SYSTEM_TYPE_ID:
     {
         prop.resize(1);
         prop[0] = 0x00;
+        break;
     }
-    break;
 
     default:
         break;
@@ -526,29 +539,6 @@ void Lpf2HubEmulation::handlePortModeInformationRequestMessage(std::vector<uint8
     writeValue(Lpf2MessageType::PORT_MODE_INFORMATION, payload);
 }
 
-std::vector<uint8_t> Lpf2HubEmulation::packVersion(Lpf2Version version)
-{
-    std::vector<uint8_t> v;
-    v.push_back(version.Build);
-    v.push_back(version.Build >> 8);
-    v.push_back(version.Bugfix);
-    v.push_back(version.Major << 4 | version.Minor);
-    return v;
-}
-
-Lpf2Version Lpf2HubEmulation::unPackVersion(std::vector<uint8_t> version)
-{
-    if (version.size() < 4)
-        return Lpf2Version();
-
-    Lpf2Version v;
-    v.Build = version[0] | (version[1] << 8);
-    v.Bugfix = version[2];
-    v.Minor = version[3] & 0x0F;
-    v.Major = (version[3] >> 4) & 0x0F;
-    return v;
-}
-
 void Lpf2HubEmulation::checkPort(Lpf2Port *port)
 {
     Lpf2PortNum portNum = port->portNum;
@@ -579,14 +569,14 @@ void Lpf2HubEmulation::checkPort(Lpf2Port *port)
 
 void Lpf2HubEmulation::handleHubPropertyMessage(std::vector<uint8_t> message)
 {
-    if (message.size() < 5)
+    if (message.size() < 4)
     {
         LPF2_LOG_E("Unexpected message length: %i", message.size());
         return;
     }
     Lpf2HubPropertyOperation op = (Lpf2HubPropertyOperation)message[(byte)Lpf2MessageByte::OPERATION];
-    Lpf2HubPropertyReference propId = (Lpf2HubPropertyReference)message[(byte)Lpf2MessageByte::PROPERTY];
-    if (propId >= Lpf2HubPropertyReference::END)
+    Lpf2HubPropertyType propId = (Lpf2HubPropertyType)message[(byte)Lpf2MessageByte::PROPERTY];
+    if (propId >= Lpf2HubPropertyType::END)
     {
         LPF2_LOG_E("Invalid HUB property requested.");
         return;
@@ -600,8 +590,13 @@ void Lpf2HubEmulation::handleHubPropertyMessage(std::vector<uint8_t> message)
     }
     case Lpf2HubPropertyOperation::SET_DOWNSTREAM:
     {
+        if (message.size() < 5)
+        {
+            LPF2_LOG_E("Unexpected message length: %i", message.size());
+            return;
+        }
         std::vector<uint8_t> val;
-        val.insert(val.end(), message.begin() + 5, message.end()); // Okay, since we checked the lenght previously.
+        val.insert(val.end(), message.begin() + 5, message.end());
         hubProperty[(uint8_t)propId] = val;
         break;
     }
@@ -640,9 +635,9 @@ Lpf2HubEmulation::Lpf2HubEmulation(std::string hubName, Lpf2HubType hubType)
 void Lpf2HubEmulation::reset()
 {
     LPF2_LOG_D("Resetting props.");
-    for (uint8_t i = 0; i < (uint8_t)Lpf2HubPropertyReference::END; i++)
+    for (uint8_t i = 0; i < (uint8_t)Lpf2HubPropertyType::END; i++)
     {
-        resetHubProperty((Lpf2HubPropertyReference)i);
+        resetHubProperty((Lpf2HubPropertyType)i);
         updateHubPropertyEnabled[i] = false;
     }
     resetHubAlerts();
@@ -681,19 +676,19 @@ void Lpf2HubEmulation::writeValue(Lpf2MessageType messageType, std::vector<uint8
     }
 
     LPF2_DEBUG_EXPR_D(
-        std::string hexMessage = bytes_to_hexString(message);
+        std::string hexMessage = Lpf2Utils::bytes_to_hexString(message);
         LPF2_LOG_D("write message (%d): %s", message.size(), hexMessage.c_str()););
 }
 
 void Lpf2HubEmulation::setHubButton(bool pressed)
 {
-    auto &property = hubProperty[(unsigned)Lpf2HubPropertyReference::BUTTON];
+    auto &property = hubProperty[(unsigned)Lpf2HubPropertyType::BUTTON];
     if (!property.size())
     {
         property.resize(1);
     }
     property[0] = uint8_t(pressed ? Lpf2ButtonState::PRESSED : Lpf2ButtonState::RELEASED);
-    updateHubProperty(Lpf2HubPropertyReference::BUTTON);
+    updateHubProperty(Lpf2HubPropertyType::BUTTON);
 }
 
 void Lpf2HubEmulation::update()
@@ -709,35 +704,35 @@ void Lpf2HubEmulation::update()
 
 void Lpf2HubEmulation::setHubRssi(int8_t rssi)
 {
-    auto &property = hubProperty[(unsigned)Lpf2HubPropertyReference::RSSI];
+    auto &property = hubProperty[(unsigned)Lpf2HubPropertyType::RSSI];
     if (!property.size())
     {
         property.resize(1);
     }
     property[0] = rssi;
-    updateHubProperty(Lpf2HubPropertyReference::RSSI);
+    updateHubProperty(Lpf2HubPropertyType::RSSI);
 }
 
 void Lpf2HubEmulation::setHubBatteryLevel(uint8_t batteryLevel)
 {
-    auto &property = hubProperty[(unsigned)Lpf2HubPropertyReference::BATTERY_VOLTAGE];
+    auto &property = hubProperty[(unsigned)Lpf2HubPropertyType::BATTERY_VOLTAGE];
     if (!property.size())
     {
         property.resize(1);
     }
     property[0] = batteryLevel;
-    updateHubProperty(Lpf2HubPropertyReference::BATTERY_VOLTAGE);
+    updateHubProperty(Lpf2HubPropertyType::BATTERY_VOLTAGE);
 }
 
 void Lpf2HubEmulation::setHubBatteryType(Lpf2BatteryType batteryType)
 {
-    auto &property = hubProperty[(unsigned)Lpf2HubPropertyReference::BATTERY_TYPE];
+    auto &property = hubProperty[(unsigned)Lpf2HubPropertyType::BATTERY_TYPE];
     if (!property.size())
     {
         property.resize(1);
     }
     property[0] = (uint8_t)batteryType;
-    updateHubProperty(Lpf2HubPropertyReference::BATTERY_TYPE);
+    updateHubProperty(Lpf2HubPropertyType::BATTERY_TYPE);
 }
 
 void Lpf2HubEmulation::setHubName(std::string hubName)
@@ -747,15 +742,15 @@ void Lpf2HubEmulation::setHubName(std::string hubName)
         hubName = hubName.substr(0, 14);
     }
 
-    auto &property = hubProperty[(unsigned)Lpf2HubPropertyReference::ADVERTISING_NAME];
+    auto &property = hubProperty[(unsigned)Lpf2HubPropertyType::ADVERTISING_NAME];
     property.resize(hubName.size());
     property.insert(property.end(), hubName.begin(), hubName.end());
-    updateHubProperty(Lpf2HubPropertyReference::ADVERTISING_NAME);
+    updateHubProperty(Lpf2HubPropertyType::ADVERTISING_NAME);
 }
 
 std::string Lpf2HubEmulation::getHubName()
 {
-    auto &hubName = hubProperty[(unsigned)Lpf2HubPropertyReference::ADVERTISING_NAME];
+    auto &hubName = hubProperty[(unsigned)Lpf2HubPropertyType::ADVERTISING_NAME];
     std::string str;
     str.insert(str.end(), hubName.begin(), hubName.end());
     return str;
@@ -763,7 +758,7 @@ std::string Lpf2HubEmulation::getHubName()
 
 Lpf2BatteryType Lpf2HubEmulation::getBatteryType()
 {
-    auto &prop = hubProperty[(unsigned)Lpf2HubPropertyReference::BATTERY_TYPE];
+    auto &prop = hubProperty[(unsigned)Lpf2HubPropertyType::BATTERY_TYPE];
     if (!prop.size())
     {
         prop.push_back((uint8_t)Lpf2BatteryType::NORMAL);
@@ -773,14 +768,14 @@ Lpf2BatteryType Lpf2HubEmulation::getBatteryType()
 
 void Lpf2HubEmulation::setHubFirmwareVersion(Lpf2Version version)
 {
-    auto v = packVersion(version);
-    hubProperty[(unsigned)Lpf2HubPropertyReference::FW_VERSION] = v;
+    auto v = Lpf2Utils::packVersion(version);
+    hubProperty[(unsigned)Lpf2HubPropertyType::FW_VERSION] = v;
 }
 
 void Lpf2HubEmulation::setHubHardwareVersion(Lpf2Version version)
 {
-    auto v = packVersion(version);
-    hubProperty[(unsigned)Lpf2HubPropertyReference::HW_VERSION] = v;
+    auto v = Lpf2Utils::packVersion(version);
+    hubProperty[(unsigned)Lpf2HubPropertyType::HW_VERSION] = v;
 }
 
 void Lpf2HubEmulation::start()
@@ -853,8 +848,8 @@ void Lpf2HubEmulation::start()
     uint8_t slaveConnectionIntervalRangeData[6] = {0x05, 0x12, 0x10, 0x00, 0x20, 0x00};
     scanResponseData.addData(slaveConnectionIntervalRangeData, sizeof(slaveConnectionIntervalRangeData));
 
-    LPF2_LOG_D("advertisment data payload(%d): %s", advertisementData.getPayload().size(), bytes_to_hexString(advertisementData.getPayload()).c_str());
-    LPF2_LOG_D("scan response data payload(%d): %s", scanResponseData.getPayload().size(), bytes_to_hexString(scanResponseData.getPayload()).c_str());
+    LPF2_LOG_D("advertisment data payload(%d): %s", advertisementData.getPayload().size(), Lpf2Utils::bytes_to_hexString(advertisementData.getPayload()).c_str());
+    LPF2_LOG_D("scan response data payload(%d): %s", scanResponseData.getPayload().size(), Lpf2Utils::bytes_to_hexString(scanResponseData.getPayload()).c_str());
 
     _pAdvertising->setAdvertisementData(advertisementData);
     _pAdvertising->setScanResponseData(scanResponseData);

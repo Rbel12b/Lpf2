@@ -1,6 +1,6 @@
 #include "TrainMotor.h"
 #include "Lpf2Const.h"
-#include "Util/hexUtils.h"
+#include "Util/Values.h"
 
 Lpf2DeviceType Lpf2VirtualTrainMotor::getDeviceType() const
 {
@@ -14,7 +14,7 @@ const std::vector<Lpf2Mode> &Lpf2VirtualTrainMotor::getModes() const
 
 int Lpf2VirtualTrainMotor::writeData(uint8_t modeNum, const std::vector<uint8_t> &data)
 {
-    LPF2_LOG_I("Writing to mode: %i, data: %s", modeNum, bytes_to_hexString(data).c_str());
+    LPF2_LOG_I("Writing to mode: %i, data: %s", modeNum, Lpf2Utils::bytes_to_hexString(data).c_str());
     return 0;
 }
 
