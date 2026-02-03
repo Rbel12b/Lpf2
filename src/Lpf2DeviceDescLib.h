@@ -16,6 +16,10 @@ namespace Lpf2DeviceDescriptors
     extern const Lpf2DeviceDescriptor LPF2_DEVICE_CURRENT_SENSOR;
     extern const Lpf2DeviceDescriptor LPF2_DEVICE_VOLTAGE_SENSOR;
     extern const Lpf2DeviceDescriptor LPF2_DEVICE_TECHNIC_MEDIUM_HUB_TEMPERATURE_SENSOR;
+    extern const Lpf2DeviceDescriptor LPF2_DEVICE_TECHNIC_LARGE_ANGULAR_MOTOR_GREY;
+    extern const Lpf2DeviceDescriptor LPF2_DEVICE_TECHNIC_DISTANCE_SENSOR;
+    extern const Lpf2DeviceDescriptor LPF2_DEVICE_TECHNIC_MEDIUM_ANGULAR_MOTOR_GREY;
+    extern const Lpf2DeviceDescriptor LPF2_DEVICE_TECHNIC_COLOR_SENSOR;
 };
 
 #endif
