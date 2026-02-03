@@ -50,7 +50,7 @@ namespace Lpf2DeviceDescriptors
                 Lpf2Mode::Flags{{0x00}}
             },
             {
-                "",
+                "IMP",
                 0.0f, 100.0f,
                 0.0f, 100.0f,
                 0.0f, 100.0f,
@@ -62,7 +62,7 @@ namespace Lpf2DeviceDescriptors
                 Lpf2Mode::Flags{{0x00}}
             },
             {
-                "",
+                "CFG",
                 0.0f, 255.0f,
                 0.0f, 100.0f,
                 0.0f, 255.0f,
@@ -124,7 +124,7 @@ namespace Lpf2DeviceDescriptors
                 Lpf2Mode::Flags{{0x00}}
             },
             {
-                "",
+                "CAL",
                 1.0f, 1.0f,
                 -100.0f, 100.0f,
                 1.0f, 1.0f,
@@ -161,7 +161,7 @@ namespace Lpf2DeviceDescriptors
                 Lpf2Mode::Flags{{0x00}}
             },
             {
-                "",
+                "RGB O",
                 0.0f, 255.0f,
                 0.0f, 100.0f,
                 0.0f, 255.0f,
@@ -223,7 +223,7 @@ namespace Lpf2DeviceDescriptors
                 Lpf2Mode::Flags{{0x00}}
             },
             {
-                "",
+                "CUR S",
                 0.0f, 4095.0f,
                 0.0f, 100.0f,
                 0.0f, 4175.0f,
@@ -260,7 +260,7 @@ namespace Lpf2DeviceDescriptors
                 Lpf2Mode::Flags{{0x00}}
             },
             {
-                "",
+                "VLT S",
                 0.0f, 4095.0f,
                 0.0f, 100.0f,
                 0.0f, 9615.0f,

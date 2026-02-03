@@ -56,6 +56,7 @@ public:
     void onWrite(NimBLECharacteristic *pCharacteristic, NimBLEConnInfo &connInfo) override
     {
         std::vector<uint8_t> msgReceived = pCharacteristic->getValue();
+        pCharacteristic->setValue(nullptr, 0);
 
         if (msgReceived.size() == 0)
         {
@@ -75,7 +76,7 @@ public:
 void Lpf2HubEmulation::onMessageReceived(std::vector<uint8_t> message)
 {
     Lpf2MessageType type = (Lpf2MessageType)message[(byte)Lpf2MessageHeader::MESSAGE_TYPE];
-    LPF2_DEBUG_EXPR_V(
+    LPF2_DEBUG_EXPR_D(
         std::string hexMessage = Lpf2Utils::bytes_to_hexString(message);
         LPF2_LOG_D("message received (%d): %s", message.size(), hexMessage.c_str()););
     LPF2_LOG_V("message type: %d", (byte)type);
@@ -291,7 +292,14 @@ void Lpf2HubEmulation::resetHubProperty(Lpf2HubPropertyType propId)
     }
     case Lpf2HubPropertyType::PRIMARY_MAC_ADDRESS:
     {
-        prop.assign({0x90, 0x84, 0x2b, 0x63, 0xf3, 0x51});
+        prop.resize(0);
+        auto mac = ESP.getEfuseMac();
+        prop.push_back((char)((mac >> 40) & 0xFF));
+        prop.push_back((char)((mac >> 32) & 0xFF));
+        prop.push_back((char)((mac >> 24) & 0xFF));
+        prop.push_back((char)((mac >> 16) & 0xFF));
+        prop.push_back((char)((mac >> 8) & 0xFF));
+        prop.push_back((char)(mac & 0xFF));
         break;
     }
     case Lpf2HubPropertyType::RADIO_FIRMWARE_VERSION:
@@ -309,7 +317,15 @@ void Lpf2HubEmulation::resetHubProperty(Lpf2HubPropertyType propId)
     }
     case Lpf2HubPropertyType::SECONDARY_MAC_ADDRESS:
     {
-        prop.assign({0x90, 0x84, 0x2b, 0x9d, 0xf3, 0x51});
+        prop.resize(0);
+        auto mac = ESP.getEfuseMac();
+        prop.push_back((char)((mac >> 40) & 0xFF));
+        prop.push_back((char)((mac >> 32) & 0xFF));
+        prop.push_back((char)((mac >> 24) & 0xFF));
+        prop.push_back((char)((mac >> 16) & 0xFF) + 0x3A);
+        prop.push_back((char)((mac >> 8) & 0xFF));
+        prop.push_back((char)(mac & 0xFF));
+        break;
     }
     case Lpf2HubPropertyType::SYSTEM_TYPE_ID:
     {
@@ -666,7 +682,7 @@ void Lpf2HubEmulation::attachPort(Lpf2PortNum portNum, Lpf2Port *port)
     port->portNum = portNum;
 }
 
-void Lpf2HubEmulation::writeValue(Lpf2MessageType messageType, std::vector<uint8_t> payload, bool notify)
+void Lpf2HubEmulation::writeValue(Lpf2MessageType messageType, std::vector<uint8_t> payload)
 {
     if (!isConnected || !pCharacteristic)
         return;
@@ -675,16 +691,12 @@ void Lpf2HubEmulation::writeValue(Lpf2MessageType messageType, std::vector<uint8
     message.push_back(0x00);                       // hub id (not used)
     message.push_back((char)messageType);          // message type
     message.insert(message.end(), payload.begin(), payload.end());
-    pCharacteristic->setValue(message);
-
-    if (notify)
-    {
-        pCharacteristic->notify();
-    }
-
-    LPF2_DEBUG_EXPR_V(
+    LPF2_DEBUG_EXPR_D(
         std::string hexMessage = Lpf2Utils::bytes_to_hexString(message);
-        LPF2_LOG_V("write message (%d): %s", message.size(), hexMessage.c_str()););
+        LPF2_LOG_D("write message (%d): %s", message.size(), hexMessage.c_str()););
+
+    pCharacteristic->setValue(message);
+    pCharacteristic->notify();
 }
 
 void Lpf2HubEmulation::setHubButton(bool pressed)

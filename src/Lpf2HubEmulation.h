@@ -91,7 +91,7 @@ public:
      */
     void attachPort(Lpf2PortNum portNum, Lpf2Port* port);
 
-    void writeValue(Lpf2MessageType messageType, std::vector<uint8_t> payload, bool notify = true);
+    void writeValue(Lpf2MessageType messageType, std::vector<uint8_t> payload);
 
     void onMessageReceived(std::vector<uint8_t> message);
 

@@ -119,12 +119,14 @@ public:
  */
 void Lpf2Hub::writeValue(Lpf2MessageType type, const std::vector<uint8_t> &data)
 {
-    // TODO: refactor to use vectors
+    if (!_isConnected || !_pRemoteCharacteristic)
+        return;
     size_t size = data.size();
     std::vector<uint8_t> fullData;
     fullData.insert(fullData.begin(), {(uint8_t)(size + 2), (uint8_t)0x00});
     fullData.push_back((uint8_t)type);
     fullData.insert(fullData.end(), data.begin(), data.end());
+    LPF2_LOG_D("write value: %s", Lpf2Utils::bytes_to_hexString(fullData).c_str());
     _pRemoteCharacteristic->writeValue(fullData, false);
 }
 
@@ -141,7 +143,7 @@ void Lpf2Hub::notifyCallback(
     size_t length,
     bool isNotify)
 {
-    LPF2_LOG_V("notify callback for characteristic %s", pBLERemoteCharacteristic->getUUID().toString().c_str());
+    LPF2_LOG_D("notify callback, value: %s", Lpf2Utils::bytes_to_hexString(std::vector<uint8_t>(pData, pData + length)).c_str());
 
     std::vector<uint8_t> data(pData, pData + length);
 
@@ -227,6 +229,7 @@ void Lpf2Hub::enableHubProperty(Lpf2HubPropertyType propId)
     payload.push_back((uint8_t)propId);
     payload.push_back((uint8_t)Lpf2HubPropertyOperation::ENABLE_UPDATES_DOWNSTREAM);
     writeValue(Lpf2MessageType::HUB_PROPERTIES, payload);
+    LPF2_LOG_D("Enabled prop update: %i", (uint8_t)m_dataRequestState.propId);
 }
 
 void Lpf2Hub::disableHubProperty(Lpf2HubPropertyType propId)
@@ -277,7 +280,7 @@ void Lpf2Hub::requestHubPropertyUpdate(Lpf2HubPropertyType propId)
 
 void Lpf2Hub::handleHubPropertyMessage(const std::vector<uint8_t> &message)
 {
-    if (checkLenght(message, 6))
+    if (checkLenght(message, 5))
     {
         return;
     }
@@ -300,8 +303,8 @@ void Lpf2Hub::handleHubPropertyMessage(const std::vector<uint8_t> &message)
     case Lpf2HubPropertyOperation::UPDATE_UPSTREAM:
     {
         prop.assign(message.begin() + 5, message.end());
-        LPF2_LOG_D("Updating hub prop: %i, data: %s, message: %s",
-                   (int)propId, Lpf2Utils::bytes_to_hexString(prop).c_str(), Lpf2Utils::bytes_to_hexString(message).c_str());
+        LPF2_LOG_D("Updating hub prop: %i, message: %s",
+                   (int)propId, Lpf2Utils::bytes_to_hexString(message).c_str());
         break;
     }
     default:
@@ -309,7 +312,7 @@ void Lpf2Hub::handleHubPropertyMessage(const std::vector<uint8_t> &message)
     }
     return;
 unimplemented:
-    LPF2_LOG_E("Unimplemented!");
+    LPF2_LOG_E("Unimplemented: op: %i, propId: %i", (int)op, (int)propId);
     return;
 }
 
@@ -462,7 +465,7 @@ unimplemented:
 
 void Lpf2Hub::handlePortModeInfoMessage(const std::vector<uint8_t> &message)
 {
-    if (checkLenght(message, 7))
+    if (checkLenght(message, 6))
     {
         return;
     }
@@ -489,6 +492,7 @@ void Lpf2Hub::handlePortModeInfoMessage(const std::vector<uint8_t> &message)
     case Lpf2ModeInfoType::NAME:
     {
         mode.name.assign(message.begin() + 6, message.end());
+        break;
     }
     case Lpf2ModeInfoType::RAW:
     case Lpf2ModeInfoType::PCT:
@@ -508,18 +512,22 @@ void Lpf2Hub::handlePortModeInfoMessage(const std::vector<uint8_t> &message)
         {
             mode.min = min;
             mode.max = max;
+            break;
         }
         case Lpf2ModeInfoType::PCT:
         {
             mode.PCTmin = min;
             mode.PCTmax = max;
+            break;
         }
         case Lpf2ModeInfoType::SI:
         {
             mode.SImin = min;
             mode.SImax = max;
+            break;
         }
         }
+        break;
     }
     case Lpf2ModeInfoType::SYMBOL:
     {
@@ -538,6 +546,10 @@ void Lpf2Hub::handlePortModeInfoMessage(const std::vector<uint8_t> &message)
     }
     case Lpf2ModeInfoType::MOTOR_BIAS:
     {
+        if (checkLenght(message, 7))
+        {
+            return;
+        }
         mode.motor_bias = message[6];
         break;
     }
@@ -545,7 +557,7 @@ void Lpf2Hub::handlePortModeInfoMessage(const std::vector<uint8_t> &message)
     {
         if (checkLenght(message, 12))
         {
-            return;
+            break;
         }
         mode.flags.bytes[5] = message[6];
         mode.flags.bytes[4] = message[7];
@@ -559,7 +571,7 @@ void Lpf2Hub::handlePortModeInfoMessage(const std::vector<uint8_t> &message)
     {
         if (checkLenght(message, 10))
         {
-            return;
+            break;
         }
         mode.data_sets = message[6];
         mode.format = message[7];
@@ -596,11 +608,19 @@ void Lpf2Hub::requestInfos()
         }
         else
         {
-            requestHubPropertyUpdate(m_dataRequestState.propId);
-            if (m_dataRequestState.propId != Lpf2HubPropertyType::RSSI)
-                enableHubProperty(m_dataRequestState.propId);
-            LPF2_LOG_D("Requested prop update: %i", (uint8_t)m_dataRequestState.propId);
-            m_dataRequestState.propId = Lpf2HubPropertyType((uint8_t)m_dataRequestState.propId + 1);
+            if (m_dataRequestState.mode == 0)
+            {
+                requestHubPropertyUpdate(m_dataRequestState.propId);
+                LPF2_LOG_D("Requested prop update: %i", (uint8_t)m_dataRequestState.propId);
+                m_dataRequestState.mode++;
+            }
+            else
+            {
+                m_dataRequestState.mode = 0;
+                if (m_dataRequestState.propId != Lpf2HubPropertyType::RSSI)
+                    enableHubProperty(m_dataRequestState.propId);
+                m_dataRequestState.propId = Lpf2HubPropertyType((uint8_t)m_dataRequestState.propId + 1);
+            }
         }
         break;
     }
@@ -608,7 +628,7 @@ void Lpf2Hub::requestInfos()
     case DataRequestingState::PORT_INFO:
     {
         if (isPending_warn())
-            return;
+            break;
 
         LPF2_LOG_D("Requesting port info: infoType: %i, portNum: 0x%02X",
                    m_dataRequestState.mode + 1, (int)m_dataRequestState.portNum);
@@ -639,7 +659,7 @@ void Lpf2Hub::requestInfos()
     case DataRequestingState::PORT_MODE:
     {
         if (isPending_warn())
-            return;
+            break;
 
         LPF2_LOG_D("Requesting port mode info: mode: %i, infoType: %i, portNum: 0x%02X",
                    m_dataRequestState.mode, m_dataRequestState.info, (int)m_dataRequestState.portNum);
@@ -654,7 +674,6 @@ void Lpf2Hub::requestInfos()
         if (m_dataRequestState.info == 0x80)
         {
             m_dataRequestState.mode++;
-            m_dataRequestState.info = 0;
         }
 
         auto &port = *_getPort(m_dataRequestState.portNum);
@@ -664,6 +683,12 @@ void Lpf2Hub::requestInfos()
             m_dataRequestState.mode = 0;
             m_dataRequestState.info = 0;
             m_dataRequestState.finishedRequests = true;
+        }
+
+        if (m_dataRequestState.info == 0x80)
+        {
+            m_dataRequestState.info = 0;
+            break;
         }
 
         if (m_dataRequestState.info == 0x08)
@@ -731,7 +756,7 @@ bool Lpf2Hub::checkLenght(const std::vector<uint8_t> &message, size_t lenght)
 {
     if (message.size() < lenght)
     {
-        LPF2_LOG_E("Unexpected message length: %i", message.size());
+        LPF2_LOG_E("Unexpected message length: %i, expected at least %i", message.size(), lenght);
         return true;
     }
     return false;
@@ -990,6 +1015,8 @@ bool Lpf2Hub::connectHub()
     _isConnecting = false;
     m_dataRequestState.finishedRequests = false;
     m_dataRequestState.propId = Lpf2HubPropertyType::ADVERTISING_NAME;
+    m_dataRequestState.mode = 0;
+    m_dataRequestState.state = DataRequestingState::HUB_PROP;
     vTaskDelay(200);
     return true;
 }
