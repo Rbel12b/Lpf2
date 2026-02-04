@@ -49,6 +49,8 @@ private:
     bool hubAlertEnabled[(unsigned int)Lpf2HubAlertType::END] = {false};
     bool hubAlert[(unsigned int)Lpf2HubAlertType::END] = {false};
 
+    bool m_firstUpdate = true;
+
 public:
     void updateHubAlert(Lpf2HubAlertType alert, bool on);
 
@@ -64,6 +66,8 @@ private:
 
     void initBuiltInPorts();
     void initBuiltInDevices();
+
+    void destroyBuiltIn();
 
 public:
     Lpf2HubEmulation();
@@ -107,7 +111,7 @@ public:
     /**
      * @brief Attach a port object, the class will take care of the devices atached/detached.
      * @param portNum The port number that will be assigned to the port.
-     * @param port The port object, it's lifetime must exceed the Lpf2HubEmulation instance's lifetime, or must live till something calls reset().
+     * @param port The port object, it's lifetime must exceed the Lpf2HubEmulation instance's lifetime.
      */
     void attachPort(Lpf2PortNum portNum, Lpf2Port* port);
 
