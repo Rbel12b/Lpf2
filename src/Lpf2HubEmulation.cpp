@@ -49,7 +49,7 @@ public:
                    subValue == 0 ? "Un-Subscribed" : subValue == 1 ? "Notifications"
                                                  : subValue == 2   ? "Indications"
                                                  : subValue == 3   ? "Notifications and Indications"
-                                                                   : "unknown subscription dstatus",
+                                                                   : "unknown subscription status",
                    subValue);
 
         _lpf2HubEmulation->isSubscribed = subValue != 0;
@@ -564,6 +564,7 @@ void Lpf2HubEmulation::checkPort(Lpf2Port *port)
     Lpf2PortNum portNum = port->portNum;
     if (connectedDevices[portNum] == port->deviceConnected())
         return;
+
     connectedDevices[portNum] = port->deviceConnected();
 
     if (connectedDevices[portNum])
@@ -590,9 +591,11 @@ void Lpf2HubEmulation::checkPort(Lpf2Port *port)
 void Lpf2HubEmulation::initBuiltInPorts()
 {
 #define INIT_PORT(portNum) \
-    auto port = new Lpf2PortVirtual(); \
-    attachedPorts[(Lpf2PortNum)portNum] = port; \
-    ownedPorts.push_back(port); \
+    do { \
+        auto port = new Lpf2PortVirtual(); \
+        attachPort((Lpf2PortNum)portNum, port); \
+        ownedPorts.push_back(port); \
+    } while (0)
 
     switch (m_hubType)
     {
@@ -613,16 +616,18 @@ void Lpf2HubEmulation::initBuiltInPorts()
         break;
     }
 
-#undef INIT_PORT()
+#undef INIT_PORT
 }
 
 void Lpf2HubEmulation::initBuiltInDevices()
 {
 #define INIT_DEVICE(portNum, desc) \
-    auto &port = *((Lpf2PortVirtual*)attachedPorts[(Lpf2PortNum)portNum]); \
-    auto device = new Lpf2VirtualGenericDevice(desc); \
-    port.attachDevice(device); \
-    ownedDevices.push_back(device)
+    do { \
+        auto &port = *((Lpf2PortVirtual*)attachedPorts[(Lpf2PortNum)portNum]); \
+        auto device = new Lpf2VirtualGenericDevice(desc); \
+        port.attachDevice(device); \
+        ownedDevices.push_back(device); \
+    } while (0)
 
     switch (m_hubType)
     {
@@ -660,7 +665,29 @@ void Lpf2HubEmulation::initBuiltInDevices()
         break;
     }
 
-#undef INIT_DEVICE()
+#undef INIT_DEVICE
+}
+
+void Lpf2HubEmulation::destroyBuiltIn()
+{
+    for (auto &port : ownedPorts)
+    {
+        if (port)
+        {
+            delete port;
+            port = nullptr;
+        }
+    }
+    ownedPorts.clear();
+    for (auto &device : ownedDevices)
+    {
+        if (device)
+        {
+            delete device;
+            device = nullptr;
+        }
+    }
+    ownedDevices.clear();
 }
 
 void Lpf2HubEmulation::handleHubPropertyMessage(std::vector<uint8_t> message)
@@ -735,22 +762,7 @@ Lpf2HubEmulation::Lpf2HubEmulation(std::string hubName, Lpf2HubType hubType)
 
 Lpf2HubEmulation::~Lpf2HubEmulation()
 {
-    for (auto &port : ownedPorts)
-    {
-        if (port)
-        {
-            delete port;
-            port = nullptr;
-        }
-    }
-    for (auto &device : ownedDevices)
-    {
-        if (device)
-        {
-            delete device;
-            device = nullptr;
-        }
-    }
+    destroyBuiltIn();
 }
 
 void Lpf2HubEmulation::reset()
@@ -812,6 +824,14 @@ void Lpf2HubEmulation::update()
 {
     if (!isSubscribed)
         return;
+    if (m_firstUpdate)
+    {
+        m_firstUpdate = false;
+        if (m_useBuiltInDevices)
+        {
+            initBuiltInDevices();
+        }
+    }
     std::for_each(attachedPorts.begin(), attachedPorts.end(),
                   [this](auto &pair)
                   {
@@ -902,7 +922,12 @@ void Lpf2HubEmulation::setHubHardwareVersion(Lpf2Version version)
 
 void Lpf2HubEmulation::start()
 {
+    destroyBuiltIn();
     reset();
+    if (m_useBuiltInDevices)
+    {
+        initBuiltInPorts();
+    }
     LPF2_LOG_D("Starting BLE");
 
     NimBLEDevice::init(getHubName());
@@ -979,4 +1004,5 @@ void Lpf2HubEmulation::start()
     LPF2_LOG_D("Start advertising");
     NimBLEDevice::startAdvertising();
     LPF2_LOG_D("Characteristic defined! Now you can connect with your PoweredUp App!");
+    m_firstUpdate = true;
 }
