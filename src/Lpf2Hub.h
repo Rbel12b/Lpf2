@@ -106,6 +106,7 @@ public:
 
     enum class DataRequestingState
     {
+        HUB_ALERTS,
         HUB_PROP,
         PORT_INFO,
         PORT_MODE
