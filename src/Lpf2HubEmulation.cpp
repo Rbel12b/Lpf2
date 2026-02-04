@@ -2,7 +2,9 @@
 #include "Lpf2Hub.h"
 #include "Lpf2HubEmulation.h"
 #include "Util/Values.h"
-#include "Lpf2Port.h"
+#include "Lpf2Virtual/Lpf2PortVirtual.h"
+#include "Lpf2Virtual/Lpf2VirtualDevice.h"
+#include "Lpf2DeviceDescLib.h"
 
 class Lpf2HubServerCallbacks : public NimBLEServerCallbacks
 {
@@ -585,6 +587,82 @@ void Lpf2HubEmulation::checkPort(Lpf2Port *port)
     }
 }
 
+void Lpf2HubEmulation::initBuiltInPorts()
+{
+#define INIT_PORT(portNum) \
+    auto port = new Lpf2PortVirtual(); \
+    attachedPorts[(Lpf2PortNum)portNum] = port; \
+    ownedPorts.push_back(port); \
+
+    switch (m_hubType)
+    {
+    case Lpf2HubType::CONTROL_PLUS_HUB:
+    {
+        INIT_PORT(Lpf2ControlPlusHubPort::ACCELEROMETER);
+        INIT_PORT(Lpf2ControlPlusHubPort::CURRENT);
+        INIT_PORT(Lpf2ControlPlusHubPort::GESTURE);
+        INIT_PORT(Lpf2ControlPlusHubPort::GYRO);
+        INIT_PORT(Lpf2ControlPlusHubPort::LED);
+        INIT_PORT(Lpf2ControlPlusHubPort::TEMP2);
+        INIT_PORT(Lpf2ControlPlusHubPort::TEMP);
+        INIT_PORT(Lpf2ControlPlusHubPort::TILT);
+        INIT_PORT(Lpf2ControlPlusHubPort::VOLTAGE);
+        break;
+    }
+    default:
+        break;
+    }
+
+#undef INIT_PORT()
+}
+
+void Lpf2HubEmulation::initBuiltInDevices()
+{
+#define INIT_DEVICE(portNum, desc) \
+    auto &port = *((Lpf2PortVirtual*)attachedPorts[(Lpf2PortNum)portNum]); \
+    auto device = new Lpf2VirtualGenericDevice(desc); \
+    port.attachDevice(device); \
+    ownedDevices.push_back(device)
+
+    switch (m_hubType)
+    {
+    case Lpf2HubType::CONTROL_PLUS_HUB:
+    {
+        INIT_DEVICE(Lpf2ControlPlusHubPort::ACCELEROMETER,
+            Lpf2DeviceDescriptors::LPF2_DEVICE_TECHNIC_MEDIUM_HUB_ACCELEROMETER);
+            
+        INIT_DEVICE(Lpf2ControlPlusHubPort::CURRENT,
+            Lpf2DeviceDescriptors::LPF2_DEVICE_CURRENT_SENSOR);
+
+        INIT_DEVICE(Lpf2ControlPlusHubPort::GESTURE,
+            Lpf2DeviceDescriptors::LPF2_DEVICE_TECHNIC_MEDIUM_HUB_GEST_SENSOR);
+
+        INIT_DEVICE(Lpf2ControlPlusHubPort::GYRO,
+            Lpf2DeviceDescriptors::LPF2_DEVICE_TECHNIC_MEDIUM_HUB_GYRO_SENSOR);
+
+        INIT_DEVICE(Lpf2ControlPlusHubPort::LED,
+            Lpf2DeviceDescriptors::LPF2_DEVICE_HUB_LED);
+
+        INIT_DEVICE(Lpf2ControlPlusHubPort::TEMP2,
+            Lpf2DeviceDescriptors::LPF2_DEVICE_TECHNIC_MEDIUM_HUB_TEMPERATURE_SENSOR);
+
+        INIT_DEVICE(Lpf2ControlPlusHubPort::TEMP,
+            Lpf2DeviceDescriptors::LPF2_DEVICE_TECHNIC_MEDIUM_HUB_TEMPERATURE_SENSOR);
+
+        INIT_DEVICE(Lpf2ControlPlusHubPort::TILT,
+            Lpf2DeviceDescriptors::LPF2_DEVICE_TECHNIC_MEDIUM_HUB_TILT_SENSOR);
+
+        INIT_DEVICE(Lpf2ControlPlusHubPort::VOLTAGE,
+            Lpf2DeviceDescriptors::LPF2_DEVICE_VOLTAGE_SENSOR);
+        break;
+    }
+    default:
+        break;
+    }
+
+#undef INIT_DEVICE()
+}
+
 void Lpf2HubEmulation::handleHubPropertyMessage(std::vector<uint8_t> message)
 {
     if (message.size() < 4)
@@ -652,7 +730,27 @@ Lpf2HubEmulation::Lpf2HubEmulation() {};
 Lpf2HubEmulation::Lpf2HubEmulation(std::string hubName, Lpf2HubType hubType)
 {
     setHubName(hubName);
-    _hubType = hubType;
+    m_hubType = hubType;
+}
+
+Lpf2HubEmulation::~Lpf2HubEmulation()
+{
+    for (auto &port : ownedPorts)
+    {
+        if (port)
+        {
+            delete port;
+            port = nullptr;
+        }
+    }
+    for (auto &device : ownedDevices)
+    {
+        if (device)
+        {
+            delete device;
+            device = nullptr;
+        }
+    }
 }
 
 void Lpf2HubEmulation::reset()
@@ -719,7 +817,11 @@ void Lpf2HubEmulation::update()
                   {
                       this->checkPort(pair.second);
                   });
-    // _pService->
+}
+
+void Lpf2HubEmulation::setUseBuiltInDevices(bool use)
+{
+    m_useBuiltInDevices = use;
 }
 
 void Lpf2HubEmulation::setHubRssi(int8_t rssi)
@@ -834,7 +936,7 @@ void Lpf2HubEmulation::start()
     _pAdvertising->setMaxInterval(64); // 0.625ms units -> 40ms
 
     std::string manufacturerData;
-    if (_hubType == Lpf2HubType::POWERED_UP_HUB)
+    if (m_hubType == Lpf2HubType::POWERED_UP_HUB)
     {
         LPF2_LOG_D("PoweredUp Hub");
         // this is the minimal change that makes PoweredUp working on devices with Android <6
@@ -843,7 +945,7 @@ void Lpf2HubEmulation::start()
         const char poweredUpHub[8] = {0x97, 0x03, 0x00, 0x41, 0x07, 0x00, 0x63, 0x00};
         manufacturerData = std::string(poweredUpHub, sizeof(poweredUpHub));
     }
-    else if (_hubType == Lpf2HubType::CONTROL_PLUS_HUB)
+    else if (m_hubType == Lpf2HubType::CONTROL_PLUS_HUB)
     {
         LPF2_LOG_D("ControlPlus Hub");
         const char controlPlusHub[8] = {0x97, 0x03, 0x00, 0x80, 0x06, 0x00, 0x41, 0x00};

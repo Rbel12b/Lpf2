@@ -7,6 +7,8 @@
 #include <unordered_map>
 
 class Lpf2Port;
+class Lpf2PortVirtual;
+class Lpf2VirtualGenericDevice;
 
 class Lpf2HubEmulation
 {
@@ -20,14 +22,22 @@ private:
     BLEAddress *_hubAddress = nullptr;
     BLEAdvertising *_pAdvertising;
 
-    Lpf2HubType _hubType = Lpf2HubType::UNKNOWNHUB;
+    Lpf2HubType m_hubType = Lpf2HubType::UNKNOWNHUB;
 
     std::unordered_map<Lpf2PortNum, Lpf2Port*> attachedPorts;
+    /**
+     * @brief ports that are owned by this class, they will be destructed in the destructor.
+     */
+    std::vector<Lpf2Port*> ownedPorts;
+    std::vector<Lpf2VirtualGenericDevice*> ownedDevices;
+
     /**
      * @brief a map that contains if a port has a device attached,
      * used to determine when to send IO attached/detached messages
      */
     std::unordered_map<Lpf2PortNum, bool> connectedDevices;
+
+    bool m_useBuiltInDevices = true;
 
     bool updateHubPropertyEnabled[(unsigned int)Lpf2HubPropertyType::END] = {false};
     std::vector<uint8_t> hubProperty[(unsigned int)Lpf2HubPropertyType::END];
@@ -52,9 +62,13 @@ private:
 
     void checkPort(Lpf2Port* port);
 
+    void initBuiltInPorts();
+    void initBuiltInDevices();
+
 public:
     Lpf2HubEmulation();
     Lpf2HubEmulation(std::string hubName, Lpf2HubType hubType);
+    ~Lpf2HubEmulation();
 
     /**
      * @brief reset Hub properties, does not detach ports!
@@ -62,7 +76,7 @@ public:
     void reset();
 
     /**
-     * Starts BLE advertising
+     * @brief Starts BLE advertising, resets hub props
      */
     void start();
 
@@ -71,6 +85,12 @@ public:
      * attached ports have devices attached or not
      */
     void update();
+
+    /**
+     * @brief sets if the library should initialize the default
+     * built-in devices, defaults to true.
+     */
+    void setUseBuiltInDevices(bool use);
 
     void setHubRssi(int8_t rssi);
     void setHubBatteryLevel(uint8_t batteryLevel);
