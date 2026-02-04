@@ -600,6 +600,24 @@ void Lpf2Hub::requestInfos()
 
     switch (m_dataRequestState.state)
     {
+    case DataRequestingState::HUB_ALERTS:
+    {
+        if (m_dataRequestState.mode >= 4)
+        {
+            m_dataRequestState.mode = 0;
+            m_dataRequestState.state = DataRequestingState::HUB_PROP;
+        }
+        else
+        {
+            m_dataRequestState.mode++;
+            std::vector<uint8_t> payload;
+            payload.push_back((uint8_t)m_dataRequestState.mode);
+            payload.push_back(0x01);
+            writeValue(Lpf2MessageType::HUB_ALERTS, payload);
+        }
+        break;
+    }
+
     case DataRequestingState::HUB_PROP:
     {
         if (m_dataRequestState.propId >= Lpf2HubPropertyType::HARDWARE_NETWORK_FAMILY) // Hub usually don't reply to this
@@ -771,7 +789,7 @@ void Lpf2Hub::setHubNameProp(std::string name)
  * @brief Constructor
  */
 Lpf2Hub::Lpf2Hub()
-    : m_rateLimiter(20)
+    : m_rateLimiter(5)
 {
 }
 
@@ -1016,7 +1034,7 @@ bool Lpf2Hub::connectHub()
     m_dataRequestState.finishedRequests = false;
     m_dataRequestState.propId = Lpf2HubPropertyType::ADVERTISING_NAME;
     m_dataRequestState.mode = 0;
-    m_dataRequestState.state = DataRequestingState::HUB_PROP;
+    m_dataRequestState.state = DataRequestingState::HUB_ALERTS;
     vTaskDelay(200);
     return true;
 }
