@@ -126,7 +126,7 @@ public:
     BLEAddress *_requestedDeviceAddress = nullptr;
     BLERemoteCharacteristic *_pRemoteCharacteristic;
     BLEScan *pBLEScan;
-    Lpf2HubType _hubType;
+    Lpf2HubType m_hubType;
     bool _isConnecting = false;
     bool _isConnected = false;
 

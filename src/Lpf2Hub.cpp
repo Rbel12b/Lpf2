@@ -84,25 +84,25 @@ public:
                     switch (manufacturerData[3])
                     {
                     case DUPLO_TRAIN_HUB_ID:
-                        _lpf2Hub->_hubType = Lpf2HubType::DUPLO_TRAIN_HUB;
+                        _lpf2Hub->m_hubType = Lpf2HubType::DUPLO_TRAIN_HUB;
                         break;
                     case BOOST_MOVE_HUB_ID:
-                        _lpf2Hub->_hubType = Lpf2HubType::BOOST_MOVE_HUB;
+                        _lpf2Hub->m_hubType = Lpf2HubType::BOOST_MOVE_HUB;
                         break;
                     case POWERED_UP_HUB_ID:
-                        _lpf2Hub->_hubType = Lpf2HubType::POWERED_UP_HUB;
+                        _lpf2Hub->m_hubType = Lpf2HubType::POWERED_UP_HUB;
                         break;
                     case POWERED_UP_REMOTE_ID:
-                        _lpf2Hub->_hubType = Lpf2HubType::POWERED_UP_REMOTE;
+                        _lpf2Hub->m_hubType = Lpf2HubType::POWERED_UP_REMOTE;
                         break;
                     case CONTROL_PLUS_HUB_ID:
-                        _lpf2Hub->_hubType = Lpf2HubType::CONTROL_PLUS_HUB;
+                        _lpf2Hub->m_hubType = Lpf2HubType::CONTROL_PLUS_HUB;
                         break;
                     case MARIO_HUB_ID:
-                        _lpf2Hub->_hubType = Lpf2HubType::MARIO_HUB;
+                        _lpf2Hub->m_hubType = Lpf2HubType::MARIO_HUB;
                         break;
                     default:
-                        _lpf2Hub->_hubType = Lpf2HubType::UNKNOWNHUB;
+                        _lpf2Hub->m_hubType = Lpf2HubType::UNKNOWNHUB;
                         break;
                     }
                 }
@@ -809,7 +809,7 @@ void Lpf2Hub::init()
     _isConnecting = false;
     _bleUuid = BLEUUID(LPF2_UUID);
     _charachteristicUuid = BLEUUID(LPF2_CHARACHTERISTIC);
-    _hubType = Lpf2HubType::UNKNOWNHUB;
+    m_hubType = Lpf2HubType::UNKNOWNHUB;
 
     BLEDevice::init("");
     pBLEScan = BLEDevice::getScan();
@@ -1071,7 +1071,7 @@ bool Lpf2Hub::isScanning()
  */
 Lpf2HubType Lpf2Hub::getHubType()
 {
-    return _hubType;
+    return m_hubType;
 }
 
 std::string Lpf2Hub::getAllInfoStr()
