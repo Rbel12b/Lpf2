@@ -11,6 +11,7 @@
 #include "./log/log.h"
 #include <sstream>
 #include <iomanip>
+#include "Lpf2DeviceDescLib.h"
 
 /**
  * Derived class which could be added as an instance to the BLEClient for callback handling
@@ -382,23 +383,18 @@ void Lpf2Hub::handleAttachedIOMessage(const std::vector<uint8_t> &message)
                    (int)portNum, (int)devType);
 
         attachedPorts[portNum] = devType;
-        if (!remotePorts.count(portNum))
+        auto port = _getPort(portNum);
+        if (auto desc = Lpf2DeviceDescRegistry::instance().getDescriptor(devType))
         {
-            remotePorts[portNum] = new Lpf2PortRemote();
-            remotePorts[portNum]->setRemote(this);
+            port->setDevType(devType);
+            port->setFromDesc(desc);
         }
-        // don't set the device type on the port yet, only when finished retrieving modes.
         break;
     }
     case Lpf2IOEvent::DETACHED_IO:
     {
         attachedPorts[portNum] = Lpf2DeviceType::UNKNOWNDEVICE;
-        if (!remotePorts.count(portNum))
-        {
-            remotePorts[portNum] = new Lpf2PortRemote();
-            remotePorts[portNum]->setRemote(this);
-        }
-        auto &port = remotePorts[portNum];
+        auto port = _getPort(portNum);
         port->setDevType(Lpf2DeviceType::UNKNOWNDEVICE);
         port->getModes_mod().clear();
         break;
@@ -748,17 +744,17 @@ void Lpf2Hub::pending(Lpf2MessageType msgType)
     pendingRequest.valid = true;
 }
 
-Lpf2PortRemote *Lpf2Hub::_getPort(Lpf2PortNum portNum)
+Lpf2PortRemote_internal *Lpf2Hub::_getPort(Lpf2PortNum portNum)
 {
     if (!remotePorts.count(portNum))
     {
         remotePorts[portNum] = nullptr;
         LPF2_LOG_D("Adding new NULL port.");
     }
-    Lpf2PortRemote *pPort = remotePorts[portNum];
+    Lpf2PortRemote_internal *pPort = remotePorts[portNum];
     if (pPort == nullptr)
     {
-        pPort = new Lpf2PortRemote();
+        pPort = new Lpf2PortRemote_internal();
         if (!pPort)
         {
             LPF2_LOG_E("Failed to allocate port.");
@@ -883,11 +879,7 @@ void Lpf2Hub::update()
 
     std::for_each(attachedPorts.begin(), attachedPorts.end(), [this](std::pair<Lpf2PortNum, Lpf2DeviceType> attachedPort)
                   {
-        if (!remotePorts.count(attachedPort.first))
-        {
-            remotePorts[attachedPort.first] = new Lpf2PortRemote();
-            remotePorts[attachedPort.first]->setRemote(this);
-        }
+        _getPort(attachedPort.first);
         if (!m_dataRequestState.finishedRequests)
         {
             return;

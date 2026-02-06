@@ -21,7 +21,7 @@ bool Lpf2PortRemote::deviceConnected()
     return m_deviceType != Lpf2DeviceType::UNKNOWNDEVICE;
 }
 
-void Lpf2PortRemote::setRemote(Lpf2Hub *remote)
+void Lpf2PortRemote_internal::setRemote(Lpf2Hub *remote)
 {
     m_remote = remote;
 }
