@@ -4,7 +4,7 @@
 #include "Lpf2Devices/ColorSensor.h"
 #include "Lpf2Devices/DistanceSensor.h"
 
-void Lpf2DeviceRegistry::registerDefaultFactories()
+void Lpf2DeviceRegistry::registerDefault()
 {
     // Order matters
     EncoderMotor::registerFactory(Lpf2DeviceRegistry::instance()); // EncoderMotor must be before BasicMotor, because we prefer EncoderMotors over BasicMotors

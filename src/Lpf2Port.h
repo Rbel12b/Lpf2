@@ -4,6 +4,7 @@
 
 #include "config.h"
 #include "Lpf2Const.h"
+#include "Lpf2DeviceDesc.h"
 
 class Lpf2Port
 {
@@ -56,7 +57,26 @@ public:
 
     std::vector<Lpf2Mode> modeData;
 
-    Lpf2PortNum portNum; // just a reference for some external code. (e.g. you can set it and use it, but only if Lpf2HubEmulation does not use it!!!)
+    Lpf2PortNum portNum; // internal, for Lpf2HubEmulation
+
+    /**
+     * @brief Set the port data from a device descriptor,
+     * the function will check if the device type matches before setting the data
+     * @param desc Device descriptor to set from
+     */
+    void setFromDesc(const Lpf2DeviceDescriptor *desc)
+    {
+        if (!desc || desc->type != m_deviceType)
+            return;
+        modeData = desc->modes;
+        modes = modeData.size();
+        views = 0; // TODO: add to desc
+        modeCombos = desc->combos;
+        caps = desc->caps;
+        inModes = desc->inModes;
+        outModes = desc->outModes;
+    }
+
 protected:
     static uint8_t getDataSize(uint8_t format);
     static Lpf2ModeNum getDefaultMode(Lpf2DeviceType id);
