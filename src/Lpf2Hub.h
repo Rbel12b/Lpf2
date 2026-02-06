@@ -19,7 +19,7 @@
 
 class Lpf2Hub
 {
-    std::unordered_map<Lpf2PortNum, Lpf2PortRemote*> remotePorts;
+    std::unordered_map<Lpf2PortNum, Lpf2PortRemote_internal*> remotePorts;
     std::unordered_map<Lpf2PortNum, Lpf2DeviceType> attachedPorts; // Ports with attached devices
 
     std::vector<uint8_t> hubProperty[(unsigned int)Lpf2HubPropertyType::END];
@@ -45,7 +45,7 @@ class Lpf2Hub
 
     void pending(Lpf2MessageType msgType);
 
-    Lpf2PortRemote *_getPort(Lpf2PortNum portNum);
+    Lpf2PortRemote_internal *_getPort(Lpf2PortNum portNum);
 
     /**
      * @brief check the lenght of a message, and prints an error to the log
@@ -98,7 +98,6 @@ public:
     std::string getHubName();
     Lpf2BatteryType getBatteryType();
 
-    // write (set) operations on port devices
     void writeValue(Lpf2MessageType type, const std::vector<uint8_t> &data);
 
     // BLE specific stuff

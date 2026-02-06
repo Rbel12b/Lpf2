@@ -1,5 +1,28 @@
 #include "Lpf2DeviceDescLib.h"
 
+void Lpf2DeviceDescRegistry::registerDefault()
+{
+#define REGISTER_DEVICE_DESC(dev) \
+    Lpf2DeviceDescRegistry::instance().registerDesc( \
+        Lpf2DeviceType::dev, &Lpf2DeviceDescriptors::LPF2_DEVICE_ ## dev)
+
+    REGISTER_DEVICE_DESC(TECHNIC_MEDIUM_HUB_GEST_SENSOR);
+    REGISTER_DEVICE_DESC(TECHNIC_MEDIUM_HUB_TILT_SENSOR);
+    REGISTER_DEVICE_DESC(TECHNIC_MEDIUM_HUB_GYRO_SENSOR);
+    REGISTER_DEVICE_DESC(TECHNIC_MEDIUM_HUB_ACCELEROMETER);
+    REGISTER_DEVICE_DESC(HUB_LED);
+    REGISTER_DEVICE_DESC(TRAIN_MOTOR);
+    REGISTER_DEVICE_DESC(CURRENT_SENSOR);
+    REGISTER_DEVICE_DESC(VOLTAGE_SENSOR);
+    REGISTER_DEVICE_DESC(TECHNIC_MEDIUM_HUB_TEMPERATURE_SENSOR);
+    REGISTER_DEVICE_DESC(TECHNIC_LARGE_ANGULAR_MOTOR_GREY);
+    REGISTER_DEVICE_DESC(TECHNIC_DISTANCE_SENSOR);
+    REGISTER_DEVICE_DESC(TECHNIC_MEDIUM_ANGULAR_MOTOR_GREY);
+    REGISTER_DEVICE_DESC(TECHNIC_COLOR_SENSOR);
+
+#undef REGISTER_DEVICE_DESC
+}
+
 namespace Lpf2DeviceDescriptors
 {
     // Device 0x36
@@ -718,6 +741,91 @@ namespace Lpf2DeviceDescriptors
                 {},
                 0x00,
                 Lpf2Mode::Flags{{ 0x84, 0x04, 0x00, 0x00, 0x40, 0x40 }}
+            },
+        }
+    };
+
+    // Device 0x2E
+    const Lpf2DeviceDescriptor LPF2_DEVICE_TECHNIC_LARGE_LINEAR_MOTOR =
+    {
+        .type = Lpf2DeviceType::TECHNIC_LARGE_LINEAR_MOTOR,
+        .inModes = 0x001E,
+        .outModes = 0x001F,
+        .caps = 0x0F,
+        .combos = { 0x0000 },
+        .modes =
+        {
+            {
+                "POWER",
+                -100.0f, 100.0f,
+                -100.0f, 100.0f,
+                -100.0f, 100.0f,
+                "PCT",
+                0x00, 0x50,
+                1, DATA8, 4, 0,
+                {},
+                0x00,
+                Lpf2Mode::Flags{{ 0x04, 0x05, 0x00, 0x00, 0x00, 0x30 }}
+            },
+            {
+                "SPEED",
+                -100.0f, 100.0f,
+                -100.0f, 100.0f,
+                -100.0f, 100.0f,
+                "PCT",
+                0x30, 0x70,
+                1, DATA8, 4, 0,
+                {},
+                0x00,
+                Lpf2Mode::Flags{{ 0x04, 0x05, 0x00, 0x00, 0x00, 0x21 }}
+            },
+            {
+                "POS",
+                -360.0f, 360.0f,
+                -100.0f, 100.0f,
+                -360.0f, 360.0f,
+                "DEG",
+                0x28, 0x68,
+                1, DATA32, 11, 0,
+                {},
+                0x00,
+                Lpf2Mode::Flags{{ 0x00, 0x00, 0x00, 0x24, 0x00, 0x00 }}
+            },
+            {
+                "APOS",
+                -180.0f, 179.0f,
+                -200.0f, 200.0f,
+                -180.0f, 179.0f,
+                "DEG",
+                0x32, 0x32,
+                1, DATA16, 3, 0,
+                {},
+                0x00,
+                Lpf2Mode::Flags{{ 0x05, 0x00, 0x00, 0x00, 0x22, 0x00 }}
+            },
+            {
+                "CALIB",
+                0.0f, 3600.0f,
+                0.0f, 100.0f,
+                0.0f, 3600.0f,
+                "CAL",
+                0x00, 0x00,
+                2, DATA16, 5, 0,
+                {},
+                0x00,
+                Lpf2Mode::Flags{{ 0x04, 0x05, 0x00, 0x00, 0x40, 0x22 }}
+            },
+            {
+                "STATS",
+                0.0f, 65535.0f,
+                0.0f, 100.0f,
+                0.0f, 65535.0f,
+                "MIN",
+                0x00, 0x00,
+                14, DATA16, 5, 0,
+                {},
+                0x00,
+                Lpf2Mode::Flags{{ 0x04, 0x05, 0x00, 0x00, 0x00, 0x00 }}
             },
         }
     };

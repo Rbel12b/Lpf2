@@ -22,4 +22,54 @@ namespace Lpf2DeviceDescriptors
     extern const Lpf2DeviceDescriptor LPF2_DEVICE_TECHNIC_COLOR_SENSOR;
 };
 
+class Lpf2DeviceDescRegistry
+{
+public:
+    static Lpf2DeviceDescRegistry &instance()
+    {
+        static Lpf2DeviceDescRegistry inst;
+        return inst;
+    }
+
+    static void registerDefault();
+
+    void registerDesc(Lpf2DeviceType type, const Lpf2DeviceDescriptor *desc)
+    {
+        if (count_ >= MAX_DESCRIPTORS)
+        {
+            assert(false && "Exceeded maximum number of Lpf2 device factories");
+            return;
+        }
+
+        _descriptors[count_++] = Lpf2DeviceDescRegistryEntry{desc, type};
+    }
+
+    const Lpf2DeviceDescriptor *getDescriptor(Lpf2DeviceType type)
+    {
+        for (size_t i = 0; i < count_; i++)
+        {
+            if (_descriptors[i]._type == type)
+            {
+                return _descriptors[i]._desc;
+            }
+        }
+        return nullptr;
+    }
+
+    size_t count() const
+    {
+        return count_;
+    }
+
+private:
+    static constexpr size_t MAX_DESCRIPTORS = 64;
+
+    struct Lpf2DeviceDescRegistryEntry
+    {
+        const Lpf2DeviceDescriptor* _desc;
+        Lpf2DeviceType _type;
+    }_descriptors[MAX_DESCRIPTORS];
+    size_t count_ = 0;
+};
+
 #endif
