@@ -44,16 +44,6 @@ void loop()
         hub.update();
 
         auto &portA = *hub.getPort(Lpf2PortNum(Lpf2ControlPlusHubPort::A));
-        // Set mode 0 on port A if a device is connected, this is required for the color sensor to start sending data
-        if (portA.deviceConnected())
-        {
-            static bool portASetupDone = false;
-            if (!portASetupDone)
-            {
-                portA.setMode(0);
-                portASetupDone = true;
-            }
-        }
 
         static Lpf2DeviceManager portADeviceManager(portA);
         portADeviceManager.update();

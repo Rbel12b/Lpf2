@@ -3,6 +3,11 @@
 
 void Lpf2PortRemote::update()
 {
+    if (m_lastDevType != m_deviceType)
+    {
+        m_lastDevType = m_deviceType;
+        setMode(getDefaultMode(m_deviceType));
+    }
 }
 
 int Lpf2PortRemote::writeData(uint8_t modeNum, const std::vector<uint8_t> &data)
