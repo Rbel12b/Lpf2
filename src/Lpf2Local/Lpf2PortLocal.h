@@ -13,6 +13,7 @@
 class Lpf2PortLocal : public Lpf2Port
 {
 public:
+    Lpf2PortLocal() = delete;
     Lpf2PortLocal(Lpf2IO *IO) : m_IO(IO), m_serial(m_IO->getUart()), m_pwm(m_IO->getPWM()), m_parser(m_serial) {};
 
     void init(
