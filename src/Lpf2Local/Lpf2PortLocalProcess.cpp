@@ -1,4 +1,4 @@
-#include "Lpf2PortLocal.h"
+#include "Lpf2PortLocal.hpp"
 #include <string>
 #include <cstring>
 

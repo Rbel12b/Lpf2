@@ -2,7 +2,7 @@
 #ifndef _LPF2_UTIL_RATE_LIMITER_H_
 #define _LPF2_UTIL_RATE_LIMITER_H_
 
-#include "../config.h"
+#include "../config.hpp"
 
 class RateLimiter
 {

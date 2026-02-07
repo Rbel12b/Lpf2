@@ -2,8 +2,8 @@
 #ifndef _LPF2_DEVICE_DESC_LIB_H_
 #define _LPF2_DEVICE_DESC_LIB_H_
 
-#include "config.h"
-#include "Lpf2Device.h"
+#include "config.hpp"
+#include "Lpf2Device.hpp"
 
 namespace Lpf2DeviceDescriptors
 {

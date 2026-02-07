@@ -2,7 +2,7 @@
 #ifndef _LPF2_SERIAL_H_
 #define _LPF2_SERIAL_H_
 
-#include "config.h"
+#include "config.hpp"
 #include "IO/IO.h"
 #include <vector>
 

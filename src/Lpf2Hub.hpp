@@ -1,5 +1,5 @@
 /*
- * Lpf2Hub.h - Arduino base class for controlling Powered UP and Boost controllers
+ * Lpf2Hub.hpp - Arduino base class for controlling Powered UP and Boost controllers
  *
  * (c) Copyright 2020 - Cornelius Munz
  * Released under MIT License
@@ -9,12 +9,12 @@
 #ifndef _LPF2_HUB_H_
 #define _LPF2_HUB_H_
 
-#include "config.h"
+#include "config.hpp"
 #include "Arduino.h"
 #include "NimBLEDevice.h"
-#include "Lpf2Const.h"
-#include "Util/RateLimiter.h"
-#include "Lpf2Remote/Lpf2PortRemote.h"
+#include "Lpf2Const.hpp"
+#include "Util/RateLimiter.hpp"
+#include "Lpf2Remote/Lpf2PortRemote.hpp"
 #include "unordered_map"
 
 class Lpf2Hub

@@ -1,4 +1,4 @@
-#include "Lpf2DeviceManager.h"
+#include "Lpf2DeviceManager.hpp"
 
 #if defined(LPF2_USE_FREERTOS)
 void Lpf2DeviceManager::taskEntryPoint(void *pvParameters)

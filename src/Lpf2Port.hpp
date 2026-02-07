@@ -2,9 +2,9 @@
 #ifndef _LPF2_PORT_H_
 #define _LPF2_PORT_H_
 
-#include "config.h"
-#include "Lpf2Const.h"
-#include "Lpf2DeviceDesc.h"
+#include "config.hpp"
+#include "Lpf2Const.hpp"
+#include "Lpf2DeviceDesc.hpp"
 
 class Lpf2Port
 {

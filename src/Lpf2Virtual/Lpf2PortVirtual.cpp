@@ -1,4 +1,4 @@
-#include "Lpf2PortVirtual.h"
+#include "Lpf2PortVirtual.hpp"
 #include <memory>
 
 void Lpf2PortVirtual::update()
