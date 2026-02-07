@@ -2,11 +2,11 @@
 #ifndef _LPF2_PORT_LOCAL_H_
 #define _LPF2_PORT_LOCAL_H_
 
-#include "config.h"
-#include "Lpf2Port.h"
-#include "Lpf2Serial.h"
-#include "Lpf2SerialDef.h"
-#include "Util/mutex.h"
+#include "config.hpp"
+#include "Lpf2Port.hpp"
+#include "Lpf2Serial.hpp"
+#include "Lpf2SerialDef.hpp"
+#include "Util/mutex.hpp"
 
 #define MEASUREMENTS 20
 

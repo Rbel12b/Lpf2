@@ -1,4 +1,4 @@
-#include "BasicMotor.h"
+#include "BasicMotor.hpp"
 
 namespace
 {

@@ -1,7 +1,7 @@
 #pragma once
-#include "config.h"
-#include "UART/UART.h"
-#include "Lpf2Local/IO/IO.h"
+#include "config.hpp"
+#include "UART/UART.hpp"
+#include "Lpf2Local/IO/IO.hpp"
 
 #ifdef ESP32
 

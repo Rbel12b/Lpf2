@@ -1,10 +1,10 @@
 #include <Arduino.h>
 
-#include "Lpf2Hub.h"
-#include "Lpf2DeviceDescLib.h"
-#include "Lpf2DeviceManager.h"
-#include "Lpf2Devices/ColorSensor.h"
-#include "Lpf2Devices/BasicMotor.h"
+#include "Lpf2Hub.hpp"
+#include "Lpf2DeviceDescLib.hpp"
+#include "Lpf2DeviceManager.hpp"
+#include "Lpf2Devices/ColorSensor.hpp"
+#include "Lpf2Devices/BasicMotor.hpp"
 
 Lpf2Hub hub;
 

@@ -1,5 +1,5 @@
-#include "Lpf2Serial.h"
-#include "Lpf2SerialDef.h"
+#include "Lpf2Serial.hpp"
+#include "Lpf2SerialDef.hpp"
 
 #include <string>
 #include <cstdio>

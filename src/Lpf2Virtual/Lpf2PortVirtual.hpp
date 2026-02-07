@@ -2,9 +2,9 @@
 #ifndef _LPF2_PORT_VIRTUAL_H_
 #define _LPF2_PORT_VIRTUAL_H_
 
-#include "config.h"
-#include "Lpf2Port.h"
-#include "Lpf2VirtualDevice.h"
+#include "config.hpp"
+#include "Lpf2Port.hpp"
+#include "Lpf2VirtualDevice.hpp"
 #include <memory>
 
 class Lpf2PortVirtual : public Lpf2Port

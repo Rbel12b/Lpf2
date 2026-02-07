@@ -1,4 +1,4 @@
-#include "Lpf2PortLocal.h"
+#include "Lpf2PortLocal.hpp"
 
 int Lpf2PortLocal::setMode(uint8_t mode)
 {
