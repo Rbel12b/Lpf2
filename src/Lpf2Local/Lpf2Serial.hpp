@@ -3,7 +3,7 @@
 #define _LPF2_SERIAL_H_
 
 #include "config.hpp"
-#include "IO/IO.h"
+#include "IO/IO.hpp"
 #include <vector>
 
 struct Lpf2Message
