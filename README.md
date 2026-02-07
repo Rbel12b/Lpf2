@@ -10,7 +10,7 @@ Lpf2 is a LEGO PoweredUp Protocol 2 (LPF2) communication library for ESP32 micro
 I used the library as a reference, and base for LWP implementation (Hub emulation, and controlling a Hub).
 - Thanks to LEGO for releasing the LWP documentation: [LEGO Wireless Protocol](https://lego.github.io/lego-ble-wireless-protocol-docs).
 - Thanks to the pybrics team for creating the uart protocol documentation: [LEGO PoweredUp UART Protocol](https://github.com/pybricks/technical-info/blob/master/uart-protocol.md).
-- Thanks to @h2zero for the great [NimBLE-Arduino library](https://github.com/h2zero/NimBLE-Arduino).
+- Thanks to h2zero (Ryan Powell) for the great [NimBLE-Arduino library](https://github.com/h2zero/NimBLE-Arduino).
 
 ## License
 
