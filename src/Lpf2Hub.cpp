@@ -183,6 +183,11 @@ void Lpf2Hub::notifyCallback(
         handlePortInputFormatSingleMessage(data);
         break;
     }
+    case Lpf2MessageType::PORT_VALUE_SINGLE:
+    {
+        handlePortValueSingleMessage(data);
+        break;
+    }
     default:
     {
         LPF2_LOG_E("Unimplemented: %i", data[2]);
@@ -610,6 +615,29 @@ void Lpf2Hub::handlePortInputFormatSingleMessage(const std::vector<uint8_t> &mes
 
     m_portInputFormatMap[inputFormat.portNum] = inputFormat;
 
+    return;
+}
+
+void Lpf2Hub::handlePortValueSingleMessage(const std::vector<uint8_t> &message)
+{
+    if (checkLenght(message, 5))
+    {
+        return;
+    }
+
+    Lpf2PortNum portNum = (Lpf2PortNum)message[(byte)Lpf2MessageByte::PORT_ID];
+    if (!m_portInputFormatMap.count(portNum))
+    {
+        return;
+    }
+    auto &port = *_getPort(portNum);
+    uint8_t mode = m_portInputFormatMap[portNum].mode;
+    auto &modeData = port.getModes_mod();
+    if (modeData.size() <= mode)
+    {
+        return;
+    }
+    modeData[mode].rawData.assign(message.begin() + 4, message.end());
     return;
 }
 

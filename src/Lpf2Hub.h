@@ -36,6 +36,7 @@ class Lpf2Hub
     void handlePortInfoMessage(const std::vector<uint8_t> &message);
     void handlePortModeInfoMessage(const std::vector<uint8_t> &message);
     void handlePortInputFormatSingleMessage(const std::vector<uint8_t> &message);
+    void handlePortValueSingleMessage(const std::vector<uint8_t> &message);
 
     void requestInfos();
 
