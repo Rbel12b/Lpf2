@@ -6,7 +6,7 @@
 #include "Lpf2Devices/ColorSensor.hpp"
 #include "Lpf2Devices/BasicMotor.hpp"
 
-#include "device.h"
+#include "device.hpp"
 
 #include "driver/mcpwm.h"
 
