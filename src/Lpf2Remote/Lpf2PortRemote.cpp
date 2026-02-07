@@ -21,7 +21,15 @@ bool Lpf2PortRemote::deviceConnected()
     return m_deviceType != Lpf2DeviceType::UNKNOWNDEVICE;
 }
 
-void Lpf2PortRemote_internal::setRemote(Lpf2Hub *remote)
+int Lpf2PortRemote::setMode(uint8_t mode)
 {
-    m_remote = remote;
+    if (!m_remote)
+        return 1;
+    uint32_t delta = 1;
+    return m_remote->setPortMode(portNum, mode, delta);
+}
+
+int Lpf2PortRemote::setModeCombo(uint8_t idx)
+{
+    return 0;
 }

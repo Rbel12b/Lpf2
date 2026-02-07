@@ -1,36 +1,43 @@
 #include "Lpf2PortLocal.h"
 
-void Lpf2PortLocal::setMode(uint8_t num)
+int Lpf2PortLocal::setMode(uint8_t mode)
 {
-    if (num >= modes)
+    if (mode >= modes)
     {
-        LPF2_LOG_W("Tried to set invalid mode %i (max %i)", num, modes - 1);
-        return;
+        LPF2_LOG_W("Tried to set invalid mode %i (max %i)", mode, modes - 1);
+        return 1;
     }
 
-    m_mode = num;
+    m_mode = mode;
     uint8_t header = MESSAGE_CMD | CMD_SELECT;
     uint8_t checksum = header ^ 0xFF;
-    checksum ^= (uint8_t)num;
+    checksum ^= (uint8_t)mode;
 
     {
         MutexLock lock(m_serialMutex);
         m_serial->write(header);
-        m_serial->write((uint8_t)num);
+        m_serial->write((uint8_t)mode);
         m_serial->write(checksum);
         m_serial->flush();
     }
 
-    if (modeData[num].flags.pin1())
+    if (modeData[mode].flags.pin1())
     {
         m_pwm->out(255, 0);
     }
-    if (modeData[num].flags.pin2())
+    if (modeData[mode].flags.pin2())
     {
         m_pwm->out(0, 255);
     }
 
-    LPF2_LOG_D("Set mode to %i (%s)", num, modeData[num].name.c_str());
+    LPF2_LOG_D("Set mode to %i (%s)", mode, modeData[mode].name.c_str());
+    return 0;
+}
+
+int Lpf2PortLocal::setModeCombo(uint8_t idx)
+{
+    LPF2_LOG_W("Set mode Combo: %i, unimplemented!", idx);
+    return 0;
 }
 
 void Lpf2PortLocal::requestSpeedChange(uint32_t speed)

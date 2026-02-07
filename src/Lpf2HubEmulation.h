@@ -62,7 +62,7 @@ private:
     void handlePortInformationRequestMessage(std::vector<uint8_t> message);
     void handlePortModeInformationRequestMessage(std::vector<uint8_t> message);
 
-    void checkPort(Lpf2Port* port);
+    void checkPort(Lpf2PortNum portNum, Lpf2Port* port);
 
     void initBuiltInPorts();
     void initBuiltInDevices();

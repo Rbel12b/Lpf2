@@ -35,6 +35,7 @@ class Lpf2Hub
     void handleAttachedIOMessage(const std::vector<uint8_t> &message);
     void handlePortInfoMessage(const std::vector<uint8_t> &message);
     void handlePortModeInfoMessage(const std::vector<uint8_t> &message);
+    void handlePortInputFormatSingleMessage(const std::vector<uint8_t> &message);
 
     void requestInfos();
 
@@ -75,7 +76,8 @@ public:
     void setHubName(std::string name);
     void shutDownHub();
 
-    Lpf2Port *getPort(Lpf2PortNum portNum);
+    Lpf2PortRemote *getPort(Lpf2PortNum portNum);
+    int setPortMode(Lpf2PortNum portNum, uint8_t mode, uint32_t delta, bool notify = true);
 
     /**
      * @brief returns true if all infomation requests were sent, and answered (or timed out).
@@ -128,6 +130,17 @@ public:
     Lpf2HubType m_hubType;
     bool _isConnecting = false;
     bool _isConnected = false;
+
+
+    struct PortInputFormatSingle
+    {
+        Lpf2PortNum portNum;
+        uint8_t mode;
+        uint32_t delta;
+        bool notify;
+    };
+private:
+    std::unordered_map<Lpf2PortNum, PortInputFormatSingle> m_portInputFormatMap;
 
 private:
     struct

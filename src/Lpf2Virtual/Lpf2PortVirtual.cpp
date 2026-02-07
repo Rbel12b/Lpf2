@@ -24,6 +24,20 @@ bool Lpf2PortVirtual::deviceConnected()
     return (bool)m_device;
 }
 
+int Lpf2PortVirtual::setMode(uint8_t mode)
+{
+    if (m_device)
+        return 1;
+    return m_device->setMode(mode);
+}
+
+int Lpf2PortVirtual::setModeCombo(uint8_t idx)
+{
+    if (m_device)
+        return 1;
+    return m_device->setModeCombo(idx);
+}
+
 void Lpf2PortVirtual::attachDevice(Lpf2VirtualDevice *device)
 {
     m_device.release();
