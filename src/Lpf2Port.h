@@ -11,6 +11,27 @@ class Lpf2Port
 public:
     virtual void update() = 0;
 
+    virtual int writeData(uint8_t modeNum, const std::vector<uint8_t> &data) = 0;
+
+    virtual void setPower(uint8_t pin1, uint8_t pin2) = 0;
+
+    /**
+     * @brief Select the mode of the connected device,
+     * has no effect when deviceConnected() == false
+     * @returns 0 if succesful
+     */
+    virtual int setMode(uint8_t mode) = 0;
+
+    /**
+     * @brief Set the mode combination of the connected device,
+     * has no effect when deviceConnected() == false
+     * @param idx the mode combo index (from getModeCombos())
+     * @returns 0 if succesful
+     */
+    virtual int setModeCombo(uint8_t idx) = 0;
+
+    virtual bool deviceConnected() = 0;
+
     static float getValue(const Lpf2Mode &modeData, uint8_t dataSet);
     float getValue(uint8_t modeNum, uint8_t dataSet) const;
     static std::string formatValue(float value, const Lpf2Mode &modeData);
@@ -24,15 +45,12 @@ public:
         return convertValue(modeData[modeNum]);
     }
 
-    virtual int writeData(uint8_t modeNum, const std::vector<uint8_t> &data) = 0;
-
-    virtual void setPower(uint8_t pin1, uint8_t pin2) = 0;
-
     Lpf2DeviceType getDeviceType() const { return m_deviceType; }
     uint8_t getModeCount() const { return modeData.size(); }
     uint8_t getViewCount() const { return views; }
     const std::vector<Lpf2Mode> &getModes() const { return modeData; }
     uint8_t getModeComboCount() const { return modeCombos.size(); }
+    std::vector<uint16_t> getModeCombos() const { return modeCombos; }
 
     uint16_t getModeCombo(uint8_t combo) const
     {
@@ -51,13 +69,9 @@ public:
     uint16_t getOutputModes() const { return outModes; }
     uint8_t getCapatibilities() const { return caps; }
 
-    virtual bool deviceConnected() = 0;
-
     std::string getInfoStr();
 
-    std::vector<Lpf2Mode> modeData;
-
-    Lpf2PortNum portNum; // internal, for Lpf2HubEmulation
+    Lpf2PortNum getPortNum() const { return portNum; }
 
     /**
      * @brief Set the port data from a device descriptor,
@@ -102,6 +116,10 @@ protected:
     /* bitmask */
     uint16_t inModes, outModes;
     uint8_t comboNum = 0;
+
+    std::vector<Lpf2Mode> modeData;
+
+    Lpf2PortNum portNum;
 };
 
 #endif
