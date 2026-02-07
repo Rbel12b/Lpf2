@@ -26,6 +26,8 @@ public:
     virtual uint8_t getCapatibilities() const = 0;
     virtual int writeData(uint8_t modeNum, const std::vector<uint8_t> &data) = 0;
     virtual void setPower(uint8_t pin1, uint8_t pin2) = 0;
+    virtual int setMode(uint8_t mode) = 0;
+    virtual int setModeCombo(uint8_t idx) = 0;
 };
 
 class Lpf2VirtualGenericDevice : public Lpf2VirtualDevice
@@ -83,6 +85,22 @@ public:
         LPF2_LOG_I("[%02X] power %d %d",
             static_cast<uint8_t>(m_desc.type),
             pin1, pin2);
+    }
+
+    int setMode(uint8_t mode) override
+    {
+        LPF2_LOG_I("[%02X] set mode %d",
+            static_cast<uint8_t>(m_desc.type),
+            mode);
+        return 0;
+    }
+
+    int setModeCombo(uint8_t idx) override
+    {
+        LPF2_LOG_I("[%02X] set mode combo %d",
+            static_cast<uint8_t>(m_desc.type),
+            idx);
+        return 0;
     }
 
 private:

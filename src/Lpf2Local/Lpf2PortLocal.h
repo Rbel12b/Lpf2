@@ -56,6 +56,9 @@ public:
     void setPower(uint8_t pin1, uint8_t pin2) override;
     bool deviceConnected() override;
 
+    int setMode(uint8_t mode) override;
+    int setModeCombo(uint8_t idx) override;
+
 private:
 #if defined(LPF2_USE_FREERTOS)
     static void taskEntryPoint(void *pvParameters);
@@ -67,8 +70,6 @@ private:
     void parseMessageInfo(const Lpf2Message &msg);
     void changeBaud(uint32_t baud);
     void sendACK(bool NACK = false);
-
-    void setMode(uint8_t num);
     void requestSpeedChange(uint32_t speed);
 
     void resetDevice();

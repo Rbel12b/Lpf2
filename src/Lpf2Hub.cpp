@@ -178,6 +178,11 @@ void Lpf2Hub::notifyCallback(
         handlePortModeInfoMessage(data);
         break;
     }
+    case Lpf2MessageType::PORT_INPUT_FORMAT_SINGLE:
+    {
+        handlePortInputFormatSingleMessage(data);
+        break;
+    }
     default:
     {
         LPF2_LOG_E("Unimplemented: %i", data[2]);
@@ -584,6 +589,30 @@ unimplemented:
     return;
 }
 
+void Lpf2Hub::handlePortInputFormatSingleMessage(const std::vector<uint8_t> &message)
+{
+    if (checkLenght(message, 10))
+    {
+        return;
+    }
+
+    if (pendingRequest.msgType == Lpf2MessageType::PORT_INPUT_FORMAT_SETUP_SINGLE)
+    {
+        pendingRequest.valid = false;
+    }
+
+    PortInputFormatSingle inputFormat;
+
+    inputFormat.portNum = (Lpf2PortNum)message[(byte)Lpf2MessageByte::PORT_ID];
+    inputFormat.mode = message[(byte)Lpf2MessageByte::OPERATION];
+    std::memcpy(&inputFormat.delta, message.data() + 5, 4);
+    inputFormat.notify = message[9];
+
+    m_portInputFormatMap[inputFormat.portNum] = inputFormat;
+
+    return;
+}
+
 void Lpf2Hub::requestInfos()
 {
     if (pendingRequest.valid)
@@ -754,14 +783,13 @@ Lpf2PortRemote_internal *Lpf2Hub::_getPort(Lpf2PortNum portNum)
     Lpf2PortRemote_internal *pPort = remotePorts[portNum];
     if (pPort == nullptr)
     {
-        pPort = new Lpf2PortRemote_internal();
+        pPort = new Lpf2PortRemote_internal(this, portNum);
         if (!pPort)
         {
             LPF2_LOG_E("Failed to allocate port.");
         }
         LPF2_LOG_D("Initializing port.");
         remotePorts[portNum] = pPort;
-        remotePorts[portNum]->setRemote(this);
     }
     return pPort;
 }
@@ -915,9 +943,24 @@ void Lpf2Hub::shutDownHub()
     writeValue(Lpf2MessageType::HUB_ACTIONS, {(uint8_t)Lpf2HubActionType::SWITCH_OFF_HUB});
 }
 
-Lpf2Port *Lpf2Hub::getPort(Lpf2PortNum portNum)
+Lpf2PortRemote *Lpf2Hub::getPort(Lpf2PortNum portNum)
 {
-    return static_cast<Lpf2Port *>(_getPort(portNum));
+    return static_cast<Lpf2PortRemote *>(_getPort(portNum));
+}
+
+int Lpf2Hub::setPortMode(Lpf2PortNum portNum, uint8_t mode, uint32_t delta, bool notify)
+{
+    std::vector<uint8_t> payload;
+    payload.push_back((uint8_t)portNum);
+    payload.push_back(mode);
+    payload.push_back((delta >> 0) && 0xFF);
+    payload.push_back((delta >> 8) && 0xFF);
+    payload.push_back((delta >> 16) && 0xFF);
+    payload.push_back((delta >> 24) && 0xFF);
+    payload.push_back(notify ? 1 : 0);
+    pending(Lpf2MessageType::PORT_INPUT_FORMAT_SETUP_SINGLE);
+    writeValue(Lpf2MessageType::PORT_INPUT_FORMAT_SETUP_SINGLE, payload);
+    return 0;
 }
 
 bool Lpf2Hub::infoReady()

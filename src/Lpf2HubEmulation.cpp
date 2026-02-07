@@ -559,9 +559,8 @@ void Lpf2HubEmulation::handlePortModeInformationRequestMessage(std::vector<uint8
     writeValue(Lpf2MessageType::PORT_MODE_INFORMATION, payload);
 }
 
-void Lpf2HubEmulation::checkPort(Lpf2Port *port)
+void Lpf2HubEmulation::checkPort(Lpf2PortNum portNum, Lpf2Port *port)
 {
-    Lpf2PortNum portNum = port->portNum;
     if (connectedDevices[portNum] == port->deviceConnected())
         return;
 
@@ -789,7 +788,6 @@ void Lpf2HubEmulation::attachPort(Lpf2PortNum portNum, Lpf2Port *port)
     }
     connectedDevices[portNum] = false;
     attachedPorts[portNum] = port;
-    port->portNum = portNum;
 }
 
 void Lpf2HubEmulation::writeValue(Lpf2MessageType messageType, std::vector<uint8_t> payload)
@@ -835,7 +833,7 @@ void Lpf2HubEmulation::update()
     std::for_each(attachedPorts.begin(), attachedPorts.end(),
                   [this](auto &pair)
                   {
-                      this->checkPort(pair.second);
+                      this->checkPort(pair.first, pair.second);
                   });
 }
 
