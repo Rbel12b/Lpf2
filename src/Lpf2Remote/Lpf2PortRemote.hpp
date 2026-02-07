@@ -2,8 +2,8 @@
 #ifndef _LPF2_PORT_REMOTE_H_
 #define _LPF2_PORT_REMOTE_H_
 
-#include "config.h"
-#include "Lpf2Port.h"
+#include "config.hpp"
+#include "Lpf2Port.hpp"
 #include <memory>
 
 class Lpf2Hub;

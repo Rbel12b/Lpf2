@@ -2,8 +2,8 @@
 #ifndef _LPF2_COLOR_SENSOR_H_
 #define _LPF2_COLOR_SENSOR_H_
 
-#include "../config.h"
-#include "../Lpf2Device.h"
+#include "../config.hpp"
+#include "../Lpf2Device.hpp"
 
 using Lpf2ColorIDX = Lpf2Color;
 

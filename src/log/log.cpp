@@ -5,7 +5,7 @@
 
 #ifdef LPF2_LOG_IMPL
 
-const char *pathToFileName(const char *path)
+extern "C" const char *pathToFileName(const char *path)
 {
     int i = 0;
     for (int i = strlen(path) - 1; i >= 0; i--)
@@ -22,7 +22,7 @@ const char *pathToFileName(const char *path)
 
 xQueueHandle logMutex = xSemaphoreCreateMutex();
 
-int lpf2_log_printf(const char *fmt, ...)
+extern "C" int lpf2_log_printf(const char *fmt, ...)
 {
     xSemaphoreTake(logMutex, portMAX_DELAY);
     va_list args;

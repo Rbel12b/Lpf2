@@ -1,4 +1,4 @@
-#include "Lpf2PortLocal.h"
+#include "Lpf2PortLocal.hpp"
 
 void Lpf2PortLocal::doAnalogID()
 {

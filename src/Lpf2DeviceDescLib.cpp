@@ -1,4 +1,4 @@
-#include "Lpf2DeviceDescLib.h"
+#include "Lpf2DeviceDescLib.hpp"
 
 void Lpf2DeviceDescRegistry::registerDefault()
 {

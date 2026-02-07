@@ -1,5 +1,5 @@
-#include "Lpf2PortRemote.h"
-#include "../Lpf2Hub.h"
+#include "Lpf2PortRemote.hpp"
+#include "../Lpf2Hub.hpp"
 
 void Lpf2PortRemote::update()
 {

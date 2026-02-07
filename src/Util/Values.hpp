@@ -4,7 +4,7 @@
 #include <string>
 #include <vector>
 #include <cstdint>
-#include "../Lpf2Const.h"
+#include "../Lpf2Const.hpp"
 
 namespace Lpf2Utils
 {

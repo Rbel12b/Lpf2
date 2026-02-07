@@ -1,4 +1,4 @@
-#include "ColorSensor.h"
+#include "ColorSensor.hpp"
 
 namespace
 {

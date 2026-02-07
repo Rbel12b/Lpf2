@@ -2,9 +2,9 @@
 #ifndef _LPF2_ENCODER_MOTOR_H_
 #define _LPF2_ENCODER_MOTOR_H_
 
-#include "../config.h"
-#include "../Lpf2Device.h"
-#include "Lpf2Devices/BasicMotor.h"
+#include "../config.hpp"
+#include "../Lpf2Device.hpp"
+#include "Lpf2Devices/BasicMotor.hpp"
 
 class EncoderMotorControl
 {

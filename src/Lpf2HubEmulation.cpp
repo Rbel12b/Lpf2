@@ -1,10 +1,10 @@
 #include "./log/log.h"
-#include "Lpf2Hub.h"
-#include "Lpf2HubEmulation.h"
-#include "Util/Values.h"
-#include "Lpf2Virtual/Lpf2PortVirtual.h"
-#include "Lpf2Virtual/Lpf2VirtualDevice.h"
-#include "Lpf2DeviceDescLib.h"
+#include "Lpf2Hub.hpp"
+#include "Lpf2HubEmulation.hpp"
+#include "Util/Values.hpp"
+#include "Lpf2Virtual/Lpf2PortVirtual.hpp"
+#include "Lpf2Virtual/Lpf2VirtualDevice.hpp"
+#include "Lpf2DeviceDescLib.hpp"
 
 class Lpf2HubServerCallbacks : public NimBLEServerCallbacks
 {

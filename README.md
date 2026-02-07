@@ -28,26 +28,26 @@ This library is licensed under the MIT License. See the [LICENSE](LICENSE) file 
 
 ```tree
 src/
-├── Lpf2Const.h             # Protocol constants
-├── Lpf2Device.h            # Base device interface, device factory
-├── Lpf2Port.h              # Base Port class
-├── Lpf2DeviceManager.h     # Device manager
-├── Lpf2Hub.h               # LEGO Hub control
-├── Lpf2HubEmulation.h      # LEGO Hub emulation
-├── Lpf2DeviceManager.h     # Device manager
-├── Lpf2DeviceDescLib.h     # Device descriptor library
+├── Lpf2Const.hpp             # Protocol constants
+├── Lpf2Device.hpp            # Base device interface, device factory
+├── Lpf2Port.hpp              # Base Port class
+├── Lpf2DeviceManager.hpp     # Device manager
+├── Lpf2Hub.hpp               # LEGO Hub control
+├── Lpf2HubEmulation.hpp      # LEGO Hub emulation
+├── Lpf2DeviceManager.hpp     # Device manager
+├── Lpf2DeviceDescLib.hpp     # Device descriptor library
 ├── Lpf2Devices/            # Device implementations
 │   ├── BasicMotor.h
 │   ├── EncoderMotor.h
 │   ├── DistanceSensor.h
 │   └── ColorSensor.h
 ├── Lpf2Local/              # Local port implementation
-│   └── Lpf2PortLocal.h
+│   └── Lpf2PortLocal.hpp
 ├── Lpf2Remote/             # Remote port implementation
-│   └── Lpf2PortRemote.h
+│   └── Lpf2PortRemote.hpp
 ├── Lpf2Virtual/            # Virtual (emulated) port implementation
-│   ├── Lpf2VirtualDevice.h
-│   └── Lpf2PortVirtual.h
+│   ├── Lpf2VirtualDevice.hpp
+│   └── Lpf2PortVirtual.hpp
 ```
 
 ## Functionalities
@@ -255,8 +255,8 @@ header:
 #ifndef _LPF2_BASIC_MOTOR_H_
 #define _LPF2_BASIC_MOTOR_H_
 
-#include "../config.h"
-#include "../Lpf2Device.h"
+#include "../config.hpp"
+#include "../Lpf2Device.hpp"
 
 class BasicMotorControl
 {

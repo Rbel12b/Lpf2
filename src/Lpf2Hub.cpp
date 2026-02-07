@@ -6,12 +6,12 @@
  * Released under MIT License
  *
  */
-#include "Lpf2Hub.h"
-#include "Util/Values.h"
+#include "Lpf2Hub.hpp"
+#include "Util/Values.hpp"
 #include "./log/log.h"
 #include <sstream>
 #include <iomanip>
-#include "Lpf2DeviceDescLib.h"
+#include "Lpf2DeviceDescLib.hpp"
 
 /**
  * Derived class which could be added as an instance to the BLEClient for callback handling

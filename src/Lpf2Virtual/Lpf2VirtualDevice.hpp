@@ -2,11 +2,11 @@
 #ifndef _LPF2_VIRTUAL_DEVICE_H_
 #define _LPF2_VIRTUAL_DEVICE_H_
 
-#include "config.h"
-#include "Lpf2Const.h"
+#include "config.hpp"
+#include "Lpf2Const.hpp"
 #include <vector>
-#include "../Util/Values.h"
-#include "../Lpf2Device.h"
+#include "../Util/Values.hpp"
+#include "../Lpf2Device.hpp"
 
 class Lpf2VirtualDevice
 {

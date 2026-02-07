@@ -1,8 +1,8 @@
 #ifndef _LPF2_HUB_EMULATION_H_
 #define _LPF2_HUB_EMULATION_H_
 
-#include "config.h"
-#include "Lpf2Const.h"
+#include "config.hpp"
+#include "Lpf2Const.hpp"
 #include <NimBLEDevice.h>
 #include <unordered_map>
 
