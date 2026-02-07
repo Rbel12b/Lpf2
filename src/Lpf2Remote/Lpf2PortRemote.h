@@ -23,6 +23,8 @@ public:
 
 protected:
     Lpf2Hub* m_remote;
+
+    Lpf2DeviceType m_lastDevType = Lpf2DeviceType::UNKNOWNDEVICE;
 };
 
 /* --- For internl use only! --- */

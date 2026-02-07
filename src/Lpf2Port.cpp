@@ -216,7 +216,6 @@ float Lpf2Port::parseDataF(const uint8_t *ptr)
 
 Lpf2ModeNum Lpf2Port::getDefaultMode(Lpf2DeviceType id)
 {
-
     if (deviceIsAbsMotor(id))
     {
         return Lpf2ModeNum::MOTOR__CALIB;
