@@ -1,0 +1,25 @@
+{
+  "name": "Lpf2",
+  "version": "1.0.0",
+  "description": "A library for controlling and emulating LEGO Power Functions 2.0 devices (hubs, motors, sensors...)",
+  "keywords": ["lego"],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Rbel12b/Lpf2.git"
+  },
+  "authors": [
+    {
+      "name": "Rbel12b",
+      "maintainer": true
+    }
+  ],
+  "license": "MIT",
+  "frameworks": ["arduino"],
+  "platforms": ["espressif32"],
+  "dependencies": [
+    {
+      "name": "h2zero/NimBLE-Arduino",
+      "platforms": ["espressif32"]
+    }
+  ]
+}
