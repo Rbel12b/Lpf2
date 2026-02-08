@@ -19,6 +19,7 @@
 
 class Lpf2Hub
 {
+    friend class Lpf2HubClientCallback;
     std::unordered_map<Lpf2PortNum, Lpf2PortRemote_internal*> remotePorts;
     std::unordered_map<Lpf2PortNum, Lpf2DeviceType> attachedPorts; // Ports with attached devices
 
@@ -54,6 +55,8 @@ class Lpf2Hub
      * @returns true if the message is smaller than the given length
      */
     bool checkLenght(const std::vector<uint8_t> &message, size_t lenght);
+
+    void onDisconnect();
 
 public:
     Lpf2Hub();

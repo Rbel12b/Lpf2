@@ -5,6 +5,7 @@
 #include "Lpf2DeviceManager.hpp"
 #include "Lpf2Devices/ColorSensor.hpp"
 #include "Lpf2Devices/BasicMotor.hpp"
+#include "Lpf2Devices/EncoderMotor.hpp"
 
 Lpf2Hub hub;
 
@@ -32,6 +33,9 @@ void loop()
         if (hub.isConnected())
         {
             Serial.println("Connected to HUB");
+            vTaskDelay(10); // wait a bit for devices to be registered
+            auto &port = *hub.getPort(Lpf2PortNum(Lpf2ControlPlusHubPort::LED));
+            port.setRgbColorIdx(Lpf2Color::GREEN);
         }
         else
         {
@@ -56,7 +60,7 @@ void loop()
                 Serial.print("Color idx: ");
                 Serial.println(device->getColorIdx());
             }
-            if (auto device = static_cast<BasicMotorControl *>
+            else if (auto device = static_cast<BasicMotorControl *>
                 (portADeviceManager.device()->getCapability(BasicMotor::CAP)))
             {
                 device->startPower(-50);
