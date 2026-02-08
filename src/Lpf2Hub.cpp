@@ -29,15 +29,16 @@ public:
         _lpf2Hub = lpf2Hub;
     }
 
-    void onConnect(BLEClient *bleClient)
+    void onConnect(BLEClient *bleClient) override
     {
     }
 
-    void onDisconnect(BLEClient *bleClient)
+    void onDisconnect(BLEClient *bleClient, int reason) override
     {
         _lpf2Hub->_isConnecting = false;
         _lpf2Hub->_isConnected = false;
-        LPF2_LOG_D("disconnected client");
+        _lpf2Hub->onDisconnect();
+        LPF2_LOG_D("Disconnected client, reason: %i", reason);
     }
 };
 
@@ -830,6 +831,11 @@ bool Lpf2Hub::checkLenght(const std::vector<uint8_t> &message, size_t lenght)
         return true;
     }
     return false;
+}
+
+void Lpf2Hub::onDisconnect()
+{
+    attachedPorts.clear();
 }
 
 void Lpf2Hub::setHubNameProp(std::string name)
