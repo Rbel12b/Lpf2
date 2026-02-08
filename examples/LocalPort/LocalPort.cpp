@@ -58,7 +58,7 @@ void loop()
         if (auto device = static_cast<BasicMotorControl *>
             (deviceManager.device()->getCapability(BasicMotor::CAP)))
         {
-            device->setSpeed(-50);
+            device->startPower(-50);
         }
         else
         {

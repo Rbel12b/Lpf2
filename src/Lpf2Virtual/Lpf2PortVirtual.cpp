@@ -12,13 +12,6 @@ int Lpf2PortVirtual::writeData(uint8_t modeNum, const std::vector<uint8_t> &data
     return m_device->writeData(modeNum, data);
 }
 
-void Lpf2PortVirtual::setPower(uint8_t pin1, uint8_t pin2)
-{
-    if (m_device)
-        return;
-    m_device->setPower(pin1, pin2);
-}
-
 bool Lpf2PortVirtual::deviceConnected()
 {
     return (bool)m_device;
@@ -36,6 +29,62 @@ int Lpf2PortVirtual::setModeCombo(uint8_t idx)
     if (m_device)
         return 1;
     return m_device->setModeCombo(idx);
+}
+
+void Lpf2PortVirtual::startPower(int8_t pw)
+{
+    if (m_device)
+        return;
+    m_device->startPower(pw);
+}
+
+void Lpf2PortVirtual::setAccTime(uint16_t accTime, Lpf2AccelerationProfile accProfile)
+{
+    if (m_device)
+        return;
+    m_device->setAccTime(accTime, accProfile);
+}
+
+void Lpf2PortVirtual::setDecTime(uint16_t decTime, Lpf2AccelerationProfile decProfile)
+{
+    if (m_device)
+        return;
+    m_device->setDecTime(decTime, decProfile);
+}
+
+void Lpf2PortVirtual::startSpeed(int8_t speed, uint8_t maxPower, uint8_t useProfile)
+{
+    if (m_device)
+        return;
+    m_device->startSpeed(speed, maxPower, useProfile);
+}
+
+void Lpf2PortVirtual::startSpeedForTime(uint16_t time, int8_t speed, uint8_t maxPower, Lpf2BrakingStyle endState, uint8_t useProfile)
+{
+    if (m_device)
+        return;
+    m_device->startSpeedForTime(time, speed, maxPower, endState, useProfile);
+}
+
+void Lpf2PortVirtual::startSpeedForDegrees(uint32_t degrees, int8_t speed, uint8_t maxPower, Lpf2BrakingStyle endState, uint8_t useProfile)
+{
+    if (m_device)
+        return;
+    m_device->startSpeedForDegrees(degrees, speed, maxPower, endState, useProfile);
+}
+
+void Lpf2PortVirtual::gotoAbsPosition(int32_t absPos, uint8_t speed, uint8_t maxPower, Lpf2BrakingStyle endState, uint8_t useProfile)
+{
+    if (m_device)
+        return;
+    m_device->gotoAbsPosition(absPos, speed, maxPower, endState, useProfile);
+}
+
+void Lpf2PortVirtual::presetEncoder(int32_t pos)
+{
+    if (m_device)
+        return;
+    m_device->presetEncoder(pos);
 }
 
 void Lpf2PortVirtual::attachDevice(Lpf2VirtualDevice *device)

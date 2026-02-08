@@ -31,7 +31,6 @@ public:
         m_port.update();
         if (!m_port.deviceConnected())
         {
-            m_port.setPower(0, 0);
             device_.reset(nullptr);
             return;
         }

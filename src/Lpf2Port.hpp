@@ -13,7 +13,91 @@ public:
 
     virtual int writeData(uint8_t modeNum, const std::vector<uint8_t> &data) = 0;
 
-    virtual void setPower(uint8_t pin1, uint8_t pin2) = 0;
+    /**
+     * @brief set motor power
+     * @param pw motor power:
+     * -100 - 0 -> CCW, 0 - 100 -> CW
+     */
+    virtual void startPower(int8_t pw) = 0;
+
+    /**
+     * @brief set acceleration time/profile for a motor
+     * @param accTime acceleration time in ms
+     * @param accProfile acceleration profile to use, ???, use 1
+     */
+    virtual void setAccTime(uint16_t accTime, Lpf2AccelerationProfile accProfile = 1) = 0;
+
+    /**
+     * @brief set deceleration time/profile for a motor
+     * @param decTime acceleration time in ms
+     * @param decProfile deceleration profile to use, ???, use 1
+     */
+    virtual void setDecTime(uint16_t decTime, Lpf2AccelerationProfile decProfile = 1) = 0;
+
+    /**
+     * @brief start motor with speed
+     * @param speed speed:
+     * -100 - 0 -> CCW, 0 - 100 -> CW
+     * @param maxPower max motor power, absolute value, 0-100%
+     * @param useProfile
+        0x0000000? -> Acc.- profile
+        0x000000?0 -> Decc.- profile
+     */
+    virtual void startSpeed(int8_t speed, uint8_t maxPower, uint8_t useProfile = 0) = 0;
+
+    /**
+     * @brief start motor with speed for [time] ms
+     * @param time time in ms
+     * @param speed speed: -100 - 0 -> CCW, 0 - 100 -> CW
+     * @param maxPower max motor power
+     * @param endState what happens after command is finished
+     * @param useProfile
+        0x0000000? -> Acc.- profile
+        0x000000?0 -> Decc.- profile
+     */
+    virtual void startSpeedForTime(uint16_t time, int8_t speed, uint8_t maxPower, Lpf2BrakingStyle endState, uint8_t useProfile = 0) = 0;
+
+    /**
+     * @brief start motor with speed for [degrees]°
+     * @param degrees degrees to move (positive value, use speed for CCW movement)
+     * @param speed speed: -100 - 0 -> CCW, 0 - 100 -> CW
+     * @param maxPower max motor power
+     * @param endState what happens after command is finished
+     * @param useProfile
+        0x0000000? -> Acc.- profile
+        0x000000?0 -> Decc.- profile
+     */
+    virtual void startSpeedForDegrees(uint32_t degrees, int8_t speed, uint8_t maxPower, Lpf2BrakingStyle endState, uint8_t useProfile = 0) = 0;
+
+    /**
+     * @brief got to absolute position (motor)
+     * @param absPos absolute position
+     * @param speed speed: 0 - 100
+     * @param maxPower max motor power
+     * @param endState what happens after command is finished
+     * @param useProfile
+        0x0000000? -> Acc.- profile
+        0x000000?0 -> Decc.- profile
+     */
+    virtual void gotoAbsPosition(int32_t absPos, uint8_t speed, uint8_t maxPower, Lpf2BrakingStyle endState, uint8_t useProfile = 0) = 0;
+
+    /**
+     * @brief preset encoder, also stops motors
+     * @param pos position to set the encoder to
+     */
+    virtual void presetEncoder(int32_t pos) = 0;
+
+    /**
+     * @brief uses writeData with mode 0 to set the color idx
+     * (works with an rgb led - hub led)
+     */
+    void setRgbColorIdx(Lpf2Color idx);
+
+    /**
+     * @brief uses writeData with mode 1 to set the color
+     * (works with an rgb led - hub led)
+     */
+    void setRgbColor(uint8_t r, uint8_t g, uint8_t b);
 
     /**
      * @brief Select the mode of the connected device,
@@ -89,6 +173,28 @@ public:
         caps = desc->caps;
         inModes = desc->inModes;
         outModes = desc->outModes;
+    }
+
+    /**
+     * @brief convert speed to a 8 bit raw value
+     * @param speed -100..100
+     */
+    uint8_t speedToRaw(int8_t speed)
+    {
+        uint8_t raw;
+        if (speed == 0)
+        {
+            raw = 127;
+        }
+        else if (speed > 0)
+        {
+            raw = map(speed, 0, 100, 0, 126);
+        }
+        else
+        {
+            raw = map(-speed, 0, 100, 255, 128);
+        }
+        return raw;
     }
 
 protected:

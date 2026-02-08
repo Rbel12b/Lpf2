@@ -230,7 +230,7 @@ enum class Lpf2IOEvent
     ATTACHED_VIRTUAL_IO = 0x02,
 };
 
-enum Lpf2Color
+enum Lpf2Color : uint8_t
 {
     BLACK = 0,
     PINK = 1,
@@ -466,5 +466,13 @@ public:
     };
     Flags flags;
 };
+
+#define LPF2_POWER_FLOAT 0
+#define LPF2_POWER_BRAKE 127
+
+/**
+ * @brief ???
+ */
+using Lpf2AccelerationProfile = uint8_t;
 
 #endif

@@ -5,8 +5,6 @@
 #include "../config.hpp"
 #include "../Lpf2Device.hpp"
 
-using Lpf2ColorIDX = Lpf2Color;
-
 
 class TechnicColorSensorControl
 {
@@ -15,7 +13,7 @@ public:
     /**
      * @brief Get the color idx from the sensor.
      */
-    virtual Lpf2ColorIDX getColorIdx() = 0;
+    virtual Lpf2Color getColorIdx() = 0;
 };
 
 class TechnicColorSensor : public Lpf2Device, public TechnicColorSensorControl
@@ -37,7 +35,7 @@ public:
         return "Technic Color Sensor";
     }
 
-    Lpf2ColorIDX getColorIdx() override;
+    Lpf2Color getColorIdx() override;
 
     bool hasCapability(Lpf2DeviceCapabilityId id) const override;
     void *getCapability(Lpf2DeviceCapabilityId id) override;

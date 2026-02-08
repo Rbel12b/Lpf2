@@ -6,6 +6,7 @@
 #include "../Lpf2Device.hpp"
 #include "Lpf2Devices/BasicMotor.hpp"
 
+//TODO: reimplement: move motor control to Lpf2PortLocal
 class EncoderMotorControl
 {
 public:
@@ -109,6 +110,7 @@ public:
     int64_t getRelPos() const override;
     void setRelPos(int64_t pos) override;
     void setSpeed(int speed) override;
+    void startPower(int power) override;
     void moveToAbsPos(uint16_t pos, uint8_t speed) override;
     void setAbsTarget(uint16_t pos) override;
     void moveToRelPos(int64_t pos, uint8_t speed) override;

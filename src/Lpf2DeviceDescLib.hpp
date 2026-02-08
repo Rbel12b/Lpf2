@@ -20,6 +20,7 @@ namespace Lpf2DeviceDescriptors
     extern const Lpf2DeviceDescriptor LPF2_DEVICE_TECHNIC_DISTANCE_SENSOR;
     extern const Lpf2DeviceDescriptor LPF2_DEVICE_TECHNIC_MEDIUM_ANGULAR_MOTOR_GREY;
     extern const Lpf2DeviceDescriptor LPF2_DEVICE_TECHNIC_COLOR_SENSOR;
+    extern const Lpf2DeviceDescriptor LPF2_DEVICE_TECHNIC_LARGE_LINEAR_MOTOR;
 };
 
 class Lpf2DeviceDescRegistry

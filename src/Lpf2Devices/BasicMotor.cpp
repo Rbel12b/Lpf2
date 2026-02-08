@@ -10,22 +10,9 @@ void BasicMotor::registerFactory(Lpf2DeviceRegistry& reg)
     reg.registerFactory(&factory);
 }
 
-void BasicMotor::setSpeed(int speed)
+void BasicMotor::startPower(int speed)
 {
-    assert(this);
-    assert(((uintptr_t)this & 0x3) == 0);
-    assert(m_port.deviceConnected()); 
-    bool forward = speed >= 0;
-    speed = std::abs(speed);
-    if (speed > 100)
-        speed = 100;
-
-    uint8_t pwr2 = speed * 0xFF / 100;
-    uint8_t pwr1 = 0;
-    if (!forward)
-        std::swap(pwr1, pwr2);
-
-    m_port.setPower(pwr1, pwr2);
+    m_port.startPower(speed);
 }
 
 bool BasicMotor::hasCapability(Lpf2DeviceCapabilityId id) const
