@@ -9,7 +9,7 @@ class BasicMotorControl
 {
 public:
     virtual ~BasicMotorControl() = default;
-    virtual void setSpeed(int speed) = 0;
+    virtual void startPower(int speed) = 0;
 };
 
 class BasicMotor : public Lpf2Device, public BasicMotorControl
@@ -19,7 +19,7 @@ public:
 
     bool init() override
     {
-        setSpeed(0);
+        startPower(0);
         return true;
     }
 
@@ -32,7 +32,7 @@ public:
         return "DC Motor (dumb)";
     }
 
-    void setSpeed(int speed) override;
+    void startPower(int speed) override;
 
     bool hasCapability(Lpf2DeviceCapabilityId id) const override;
     void *getCapability(Lpf2DeviceCapabilityId id) override;
