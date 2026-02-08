@@ -59,12 +59,13 @@ void loop()
             if (auto device = static_cast<BasicMotorControl *>
                 (portADeviceManager.device()->getCapability(BasicMotor::CAP)))
             {
-                device->setSpeed(-50);
+                device->startPower(-50);
             }
             else
             {
                 // Device isn't a color sensor or a motor (all motors have BasicMotor::CAP)
             }
+            vTaskDelay(100);
         }
     }
 }

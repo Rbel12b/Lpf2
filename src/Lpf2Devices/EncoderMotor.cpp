@@ -241,19 +241,14 @@ void EncoderMotor::setSpeed(int speed)
     _setSpeed(speed);
 }
 
+void EncoderMotor::startPower(int power)
+{
+    m_port.startPower(power);
+}
+
 void EncoderMotor::_setSpeed(int speed)
 {
-    bool forward = speed >= 0;
-    speed = std::abs(speed);
-    if (speed > 100)
-        speed = 100;
-
-    uint8_t pwr2 = speed * 0xFF / 100;
-    uint8_t pwr1 = 0;
-    if (!forward)
-        std::swap(pwr1, pwr2);
-
-    m_port.setPower(pwr1, pwr2);
+    m_port.startSpeed(speed, 100);
 }
 
 void EncoderMotor::moveToAbsPos(uint16_t pos, uint8_t speed)

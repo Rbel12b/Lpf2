@@ -3,6 +3,7 @@
 #include <cstring>
 #include <sstream>
 #include <iomanip>
+#include "Lpf2Const.hpp"
 
 std::string Lpf2Port::getInfoStr()
 {
@@ -84,7 +85,7 @@ uint8_t Lpf2Port::getDataSize(uint8_t format)
 
 float Lpf2Port::getValue(const Lpf2Mode &modeData, uint8_t dataSet)
 {
-    if (dataSet > modeData.data_sets)
+    if (dataSet >= modeData.data_sets)
         return 0.0f;
 
     const std::vector<uint8_t> &raw = modeData.rawData;
@@ -109,11 +110,11 @@ float Lpf2Port::getValue(const Lpf2Mode &modeData, uint8_t dataSet)
     }
 
     // Check that rawData contains enough bytes
-    size_t expectedSize = static_cast<size_t>(modeData.data_sets) * bytesPerDataset;
-    if (raw.size() < expectedSize)
-    {
+    size_t offset = bytesPerDataset * dataSet;
+
+    if (raw.size() < offset + bytesPerDataset)
         return 0.0f;
-    }
+
 
     const uint8_t *ptr = raw.data() + (bytesPerDataset * dataSet);
     float value = 0.0f;
@@ -139,7 +140,7 @@ float Lpf2Port::getValue(const Lpf2Mode &modeData, uint8_t dataSet)
 
 float Lpf2Port::getValue(uint8_t modeNum, uint8_t dataSet) const
 {
-    if (modeNum > modeData.size())
+    if (modeNum >= modeData.size())
         return 0.0f;
     return getValue(modeData[modeNum], dataSet);
 }
@@ -246,4 +247,14 @@ bool Lpf2Port::deviceIsAbsMotor(Lpf2DeviceType id)
     default:
         return false;
     }
+}
+
+void Lpf2Port::setRgbColorIdx(Lpf2Color idx)
+{
+    writeData(0, {idx});
+}
+
+void Lpf2Port::setRgbColor(uint8_t r, uint8_t g, uint8_t b)
+{
+    writeData(1, {r, g, b});
 }

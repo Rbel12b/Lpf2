@@ -40,6 +40,56 @@ int Lpf2PortLocal::setModeCombo(uint8_t idx)
     return 0;
 }
 
+void Lpf2PortLocal::startPower(int8_t pw)
+{
+    bool forward = pw >= 0;
+    pw = std::abs(pw);
+    if (pw > 100)
+        pw = 100;
+
+    uint8_t pwr2 = pw * 0xFF / 100;
+    uint8_t pwr1 = 0;
+    if (!forward)
+        std::swap(pwr1, pwr2);
+
+    setPower(pwr1, pwr2);
+}
+
+void Lpf2PortLocal::setAccTime(uint16_t accTime, Lpf2AccelerationProfile accProfile)
+{
+    // TODO: implement this
+}
+
+void Lpf2PortLocal::setDecTime(uint16_t decTime, Lpf2AccelerationProfile decProfile)
+{
+    // TODO: implement this
+}
+
+void Lpf2PortLocal::startSpeed(int8_t speed, uint8_t maxPower, uint8_t useProfile)
+{
+    // TODO: implement this
+}
+
+void Lpf2PortLocal::startSpeedForTime(uint16_t time, int8_t speed, uint8_t maxPower, Lpf2BrakingStyle endState, uint8_t useProfile)
+{
+    // TODO: implement this
+}
+
+void Lpf2PortLocal::startSpeedForDegrees(uint32_t degrees, int8_t speed, uint8_t maxPower, Lpf2BrakingStyle endState, uint8_t useProfile)
+{
+    // TODO: implement this
+}
+
+void Lpf2PortLocal::gotoAbsPosition(int32_t absPos, uint8_t speed, uint8_t maxPower, Lpf2BrakingStyle endState, uint8_t useProfile)
+{
+    // TODO: implement this
+}
+
+void Lpf2PortLocal::presetEncoder(int32_t pos)
+{
+    // TODO: implement this
+}
+
 void Lpf2PortLocal::requestSpeedChange(uint32_t speed)
 {
     uint8_t header = MESSAGE_CMD | CMD_SPEED | (2 << 3);
