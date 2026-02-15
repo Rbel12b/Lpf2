@@ -9,6 +9,7 @@
 namespace Lpf2Utils
 {
     std::string bytes_to_hexString(const std::vector<uint8_t> &data);
+    std::string bytes_to_hexString(const std::string &data);
     std::string byte_to_hexString(uint8_t data);
 
     std::vector<uint8_t> packVersion(Lpf2Version version);
