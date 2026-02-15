@@ -1,10 +1,10 @@
 #include <Arduino.h>
 
-#include "Lpf2Local/Lpf2PortLocal.hpp"
-#include "Lpf2DeviceDescLib.hpp"
-#include "Lpf2DeviceManager.hpp"
-#include "Lpf2Devices/ColorSensor.hpp"
-#include "Lpf2Devices/BasicMotor.hpp"
+#include "Lpf2/Local/Port.hpp"
+#include "Lpf2/DeviceDescLib.hpp"
+#include "Lpf2/DeviceManager.hpp"
+#include "Lpf2/Devices/ColorSensor.hpp"
+#include "Lpf2/Devices/BasicMotor.hpp"
 
 #include "device.hpp"
 

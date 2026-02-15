@@ -1,8 +1,7 @@
-#ifndef _LPF2_HUB_EMULATION_H_
-#define _LPF2_HUB_EMULATION_H_
+#pragma once
 
-#include "config.hpp"
-#include "Lpf2Const.hpp"
+#include "Lpf2/config.hpp"
+#include "Lpf2/LWPConst.hpp"
 #include <NimBLEDevice.h>
 #include <unordered_map>
 
@@ -124,5 +123,3 @@ public:
     bool isPortInitialized = false;
     BLECharacteristic *pCharacteristic;
 };
-
-#endif // _LPF2_HUB_EMULATION_H_

@@ -1,4 +1,4 @@
-#include "DistanceSensor.hpp"
+#include "Lpf2/Devices/DistanceSensor.hpp"
 
 namespace
 {

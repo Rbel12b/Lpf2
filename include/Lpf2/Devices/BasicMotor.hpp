@@ -2,8 +2,8 @@
 #ifndef _LPF2_BASIC_MOTOR_H_
 #define _LPF2_BASIC_MOTOR_H_
 
-#include "../config.hpp"
-#include "../Lpf2Device.hpp"
+#include "Lpf2/config.hpp"
+#include "Lpf2/Device.hpp"
 
 class BasicMotorControl
 {

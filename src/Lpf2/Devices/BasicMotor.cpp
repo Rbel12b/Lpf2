@@ -1,4 +1,4 @@
-#include "BasicMotor.hpp"
+#include "Lpf2/Devices/BasicMotor.hpp"
 
 namespace
 {

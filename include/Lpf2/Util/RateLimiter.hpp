@@ -1,8 +1,6 @@
 #pragma once
-#ifndef _LPF2_UTIL_RATE_LIMITER_H_
-#define _LPF2_UTIL_RATE_LIMITER_H_
 
-#include "../config.hpp"
+#include "Lpf2/config.hpp"
 
 class RateLimiter
 {
@@ -25,5 +23,3 @@ private:
     size_t m_start;
     size_t m_interval_ms;
 };
-
-#endif

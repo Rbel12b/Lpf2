@@ -2,9 +2,9 @@
 #ifndef _LPF2_ENCODER_MOTOR_H_
 #define _LPF2_ENCODER_MOTOR_H_
 
-#include "../config.hpp"
-#include "../Lpf2Device.hpp"
-#include "Lpf2Devices/BasicMotor.hpp"
+#include "Lpf2/config.hpp"
+#include "Lpf2/Device.hpp"
+#include "Lpf2/Devices/BasicMotor.hpp"
 
 //TODO: reimplement: move motor control to Lpf2PortLocal
 class EncoderMotorControl

@@ -16,7 +16,7 @@
 #ifndef __LPF2_LOG_H__
 #define __LPF2_LOG_H__
 
-#include "../config.hpp"
+#include "Lpf2//config.hpp"
 #include <Arduino.h>
 
 #ifdef __cplusplus

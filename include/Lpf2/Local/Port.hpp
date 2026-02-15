@@ -1,12 +1,10 @@
 #pragma once
-#ifndef _LPF2_PORT_LOCAL_H_
-#define _LPF2_PORT_LOCAL_H_
 
-#include "config.hpp"
-#include "Lpf2Port.hpp"
-#include "Lpf2Serial.hpp"
-#include "Lpf2SerialDef.hpp"
-#include "Util/mutex.hpp"
+#include "Lpf2/config.hpp"
+#include "Lpf2/Port.hpp"
+#include "Lpf2/Local/Serial.hpp"
+#include "Lpf2/Local/SerialDef.hpp"
+#include "Lpf2/Util/mutex.hpp"
 
 #define MEASUREMENTS 20
 
@@ -131,5 +129,3 @@ private:
     int m_detectionCounter = 0;
     int m_lastDetectedType = -1;
 };
-
-#endif

@@ -1,6 +1,4 @@
 #pragma once
-#ifndef _LPF2_DEVICE_DESCRIPTOR_H_
-#define _LPF2_DEVICE_DESCRIPTOR_H_
 
 struct Lpf2DeviceDescriptor
 {
@@ -11,5 +9,3 @@ struct Lpf2DeviceDescriptor
     std::vector<uint16_t> combos;
     std::vector<Lpf2Mode> modes;
 };
-
-#endif

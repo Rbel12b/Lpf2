@@ -2,8 +2,6 @@
  * Values from the Lego Wireless Protocol - https://lego.github.io/lego-ble-wireless-protocol-docs
  */
 #pragma once
-#ifndef _LPF2_CONST_H_
-#define _LPF2_CONST_H_
 
 #define LPF2_UUID "00001623-1212-efde-1623-785feabcd123"
 #define LPF2_CHARACHTERISTIC "00001624-1212-efde-1623-785feabcd123"
@@ -474,5 +472,3 @@ public:
  * @brief ???
  */
 using Lpf2AccelerationProfile = uint8_t;
-
-#endif

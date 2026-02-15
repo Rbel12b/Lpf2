@@ -1,8 +1,8 @@
-#include "Lpf2Device.hpp"
-#include "Lpf2Devices/EncoderMotor.hpp"
-#include "Lpf2Devices/BasicMotor.hpp"
-#include "Lpf2Devices/ColorSensor.hpp"
-#include "Lpf2Devices/DistanceSensor.hpp"
+#include "Lpf2/Device.hpp"
+#include "Lpf2/Devices/EncoderMotor.hpp"
+#include "Lpf2/Devices/BasicMotor.hpp"
+#include "Lpf2/Devices/ColorSensor.hpp"
+#include "Lpf2/Devices/DistanceSensor.hpp"
 
 void Lpf2DeviceRegistry::registerDefault()
 {

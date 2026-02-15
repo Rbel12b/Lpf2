@@ -1,10 +1,8 @@
 #pragma once
-#ifndef _LPF2_PORT_H_
-#define _LPF2_PORT_H_
 
-#include "config.hpp"
-#include "Lpf2Const.hpp"
-#include "Lpf2DeviceDesc.hpp"
+#include "Lpf2/config.hpp"
+#include "Lpf2/LWPConst.hpp"
+#include "Lpf2/DeviceDesc.hpp"
 
 class Lpf2Port
 {
@@ -227,5 +225,3 @@ protected:
 
     Lpf2PortNum portNum;
 };
-
-#endif

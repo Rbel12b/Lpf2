@@ -1,10 +1,8 @@
 #pragma once
-#ifndef _LPF2_PORT_VIRTUAL_H_
-#define _LPF2_PORT_VIRTUAL_H_
 
-#include "config.hpp"
-#include "Lpf2Port.hpp"
-#include "Lpf2VirtualDevice.hpp"
+#include "Lpf2/config.hpp"
+#include "Lpf2/Port.hpp"
+#include "Lpf2/Virtual/Device.hpp"
 #include <memory>
 
 class Lpf2PortVirtual : public Lpf2Port
@@ -34,5 +32,3 @@ public:
 private:
     std::unique_ptr<Lpf2VirtualDevice> m_device;
 };
-
-#endif
