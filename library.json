@@ -1,6 +1,6 @@
 {
   "name": "Lpf2",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "A library for controlling and emulating LEGO Power Functions 2.0 devices (hubs, motors, sensors...)",
   "keywords": [
     "lego",
@@ -29,10 +29,7 @@
   ],
   "dependencies": [
     {
-      "name": "h2zero/NimBLE-Arduino",
-      "platforms": [
-        "espressif32"
-      ]
+      "name": "h2zero/NimBLE-Arduino"
     }
   ]
 }
