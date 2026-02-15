@@ -27,27 +27,27 @@ This library is licensed under the MIT License. See the [LICENSE](LICENSE) file 
 ## Library Structure
 
 ```tree
-src/
-├── Lpf2Const.hpp             # Protocol constants
-├── Lpf2Device.hpp            # Base device interface, device factory
-├── Lpf2Port.hpp              # Base Port class
-├── Lpf2DeviceManager.hpp     # Device manager
-├── Lpf2Hub.hpp               # LEGO Hub control
-├── Lpf2HubEmulation.hpp      # LEGO Hub emulation
-├── Lpf2DeviceManager.hpp     # Device manager
-├── Lpf2DeviceDescLib.hpp     # Device descriptor library
-├── Lpf2Devices/            # Device implementations
-│   ├── BasicMotor.h
-│   ├── EncoderMotor.h
-│   ├── DistanceSensor.h
-│   └── ColorSensor.h
-├── Lpf2Local/              # Local port implementation
-│   └── Lpf2PortLocal.hpp
-├── Lpf2Remote/             # Remote port implementation
-│   └── Lpf2PortRemote.hpp
-├── Lpf2Virtual/            # Virtual (emulated) port implementation
-│   ├── Lpf2VirtualDevice.hpp
-│   └── Lpf2PortVirtual.hpp
+include/Lpf2/
+├── LWPConst.hpp          # Protocol constants
+├── Device.hpp            # Base device interface, device factory
+├── Port.hpp              # Base Port class
+├── DeviceManager.hpp     # Device manager
+├── Hub.hpp               # LEGO Hub control
+├── HubEmulation.hpp      # LEGO Hub emulation
+├── DeviceManager.hpp     # Device manager
+├── DeviceDescLib.hpp     # Device descriptor library
+├── Devices/              # Device implementations
+│   ├── BasicMotor.hpp
+│   ├── EncoderMotor.hpp
+│   ├── DistanceSensor.hpp
+│   └── ColorSensor.hpp
+├── Local/                # Local port implementation
+│   └── Port.hpp
+├── Remote/               # Remote port implementation
+│   └── Port.hpp
+├── Virtual/              # Virtual (emulated) port implementation
+│   ├── Device.hpp
+│   └── Port.hpp
 ```
 
 ## Functionalities
@@ -106,9 +106,11 @@ Examples:
 #### Connecting
 
 ```c++
+Lpf2::Hub hub;
+
 // registers the default device descriptors, makes communication faster by using the built-in descriptor library,
 // instead of relying on the devices to send the information. Should be called once at startup.
-Lpf2DeviceDescRegistry::registerDefault();
+Lpf2::DeviceDescRegistry::registerDefault();
 vTaskDelay(1); // for resetting the wdt in a loop
 
 if (!hub.isConnected() && !hub.isConnecting())
@@ -140,17 +142,17 @@ if (hub.isConnected())
 
 ```c++
 // get the A port from a hub
-auto &portA = *hub.getPort(Lpf2PortNum(Lpf2ControlPlusHubPort::A));
+auto &portA = *hub.getPort(Lpf2::PortNum(Lpf2::ControlPlusHubPort::A));
 
 portA.setMode(0); // only call it once per device connected, sets the mode (only needed when not using the default mode, wich is mode 0)
 
 portA.update();
 
-if (portA.getDeviceType() == Lpf2DeviceType::SIMPLE_MEDIUM_LINEAR_MOTOR)
+if (portA.getDeviceType() == Lpf2::DeviceType::SIMPLE_MEDIUM_LINEAR_MOTOR)
 {
     portA.setPower(255, 0); // example motor power
 }
-else if (portA.getDeviceType() == Lpf2DeviceType::TECHNIC_COLOR_SENSOR)
+else if (portA.getDeviceType() == Lpf2::DeviceType::TECHNIC_COLOR_SENSOR)
 {
     Serial.print("Color Idx: ");
     Serial.println(portA.getValue(0, 0));
@@ -170,7 +172,7 @@ Examples:
 ```c++
 // Esp32IO is from an example, see examples/LocalPort/device.h
 Esp32IO portA_IO(1); // Use UART1
-Lpf2PortLocal portA(&portA_IO); // set up port to use the IO
+Lpf2::Local::Port portA(&portA_IO); // set up port to use the IO
 
 // Port pwm pins
 #define PORT_A_PWM_1 21
@@ -190,7 +192,7 @@ Lpf2PortLocal portA(&portA_IO); // set up port to use the IO
 
 void setup()
 {
-    Lpf2DeviceDescRegistry::registerDefault();
+    Lpf2::DeviceDescRegistry::registerDefault();
 
     // Initialize IO before the port, as the port will use the IO to communicate with the device
     initIOForPort(A);
@@ -203,11 +205,11 @@ void loop()
 
     portA.update();
 
-    if (portA.getDeviceType() == Lpf2DeviceType::SIMPLE_MEDIUM_LINEAR_MOTOR)
+    if (portA.getDeviceType() == Lpf2::DeviceType::SIMPLE_MEDIUM_LINEAR_MOTOR)
     {
         portA.setPower(255, 0); // example motor power
     }
-    else if (portA.getDeviceType() == Lpf2DeviceType::TECHNIC_COLOR_SENSOR)
+    else if (portA.getDeviceType() == Lpf2::DeviceType::TECHNIC_COLOR_SENSOR)
     {
         Serial.print("Color Idx: ");
         Serial.println(portA.getValue(0, 0));
@@ -218,22 +220,22 @@ void loop()
 ### Device Manager
 
 ```c++
-Lpf2DeviceRegistry::registerDefault(); // should be called once at startup, to register the default device factories.
+Lpf2::DeviceRegistry::registerDefault(); // should be called once at startup, to register the default device factories.
 
 // port can be any class derived from Lpf2Port
-Lpf2DeviceManager deviceManager(port);
+Lpf2::DeviceManager deviceManager(port);
 deviceManager.update(); // calls port.update(), checks device type, constructs device, should be called periodically.
 
 if (deviceManager.device())
 {
-    if (auto device = static_cast<TechnicColorSensorControl *>
-        (deviceManager.device()->getCapability(TechnicColorSensor::CAP)))
+    if (auto device = static_cast<Lpf2::Devices::TechnicColorSensorControl *>
+        (deviceManager.device()->getCapability(Lpf2::Devices::TechnicColorSensor::CAP)))
     {
         Serial.print("Color idx: ");
         Serial.println(device->getColorIdx());
     }
-    if (auto device = static_cast<BasicMotorControl *>
-        (deviceManager.device()->getCapability(BasicMotor::CAP)))
+    if (auto device = static_cast<Lpf2::Devices::BasicMotorControl *>
+        (deviceManager.device()->getCapability(Lpf2::Devices::BasicMotor::CAP)))
     {
         device->setSpeed(-50);
     }
@@ -252,137 +254,126 @@ header:
 
 ```c++
 #pragma once
-#ifndef _LPF2_BASIC_MOTOR_H_
-#define _LPF2_BASIC_MOTOR_H_
 
-#include "../config.hpp"
-#include "../Lpf2Device.hpp"
+#include "Lpf2/config.hpp"
+#include "Lpf2/Device.hpp"
 
-class BasicMotorControl
+namespace Lpf2::Devices
 {
-public:
-    virtual ~BasicMotorControl() = default;
-    virtual void setSpeed(int speed) = 0;
-};
-
-class BasicMotor : public Lpf2Device, public BasicMotorControl
-{
-public:
-    BasicMotor(Lpf2Port &port) : Lpf2Device(port) {}
-
-    bool init() override
+    class BasicMotorControl
     {
-        setSpeed(0);
-        return true;
-    }
+    public:
+        virtual ~BasicMotorControl() = default;
+        virtual void startPower(int speed) = 0;
+    };
 
-    void poll() override
+    class BasicMotor : public Device, public BasicMotorControl
     {
-    }
+    public:
+        BasicMotor(Port &port) : Device(port) {}
 
-    const char *name() const override
+        bool init() override
+        {
+            startPower(0);
+            return true;
+        }
+
+        void poll() override
+        {
+        }
+
+        const char *name() const override
+        {
+            return "DC Motor (dumb)";
+        }
+
+        void startPower(int speed) override;
+
+        bool hasCapability(DeviceCapabilityId id) const override;
+        void *getCapability(DeviceCapabilityId id) override;
+
+        inline static const DeviceCapabilityId CAP =
+            Lpf2CapabilityRegistry::registerCapability("basic_motor");
+
+        static void registerFactory(DeviceRegistry &reg);
+    };
+
+    class BasicMotorFactory : public DeviceFactory
     {
-        return "DC Motor (dumb)";
-    }
+    public:
+        bool matches(Port &port) const override;
 
-    void setSpeed(int speed) override;
+        Device *create(Port &port) const override
+        {
+            return new BasicMotor(port);
+        }
 
-    bool hasCapability(Lpf2DeviceCapabilityId id) const override;
-    void *getCapability(Lpf2DeviceCapabilityId id) override;
-
-    inline static const Lpf2DeviceCapabilityId CAP =
-        Lpf2CapabilityRegistry::registerCapability("basic_motor");
-
-    static void registerFactory(Lpf2DeviceRegistry& reg);
-};
-
-class BasicMotorFactory : public Lpf2DeviceFactory
-{
-public:
-    bool matches(Lpf2Port &port) const override;
-
-    Lpf2Device *create(Lpf2Port &port) const override
-    {
-        return new BasicMotor(port);
-    }
-
-    const char *name() const
-    {
-        return "Basic Motor Factory";
-    }
-};
-
-#endif
+        const char *name() const
+        {
+            return "Basic Motor Factory";
+        }
+    };
+}; // namespace Lpf2::Devices
 ```
 
 source:
 
 ```c++
-#include "BasicMotor.h"
+#include "Lpf2/Devices/BasicMotor.hpp"
 
-namespace
+namespace Lpf2::Devices
 {
-    BasicMotorFactory factory;
-}
-
-void BasicMotor::registerFactory(Lpf2DeviceRegistry& reg)
-{
-    reg.registerFactory(&factory);
-}
-
-void BasicMotor::setSpeed(int speed)
-{
-    assert(this);
-    assert(((uintptr_t)this & 0x3) == 0);
-    assert(m_port.deviceConnected()); 
-    bool forward = speed >= 0;
-    speed = std::abs(speed);
-    if (speed > 100)
-        speed = 100;
-
-    uint8_t pwr2 = speed * 0xFF / 100;
-    uint8_t pwr1 = 0;
-    if (!forward)
-        std::swap(pwr1, pwr2);
-
-    m_port.setPower(pwr1, pwr2);
-}
-
-bool BasicMotor::hasCapability(Lpf2DeviceCapabilityId id) const
-{
-    return id == CAP;
-}
-
-void *BasicMotor::getCapability(Lpf2DeviceCapabilityId id)
-{
-    if (id == CAP)
-        return static_cast<BasicMotorControl *>(this);
-    return nullptr;
-}
-
-bool BasicMotorFactory::matches(Lpf2Port &port) const
-{
-    switch (port.getDeviceType())
+    namespace
     {
-    case Lpf2DeviceType::SIMPLE_MEDIUM_LINEAR_MOTOR:
-    case Lpf2DeviceType::TRAIN_MOTOR:
-        return true;
-    default:
-        break;
+        BasicMotorFactory factory;
     }
-    return false;
-}
+
+    void BasicMotor::registerFactory(DeviceRegistry &reg)
+    {
+        reg.registerFactory(&factory);
+    }
+
+    void BasicMotor::startPower(int speed)
+    {
+        m_port.startPower(speed);
+    }
+
+    bool BasicMotor::hasCapability(DeviceCapabilityId id) const
+    {
+        return id == CAP;
+    }
+
+    void *BasicMotor::getCapability(DeviceCapabilityId id)
+    {
+        if (id == CAP)
+            return static_cast<BasicMotorControl *>(this);
+        return nullptr;
+    }
+
+    bool BasicMotorFactory::matches(Port &port) const
+    {
+        switch (port.getDeviceType())
+        {
+        case DeviceType::SIMPLE_MEDIUM_LINEAR_MOTOR:
+        case DeviceType::TRAIN_MOTOR:
+            return true;
+        default:
+            break;
+        }
+        return false;
+    }
+}; // namespace Lpf2::Devices
 ```
 
 with replacing the name with the new device's name, adding new functions to the control interface, and most importantly: registering a new capability. A device can support more capabilities, but it must inherit from all the used capability interfaces, like:
 
 ```c++
-class EncoderMotor : public Lpf2Device, public EncoderMotorControl, public BasicMotorControl
+class EncoderMotor : public Device, public EncoderMotorControl, public BasicMotorControl
 {};
 
 // then getCapability() becomes
 
-void *EncoderMotor::getCapability(Lpf2DeviceCapabilityId id)
+void *EncoderMotor::getCapability(DeviceCapabilityId id)
 {
     if (id == CAP)
         return static_cast<EncoderMotorControl *>(this);

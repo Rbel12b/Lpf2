@@ -1,0 +1,63 @@
+#include "Lpf2/Devices/DistanceSensor.hpp"
+
+namespace Lpf2::Devices
+{
+    namespace
+    {
+        TechnicDistanceSensorFactory factory;
+    }
+
+    void TechnicDistanceSensor::registerFactory(DeviceRegistry &reg)
+    {
+        reg.registerFactory(&factory);
+    }
+
+    void TechnicDistanceSensor::setLight(uint8_t l1, uint8_t l2, uint8_t l3, uint8_t l4)
+    {
+        std::vector<uint8_t> data;
+        if (l1 > 100)
+            l1 = 100;
+        if (l2 > 100)
+            l2 = 100;
+        if (l3 > 100)
+            l3 = 100;
+        if (l4 > 100)
+            l4 = 100;
+
+        data.push_back(l1);
+        data.push_back(l2);
+        data.push_back(l3);
+        data.push_back(l4);
+
+        m_port.writeData(LIGHT_MODE, data);
+    }
+
+    float TechnicDistanceSensor::getDistance()
+    {
+        return m_port.getValue(0, 0);
+    }
+
+    bool TechnicDistanceSensor::hasCapability(DeviceCapabilityId id) const
+    {
+        return id == CAP;
+    }
+
+    void *TechnicDistanceSensor::getCapability(DeviceCapabilityId id)
+    {
+        if (id == CAP)
+            return static_cast<TechnicDistanceSensorControl *>(this);
+        return nullptr;
+    }
+
+    bool TechnicDistanceSensorFactory::matches(Port &port) const
+    {
+        switch (port.getDeviceType())
+        {
+        case DeviceType::TECHNIC_DISTANCE_SENSOR:
+            return true;
+        default:
+            break;
+        }
+        return false;
+    }
+}; // namespace Lpf2::Devices
