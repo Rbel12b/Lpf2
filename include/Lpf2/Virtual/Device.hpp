@@ -1,12 +1,10 @@
 #pragma once
-#ifndef _LPF2_VIRTUAL_DEVICE_H_
-#define _LPF2_VIRTUAL_DEVICE_H_
 
-#include "config.hpp"
-#include "Lpf2Const.hpp"
+#include "Lpf2/config.hpp"
+#include "Lpf2/LWPConst.hpp"
+#include "Lpf2/Util/Values.hpp"
+#include "Lpf2/Device.hpp"
 #include <vector>
-#include "../Util/Values.hpp"
-#include "../Lpf2Device.hpp"
 
 class Lpf2VirtualDevice
 {
@@ -237,5 +235,3 @@ public:
 private:
     const Lpf2DeviceDescriptor& m_desc;
 };
-
-#endif

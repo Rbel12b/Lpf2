@@ -6,15 +6,14 @@
  *
  */
 
-#ifndef _LPF2_HUB_H_
-#define _LPF2_HUB_H_
+#pragma once
 
-#include "config.hpp"
-#include "Arduino.h"
+#include "Lpf2/config.hpp"
+#include "Lpf2/LWPConst.hpp"
+#include "Lpf2/Util/RateLimiter.hpp"
+#include "Lpf2/Remote/Port.hpp"
+
 #include "NimBLEDevice.h"
-#include "Lpf2Const.hpp"
-#include "Util/RateLimiter.hpp"
-#include "Lpf2Remote/Lpf2PortRemote.hpp"
 #include "unordered_map"
 
 class Lpf2Hub
@@ -169,5 +168,3 @@ private:
     // BLE settings
     uint32_t _scanDuration = 10;
 };
-
-#endif // Lpf2Hub_h

@@ -1,6 +1,6 @@
-#include "Lpf2PortLocal.hpp"
+#include "Lpf2/Local/Port.hpp"
 #include <cstring>
-#include "../Util/Values.hpp"
+#include "Lpf2/Util/Values.hpp"
 
 void Lpf2PortLocal::parseMessage(const Lpf2Message &msg)
 {

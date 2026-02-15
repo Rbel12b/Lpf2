@@ -1,6 +1,4 @@
 #pragma once
-#ifndef _LPF2_UTIL_MUTEX_H_
-#define _LPF2_UTIL_MUTEX_H_
 
 #if defined(LPF2_USE_FREERTOS)
 #include <freertos/FreeRTOS.h>
@@ -46,4 +44,3 @@ public:
 private:
     Mutex& m_mutex;
 };
-#endif // _LPF2_UTIL_MUTEX_H_
