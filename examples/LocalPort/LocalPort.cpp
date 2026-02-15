@@ -11,8 +11,8 @@
 #include "driver/mcpwm.h"
 
 Esp32IO portA_IO(1); // Use UART1
-Lpf2PortLocal portA(&portA_IO);
-Lpf2DeviceManager deviceManager(portA);
+Lpf2::Local::Port portA(&portA_IO);
+Lpf2::DeviceManager deviceManager(portA);
 
 // Port pwm pins
 #define PORT_A_PWM_1 21
@@ -33,8 +33,8 @@ Lpf2DeviceManager deviceManager(portA);
 void setup()
 {
     Serial.begin(981200);
-    Lpf2DeviceRegistry::registerDefault();
-    Lpf2DeviceDescRegistry::registerDefault();
+    Lpf2::DeviceRegistry::registerDefault();
+    Lpf2::DeviceDescRegistry::registerDefault();
 
     // Initialize IO before the port, as the port will use the IO to communicate with the device
     initIOForPort(A);
@@ -49,14 +49,14 @@ void loop()
 
     if (deviceManager.device())
     {
-        if (auto device = static_cast<TechnicColorSensorControl *>
-            (deviceManager.device()->getCapability(TechnicColorSensor::CAP)))
+        if (auto device = static_cast<Lpf2::Devices::TechnicColorSensorControl *>
+            (deviceManager.device()->getCapability(Lpf2::Devices::TechnicColorSensor::CAP)))
         {
             Serial.print("Color idx: ");
             Serial.println(device->getColorIdx());
         }
-        if (auto device = static_cast<BasicMotorControl *>
-            (deviceManager.device()->getCapability(BasicMotor::CAP)))
+        if (auto device = static_cast<Lpf2::Devices::BasicMotorControl *>
+            (deviceManager.device()->getCapability(Lpf2::Devices::BasicMotor::CAP)))
         {
             device->startPower(-50);
         }

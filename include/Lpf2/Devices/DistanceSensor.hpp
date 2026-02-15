@@ -1,73 +1,71 @@
 #pragma once
-#ifndef _LPF2_DISTANCE_SENSOR_H_
-#define _LPF2_DISTANCE_SENSOR_H_
 
 #include "Lpf2/config.hpp"
 #include "Lpf2/Device.hpp"
 
-class TechnicDistanceSensorControl
+namespace Lpf2::Devices
 {
-public:
-    virtual ~TechnicDistanceSensorControl() = default;
-    /**
-     * @brief Set the light on the sensor, all values should be in the range 0-100.
-     */
-    virtual void setLight(uint8_t l1, uint8_t l2, uint8_t l3, uint8_t l4) = 0;
-    /**
-     * @brief Get the distance measured by the sensor in centimeters.
-     */
-    virtual float getDistance() = 0;
-};
-
-class TechnicDistanceSensor : public Lpf2Device, public TechnicDistanceSensorControl
-{
-public:
-    TechnicDistanceSensor(Lpf2Port &port) : Lpf2Device(port) {}
-
-    bool init() override
+    class TechnicDistanceSensorControl
     {
-        setLight(0, 0, 0, 0);
-        return true;
-    }
+    public:
+        virtual ~TechnicDistanceSensorControl() = default;
+        /**
+         * @brief Set the light on the sensor, all values should be in the range 0-100.
+         */
+        virtual void setLight(uint8_t l1, uint8_t l2, uint8_t l3, uint8_t l4) = 0;
+        /**
+         * @brief Get the distance measured by the sensor in centimeters.
+         */
+        virtual float getDistance() = 0;
+    };
 
-    void poll() override
+    class TechnicDistanceSensor : public Device, public TechnicDistanceSensorControl
     {
-    }
+    public:
+        TechnicDistanceSensor(Port &port) : Device(port) {}
 
-    const char *name() const override
+        bool init() override
+        {
+            setLight(0, 0, 0, 0);
+            return true;
+        }
+
+        void poll() override
+        {
+        }
+
+        const char *name() const override
+        {
+            return "Technic Distance Sensor";
+        }
+
+        void setLight(uint8_t l1, uint8_t l2, uint8_t l3, uint8_t l4);
+        float getDistance();
+
+        inline static const int LIGHT_MODE = 5;
+
+        bool hasCapability(DeviceCapabilityId id) const override;
+        void *getCapability(DeviceCapabilityId id) override;
+
+        inline static const DeviceCapabilityId CAP =
+            Lpf2CapabilityRegistry::registerCapability("technic_distance_sensor");
+
+        static void registerFactory(DeviceRegistry &reg);
+    };
+
+    class TechnicDistanceSensorFactory : public DeviceFactory
     {
-        return "Technic Distance Sensor";
-    }
+    public:
+        bool matches(Port &port) const override;
 
-    void setLight(uint8_t l1, uint8_t l2, uint8_t l3, uint8_t l4);
-    float getDistance();
+        Device *create(Port &port) const override
+        {
+            return new TechnicDistanceSensor(port);
+        }
 
-    inline static const int LIGHT_MODE = 5;
-
-    bool hasCapability(Lpf2DeviceCapabilityId id) const override;
-    void *getCapability(Lpf2DeviceCapabilityId id) override;
-
-
-    inline static const Lpf2DeviceCapabilityId CAP =
-        Lpf2CapabilityRegistry::registerCapability("technic_distance_sensor");
-
-    static void registerFactory(Lpf2DeviceRegistry& reg);
-};
-
-class TechnicDistanceSensorFactory : public Lpf2DeviceFactory
-{
-public:
-    bool matches(Lpf2Port &port) const override;
-
-    Lpf2Device *create(Lpf2Port &port) const override
-    {
-        return new TechnicDistanceSensor(port);
-    }
-
-    const char *name() const
-    {
-        return "Technic Distance Sensor Factory";
-    }
-};
-
-#endif
+        const char *name() const
+        {
+            return "Technic Distance Sensor Factory";
+        }
+    };
+}; // namespace Lpf2::Devices
