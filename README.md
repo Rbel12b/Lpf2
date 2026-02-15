@@ -12,6 +12,10 @@ I used the library as a reference, and base for LWP implementation (Hub emulatio
 - Thanks to the pybrics team for creating the uart protocol documentation: [LEGO PoweredUp UART Protocol](https://github.com/pybricks/technical-info/blob/master/uart-protocol.md).
 - Thanks to h2zero (Ryan Powell) for the great [NimBLE-Arduino library](https://github.com/h2zero/NimBLE-Arduino).
 
+## Disclaimers
+
+LEGO® is a trademark of the LEGO Group of companies which does not sponsor, authorize or endorse this project.
+
 ## License
 
 This library is licensed under the MIT License. See the [LICENSE](LICENSE) file for more details.
