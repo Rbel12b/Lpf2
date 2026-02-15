@@ -27,27 +27,27 @@ This library is licensed under the MIT License. See the [LICENSE](LICENSE) file 
 ## Library Structure
 
 ```tree
-src/
-├── Lpf2Const.hpp             # Protocol constants
-├── Lpf2Device.hpp            # Base device interface, device factory
-├── Lpf2Port.hpp              # Base Port class
-├── Lpf2DeviceManager.hpp     # Device manager
-├── Lpf2Hub.hpp               # LEGO Hub control
-├── Lpf2HubEmulation.hpp      # LEGO Hub emulation
-├── Lpf2DeviceManager.hpp     # Device manager
-├── Lpf2DeviceDescLib.hpp     # Device descriptor library
-├── Lpf2Devices/            # Device implementations
-│   ├── BasicMotor.h
-│   ├── EncoderMotor.h
-│   ├── DistanceSensor.h
-│   └── ColorSensor.h
-├── Lpf2Local/              # Local port implementation
-│   └── Lpf2PortLocal.hpp
-├── Lpf2Remote/             # Remote port implementation
-│   └── Lpf2PortRemote.hpp
-├── Lpf2Virtual/            # Virtual (emulated) port implementation
-│   ├── Lpf2VirtualDevice.hpp
-│   └── Lpf2PortVirtual.hpp
+include/Lpf2/
+├── LWPConst.hpp          # Protocol constants
+├── Device.hpp            # Base device interface, device factory
+├── Port.hpp              # Base Port class
+├── DeviceManager.hpp     # Device manager
+├── Hub.hpp               # LEGO Hub control
+├── HubEmulation.hpp      # LEGO Hub emulation
+├── DeviceManager.hpp     # Device manager
+├── DeviceDescLib.hpp     # Device descriptor library
+├── Devices/              # Device implementations
+│   ├── BasicMotor.hpp
+│   ├── EncoderMotor.hpp
+│   ├── DistanceSensor.hpp
+│   └── ColorSensor.hpp
+├── Local/                # Local port implementation
+│   └── Port.hpp
+├── Remote/               # Remote port implementation
+│   └── Port.hpp
+├── Virtual/              # Virtual (emulated) port implementation
+│   ├── Device.hpp
+│   └── Port.hpp
 ```
 
 ## Functionalities
@@ -255,8 +255,8 @@ header:
 #ifndef _LPF2_BASIC_MOTOR_H_
 #define _LPF2_BASIC_MOTOR_H_
 
-#include "../config.hpp"
-#include "../Lpf2Device.hpp"
+#include "Lpf2/config.hpp"
+#include "Lpf2/Device.hpp"
 
 class BasicMotorControl
 {
@@ -318,7 +318,7 @@ public:
 source:
 
 ```c++
-#include "BasicMotor.h"
+#include "Lpf2/Devices/BasicMotor.h"
 
 namespace
 {
