@@ -77,6 +77,8 @@ public:
 
             if (advertisedDevice->haveManufacturerData())
             {
+                LPF2_LOG_D("advertisement payload: %s", Lpf2Utils::bytes_to_hexString(advertisedDevice->getPayload()).c_str());
+                LPF2_LOG_D("manufacturer data: %s", Lpf2Utils::bytes_to_hexString(advertisedDevice->getManufacturerData()).c_str());
                 uint8_t *manufacturerData = (uint8_t *)advertisedDevice->getManufacturerData().data();
                 uint8_t manufacturerDataLength = advertisedDevice->getManufacturerData().length();
                 if (manufacturerDataLength >= 3)
