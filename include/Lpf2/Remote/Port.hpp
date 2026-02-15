@@ -1,9 +1,7 @@
 #pragma once
-#ifndef _LPF2_PORT_REMOTE_H_
-#define _LPF2_PORT_REMOTE_H_
 
-#include "config.hpp"
-#include "Lpf2Port.hpp"
+#include "Lpf2/config.hpp"
+#include "Lpf2/Port.hpp"
 #include <memory>
 
 class Lpf2Hub;
@@ -63,5 +61,3 @@ public:
     std::vector<Lpf2Mode>& getModes_mod() { return modeData; }
     void setPortNum(Lpf2PortNum _portNum) { portNum = _portNum; }
 };
-
-#endif // _LPF2_PORT_REMOTE_H_

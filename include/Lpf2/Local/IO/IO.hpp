@@ -2,8 +2,8 @@
 #ifndef _LPF2_IO_H_
 #define _LPF2_IO_H_
 
-#include "../../config.hpp"
-#include "../../UART/UART.hpp"
+#include "Lpf2/config.hpp"
+#include "Lpf2/Local/IO/UART.hpp"
 
 class Lpf2PWM;
 

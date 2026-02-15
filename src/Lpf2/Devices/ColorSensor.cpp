@@ -1,4 +1,4 @@
-#include "ColorSensor.hpp"
+#include "Lpf2/Devices/ColorSensor.hpp"
 
 namespace
 {

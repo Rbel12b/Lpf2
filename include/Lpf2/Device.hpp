@@ -1,9 +1,7 @@
 #pragma once
-#ifndef _LPF2_DEVICE_H_
-#define _LPF2_DEVICE_H_
 
-#include "config.hpp"
-#include "Lpf2Port.hpp"
+#include "Lpf2/config.hpp"
+#include "Lpf2/Port.hpp"
 #include <map>
 #include <string>
 
@@ -94,5 +92,3 @@ public:
         return fnv1a(name);
     }
 };
-
-#endif

@@ -1,9 +1,7 @@
 #pragma once
-#ifndef _LPF2_DEVICE_DESC_LIB_H_
-#define _LPF2_DEVICE_DESC_LIB_H_
 
-#include "config.hpp"
-#include "Lpf2Device.hpp"
+#include "Lpf2/config.hpp"
+#include "Lpf2/Device.hpp"
 
 namespace Lpf2DeviceDescriptors
 {
@@ -72,5 +70,3 @@ private:
     }_descriptors[MAX_DESCRIPTORS];
     size_t count_ = 0;
 };
-
-#endif

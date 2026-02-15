@@ -1,6 +1,4 @@
 #pragma once
-#ifndef _LPF2_SERIAL_DEFINITIONS_H_
-#define _LPF2_SERIAL_DEFINITIONS_H_
 
 #define   BYTE_SYNC                     0x00                            // Synchronisation byte
 #define   BYTE_ACK                      0x04                            // Acknowledge byte
@@ -53,5 +51,3 @@
 #define   LENGTH_32                     (0x05 << 3)
 #define   LENGTH_64                     (0x06 << 3)
 #define   LENGTH_128                    (0x07 << 3)
-
-#endif

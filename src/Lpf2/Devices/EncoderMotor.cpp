@@ -1,5 +1,5 @@
-#include "EncoderMotor.hpp"
-#include "Lpf2Devices/BasicMotor.hpp"
+#include "Lpf2/Devices/EncoderMotor.hpp"
+#include "Lpf2/Devices/BasicMotor.hpp"
 
 namespace
 {

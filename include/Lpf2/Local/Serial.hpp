@@ -1,9 +1,7 @@
 #pragma once
-#ifndef _LPF2_SERIAL_H_
-#define _LPF2_SERIAL_H_
 
-#include "config.hpp"
-#include "IO/IO.hpp"
+#include "Lpf2/config.hpp"
+#include "Lpf2/Local/IO/IO.hpp"
 #include <vector>
 
 struct Lpf2Message
@@ -36,5 +34,3 @@ private:
     uint8_t checksum;
     uint32_t m_lastReceivedTime = 0;
 };
-
-#endif

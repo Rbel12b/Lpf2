@@ -1,9 +1,9 @@
-#include "Lpf2Port.hpp"
+#include "Lpf2/Port.hpp"
+#include "Lpf2/LWPConst.hpp"
 #include <string>
 #include <cstring>
 #include <sstream>
 #include <iomanip>
-#include "Lpf2Const.hpp"
 
 std::string Lpf2Port::getInfoStr()
 {
