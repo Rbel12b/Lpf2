@@ -1,41 +1,44 @@
 #include "Lpf2/Devices/BasicMotor.hpp"
 
-namespace
+namespace Lpf2::Devices
 {
-    BasicMotorFactory factory;
-}
-
-void BasicMotor::registerFactory(Lpf2DeviceRegistry& reg)
-{
-    reg.registerFactory(&factory);
-}
-
-void BasicMotor::startPower(int speed)
-{
-    m_port.startPower(speed);
-}
-
-bool BasicMotor::hasCapability(Lpf2DeviceCapabilityId id) const
-{
-    return id == CAP;
-}
-
-void *BasicMotor::getCapability(Lpf2DeviceCapabilityId id)
-{
-    if (id == CAP)
-        return static_cast<BasicMotorControl *>(this);
-    return nullptr;
-}
-
-bool BasicMotorFactory::matches(Lpf2Port &port) const
-{
-    switch (port.getDeviceType())
+    namespace
     {
-    case Lpf2DeviceType::SIMPLE_MEDIUM_LINEAR_MOTOR:
-    case Lpf2DeviceType::TRAIN_MOTOR:
-        return true;
-    default:
-        break;
+        BasicMotorFactory factory;
     }
-    return false;
-}
+
+    void BasicMotor::registerFactory(DeviceRegistry &reg)
+    {
+        reg.registerFactory(&factory);
+    }
+
+    void BasicMotor::startPower(int speed)
+    {
+        m_port.startPower(speed);
+    }
+
+    bool BasicMotor::hasCapability(DeviceCapabilityId id) const
+    {
+        return id == CAP;
+    }
+
+    void *BasicMotor::getCapability(DeviceCapabilityId id)
+    {
+        if (id == CAP)
+            return static_cast<BasicMotorControl *>(this);
+        return nullptr;
+    }
+
+    bool BasicMotorFactory::matches(Port &port) const
+    {
+        switch (port.getDeviceType())
+        {
+        case DeviceType::SIMPLE_MEDIUM_LINEAR_MOTOR:
+        case DeviceType::TRAIN_MOTOR:
+            return true;
+        default:
+            break;
+        }
+        return false;
+    }
+}; // namespace Lpf2::Devices

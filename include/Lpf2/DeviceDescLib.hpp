@@ -1,72 +1,75 @@
 #pragma once
 
 #include "Lpf2/config.hpp"
-#include "Lpf2/Device.hpp"
+#include "Lpf2/DeviceDesc.hpp"
 
-namespace Lpf2DeviceDescriptors
+namespace Lpf2
 {
-    extern const Lpf2DeviceDescriptor LPF2_DEVICE_TECHNIC_MEDIUM_HUB_GEST_SENSOR;
-    extern const Lpf2DeviceDescriptor LPF2_DEVICE_TECHNIC_MEDIUM_HUB_TILT_SENSOR;
-    extern const Lpf2DeviceDescriptor LPF2_DEVICE_TECHNIC_MEDIUM_HUB_GYRO_SENSOR;
-    extern const Lpf2DeviceDescriptor LPF2_DEVICE_TECHNIC_MEDIUM_HUB_ACCELEROMETER;
-    extern const Lpf2DeviceDescriptor LPF2_DEVICE_HUB_LED;
-    extern const Lpf2DeviceDescriptor LPF2_DEVICE_TRAIN_MOTOR;
-    extern const Lpf2DeviceDescriptor LPF2_DEVICE_CURRENT_SENSOR;
-    extern const Lpf2DeviceDescriptor LPF2_DEVICE_VOLTAGE_SENSOR;
-    extern const Lpf2DeviceDescriptor LPF2_DEVICE_TECHNIC_MEDIUM_HUB_TEMPERATURE_SENSOR;
-    extern const Lpf2DeviceDescriptor LPF2_DEVICE_TECHNIC_LARGE_ANGULAR_MOTOR_GREY;
-    extern const Lpf2DeviceDescriptor LPF2_DEVICE_TECHNIC_DISTANCE_SENSOR;
-    extern const Lpf2DeviceDescriptor LPF2_DEVICE_TECHNIC_MEDIUM_ANGULAR_MOTOR_GREY;
-    extern const Lpf2DeviceDescriptor LPF2_DEVICE_TECHNIC_COLOR_SENSOR;
-    extern const Lpf2DeviceDescriptor LPF2_DEVICE_TECHNIC_LARGE_LINEAR_MOTOR;
-};
-
-class Lpf2DeviceDescRegistry
-{
-public:
-    static Lpf2DeviceDescRegistry &instance()
+    namespace DeviceDescriptors
     {
-        static Lpf2DeviceDescRegistry inst;
-        return inst;
-    }
+        extern const DeviceDescriptor LPF2_DEVICE_TECHNIC_MEDIUM_HUB_GEST_SENSOR;
+        extern const DeviceDescriptor LPF2_DEVICE_TECHNIC_MEDIUM_HUB_TILT_SENSOR;
+        extern const DeviceDescriptor LPF2_DEVICE_TECHNIC_MEDIUM_HUB_GYRO_SENSOR;
+        extern const DeviceDescriptor LPF2_DEVICE_TECHNIC_MEDIUM_HUB_ACCELEROMETER;
+        extern const DeviceDescriptor LPF2_DEVICE_HUB_LED;
+        extern const DeviceDescriptor LPF2_DEVICE_TRAIN_MOTOR;
+        extern const DeviceDescriptor LPF2_DEVICE_CURRENT_SENSOR;
+        extern const DeviceDescriptor LPF2_DEVICE_VOLTAGE_SENSOR;
+        extern const DeviceDescriptor LPF2_DEVICE_TECHNIC_MEDIUM_HUB_TEMPERATURE_SENSOR;
+        extern const DeviceDescriptor LPF2_DEVICE_TECHNIC_LARGE_ANGULAR_MOTOR_GREY;
+        extern const DeviceDescriptor LPF2_DEVICE_TECHNIC_DISTANCE_SENSOR;
+        extern const DeviceDescriptor LPF2_DEVICE_TECHNIC_MEDIUM_ANGULAR_MOTOR_GREY;
+        extern const DeviceDescriptor LPF2_DEVICE_TECHNIC_COLOR_SENSOR;
+        extern const DeviceDescriptor LPF2_DEVICE_TECHNIC_LARGE_LINEAR_MOTOR;
+    };
 
-    static void registerDefault();
-
-    void registerDesc(Lpf2DeviceType type, const Lpf2DeviceDescriptor *desc)
+    class DeviceDescRegistry
     {
-        if (count_ >= MAX_DESCRIPTORS)
+    public:
+        static DeviceDescRegistry &instance()
         {
-            assert(false && "Exceeded maximum number of Lpf2 device factories");
-            return;
+            static DeviceDescRegistry inst;
+            return inst;
         }
 
-        _descriptors[count_++] = Lpf2DeviceDescRegistryEntry{desc, type};
-    }
+        static void registerDefault();
 
-    const Lpf2DeviceDescriptor *getDescriptor(Lpf2DeviceType type)
-    {
-        for (size_t i = 0; i < count_; i++)
+        void registerDesc(DeviceType type, const DeviceDescriptor *desc)
         {
-            if (_descriptors[i]._type == type)
+            if (count_ >= MAX_DESCRIPTORS)
             {
-                return _descriptors[i]._desc;
+                assert(false && "Exceeded maximum number of Lpf2 device factories");
+                return;
             }
+
+            _descriptors[count_++] = Lpf2DeviceDescRegistryEntry{desc, type};
         }
-        return nullptr;
-    }
 
-    size_t count() const
-    {
-        return count_;
-    }
+        const DeviceDescriptor *getDescriptor(DeviceType type)
+        {
+            for (size_t i = 0; i < count_; i++)
+            {
+                if (_descriptors[i]._type == type)
+                {
+                    return _descriptors[i]._desc;
+                }
+            }
+            return nullptr;
+        }
 
-private:
-    static constexpr size_t MAX_DESCRIPTORS = 64;
+        size_t count() const
+        {
+            return count_;
+        }
 
-    struct Lpf2DeviceDescRegistryEntry
-    {
-        const Lpf2DeviceDescriptor* _desc;
-        Lpf2DeviceType _type;
-    }_descriptors[MAX_DESCRIPTORS];
-    size_t count_ = 0;
-};
+    private:
+        static constexpr size_t MAX_DESCRIPTORS = 64;
+
+        struct Lpf2DeviceDescRegistryEntry
+        {
+            const DeviceDescriptor *_desc;
+            DeviceType _type;
+        } _descriptors[MAX_DESCRIPTORS];
+        size_t count_ = 0;
+    };
+}; // namespace Lpf2

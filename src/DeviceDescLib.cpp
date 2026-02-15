@@ -1,35 +1,38 @@
 #include "Lpf2/DeviceDescLib.hpp"
 
-void Lpf2DeviceDescRegistry::registerDefault()
+namespace Lpf2
 {
-#define REGISTER_DEVICE_DESC(dev) \
-    Lpf2DeviceDescRegistry::instance().registerDesc( \
-        Lpf2DeviceType::dev, &Lpf2DeviceDescriptors::LPF2_DEVICE_ ## dev)
+    void DeviceDescRegistry::registerDefault()
+    {
+    #define REGISTER_DEVICE_DESC(dev) \
+        DeviceDescRegistry::instance().registerDesc( \
+            DeviceType::dev, &DeviceDescriptors::LPF2_DEVICE_ ## dev)
 
-    REGISTER_DEVICE_DESC(TECHNIC_MEDIUM_HUB_GEST_SENSOR);
-    REGISTER_DEVICE_DESC(TECHNIC_MEDIUM_HUB_TILT_SENSOR);
-    REGISTER_DEVICE_DESC(TECHNIC_MEDIUM_HUB_GYRO_SENSOR);
-    REGISTER_DEVICE_DESC(TECHNIC_MEDIUM_HUB_ACCELEROMETER);
-    REGISTER_DEVICE_DESC(HUB_LED);
-    REGISTER_DEVICE_DESC(TRAIN_MOTOR);
-    REGISTER_DEVICE_DESC(CURRENT_SENSOR);
-    REGISTER_DEVICE_DESC(VOLTAGE_SENSOR);
-    REGISTER_DEVICE_DESC(TECHNIC_MEDIUM_HUB_TEMPERATURE_SENSOR);
-    REGISTER_DEVICE_DESC(TECHNIC_LARGE_ANGULAR_MOTOR_GREY);
-    REGISTER_DEVICE_DESC(TECHNIC_DISTANCE_SENSOR);
-    REGISTER_DEVICE_DESC(TECHNIC_MEDIUM_ANGULAR_MOTOR_GREY);
-    REGISTER_DEVICE_DESC(TECHNIC_COLOR_SENSOR);
-    REGISTER_DEVICE_DESC(TECHNIC_LARGE_LINEAR_MOTOR);
+        REGISTER_DEVICE_DESC(TECHNIC_MEDIUM_HUB_GEST_SENSOR);
+        REGISTER_DEVICE_DESC(TECHNIC_MEDIUM_HUB_TILT_SENSOR);
+        REGISTER_DEVICE_DESC(TECHNIC_MEDIUM_HUB_GYRO_SENSOR);
+        REGISTER_DEVICE_DESC(TECHNIC_MEDIUM_HUB_ACCELEROMETER);
+        REGISTER_DEVICE_DESC(HUB_LED);
+        REGISTER_DEVICE_DESC(TRAIN_MOTOR);
+        REGISTER_DEVICE_DESC(CURRENT_SENSOR);
+        REGISTER_DEVICE_DESC(VOLTAGE_SENSOR);
+        REGISTER_DEVICE_DESC(TECHNIC_MEDIUM_HUB_TEMPERATURE_SENSOR);
+        REGISTER_DEVICE_DESC(TECHNIC_LARGE_ANGULAR_MOTOR_GREY);
+        REGISTER_DEVICE_DESC(TECHNIC_DISTANCE_SENSOR);
+        REGISTER_DEVICE_DESC(TECHNIC_MEDIUM_ANGULAR_MOTOR_GREY);
+        REGISTER_DEVICE_DESC(TECHNIC_COLOR_SENSOR);
+        REGISTER_DEVICE_DESC(TECHNIC_LARGE_LINEAR_MOTOR);
 
-#undef REGISTER_DEVICE_DESC
-}
+    #undef REGISTER_DEVICE_DESC
+    }
+};
 
-namespace Lpf2DeviceDescriptors
+namespace Lpf2::DeviceDescriptors
 {
     // Device 0x36
-    const Lpf2DeviceDescriptor LPF2_DEVICE_TECHNIC_MEDIUM_HUB_GEST_SENSOR =
+    const DeviceDescriptor LPF2_DEVICE_TECHNIC_MEDIUM_HUB_GEST_SENSOR =
     {
-        .type = Lpf2DeviceType::TECHNIC_MEDIUM_HUB_GEST_SENSOR,
+        .type = DeviceType::TECHNIC_MEDIUM_HUB_GEST_SENSOR,
         .inModes = 0x0001,
         .outModes = 0x0000,
         .caps = 0x02,
@@ -46,15 +49,15 @@ namespace Lpf2DeviceDescriptors
                 1, DATA8, 1, 0,
                 {},
                 0x00,
-                Lpf2Mode::Flags{{0x00}}
+                Mode::Flags{{0x00}}
             },
         }
     };
 
     // Device 0x3B
-    const Lpf2DeviceDescriptor LPF2_DEVICE_TECHNIC_MEDIUM_HUB_TILT_SENSOR =
+    const DeviceDescriptor LPF2_DEVICE_TECHNIC_MEDIUM_HUB_TILT_SENSOR =
     {
-        .type = Lpf2DeviceType::TECHNIC_MEDIUM_HUB_TILT_SENSOR,
+        .type = DeviceType::TECHNIC_MEDIUM_HUB_TILT_SENSOR,
         .inModes = 0x0003,
         .outModes = 0x0004,
         .caps = 0x03,
@@ -71,7 +74,7 @@ namespace Lpf2DeviceDescriptors
                 3, DATA16, 3, 0,
                 {},
                 0x00,
-                Lpf2Mode::Flags{{0x00}}
+                Mode::Flags{{0x00}}
             },
             {
                 "IMP",
@@ -83,7 +86,7 @@ namespace Lpf2DeviceDescriptors
                 1, DATA32, 3, 0,
                 {},
                 0x00,
-                Lpf2Mode::Flags{{0x00}}
+                Mode::Flags{{0x00}}
             },
             {
                 "CFG",
@@ -95,15 +98,15 @@ namespace Lpf2DeviceDescriptors
                 2, DATA8, 3, 0,
                 {},
                 0x00,
-                Lpf2Mode::Flags{{0x00}}
+                Mode::Flags{{0x00}}
             },
         }
     };
 
     // Device 0x3A
-    const Lpf2DeviceDescriptor LPF2_DEVICE_TECHNIC_MEDIUM_HUB_GYRO_SENSOR =
+    const DeviceDescriptor LPF2_DEVICE_TECHNIC_MEDIUM_HUB_GYRO_SENSOR =
     {
-        .type = Lpf2DeviceType::TECHNIC_MEDIUM_HUB_GYRO_SENSOR,
+        .type = DeviceType::TECHNIC_MEDIUM_HUB_GYRO_SENSOR,
         .inModes = 0x0001,
         .outModes = 0x0000,
         .caps = 0x02,
@@ -120,15 +123,15 @@ namespace Lpf2DeviceDescriptors
                 3, DATA16, 3, 0,
                 {},
                 0x00,
-                Lpf2Mode::Flags{{0x00}}
+                Mode::Flags{{0x00}}
             },
         }
     };
 
     // Device 0x39
-    const Lpf2DeviceDescriptor LPF2_DEVICE_TECHNIC_MEDIUM_HUB_ACCELEROMETER =
+    const DeviceDescriptor LPF2_DEVICE_TECHNIC_MEDIUM_HUB_ACCELEROMETER =
     {
-        .type = Lpf2DeviceType::TECHNIC_MEDIUM_HUB_ACCELEROMETER,
+        .type = DeviceType::TECHNIC_MEDIUM_HUB_ACCELEROMETER,
         .inModes = 0x0003,
         .outModes = 0x0000,
         .caps = 0x02,
@@ -145,7 +148,7 @@ namespace Lpf2DeviceDescriptors
                 3, DATA16, 3, 0,
                 {},
                 0x00,
-                Lpf2Mode::Flags{{0x00}}
+                Mode::Flags{{0x00}}
             },
             {
                 "CAL",
@@ -157,15 +160,15 @@ namespace Lpf2DeviceDescriptors
                 1, DATA8, 0, 0,
                 {},
                 0x00,
-                Lpf2Mode::Flags{{0x00}}
+                Mode::Flags{{0x00}}
             },
         }
     };
 
     // Device 0x17
-    const Lpf2DeviceDescriptor LPF2_DEVICE_HUB_LED =
+    const DeviceDescriptor LPF2_DEVICE_HUB_LED =
     {
-        .type = Lpf2DeviceType::HUB_LED,
+        .type = DeviceType::HUB_LED,
         .inModes = 0x0000,
         .outModes = 0x0003,
         .caps = 0x01,
@@ -182,7 +185,7 @@ namespace Lpf2DeviceDescriptors
                 1, DATA8, 1, 0,
                 {},
                 0x00,
-                Lpf2Mode::Flags{{0x00}}
+                Mode::Flags{{0x00}}
             },
             {
                 "RGB O",
@@ -194,15 +197,15 @@ namespace Lpf2DeviceDescriptors
                 3, DATA8, 3, 0,
                 {},
                 0x00,
-                Lpf2Mode::Flags{{0x00}}
+                Mode::Flags{{0x00}}
             },
         }
     };
 
     // Device 0x02
-    const Lpf2DeviceDescriptor LPF2_DEVICE_TRAIN_MOTOR =
+    const DeviceDescriptor LPF2_DEVICE_TRAIN_MOTOR =
     {
-        .type = Lpf2DeviceType::TRAIN_MOTOR,
+        .type = DeviceType::TRAIN_MOTOR,
         .inModes = 0x0000,
         .outModes = 0x0001,
         .caps = 0x01,
@@ -219,15 +222,15 @@ namespace Lpf2DeviceDescriptors
                 1, DATA8, 4, 0,
                 {},
                 0x00,
-                Lpf2Mode::Flags{{0x00}}
+                Mode::Flags{{0x00}}
             },
         }
     };
 
     // Device 0x15
-    const Lpf2DeviceDescriptor LPF2_DEVICE_CURRENT_SENSOR =
+    const DeviceDescriptor LPF2_DEVICE_CURRENT_SENSOR =
     {
-        .type = Lpf2DeviceType::CURRENT_SENSOR,
+        .type = DeviceType::CURRENT_SENSOR,
         .inModes = 0x0003,
         .outModes = 0x0000,
         .caps = 0x02,
@@ -244,7 +247,7 @@ namespace Lpf2DeviceDescriptors
                 1, DATA16, 4, 0,
                 {},
                 0x00,
-                Lpf2Mode::Flags{{0x00}}
+                Mode::Flags{{0x00}}
             },
             {
                 "CUR S",
@@ -256,15 +259,15 @@ namespace Lpf2DeviceDescriptors
                 1, DATA16, 4, 0,
                 {},
                 0x00,
-                Lpf2Mode::Flags{{0x00}}
+                Mode::Flags{{0x00}}
             },
         }
     };
 
     // Device 0x14
-    const Lpf2DeviceDescriptor LPF2_DEVICE_VOLTAGE_SENSOR =
+    const DeviceDescriptor LPF2_DEVICE_VOLTAGE_SENSOR =
     {
-        .type = Lpf2DeviceType::VOLTAGE_SENSOR,
+        .type = DeviceType::VOLTAGE_SENSOR,
         .inModes = 0x0003,
         .outModes = 0x0000,
         .caps = 0x02,
@@ -281,7 +284,7 @@ namespace Lpf2DeviceDescriptors
                 1, DATA16, 4, 0,
                 {},
                 0x00,
-                Lpf2Mode::Flags{{0x00}}
+                Mode::Flags{{0x00}}
             },
             {
                 "VLT S",
@@ -293,15 +296,15 @@ namespace Lpf2DeviceDescriptors
                 1, DATA16, 4, 0,
                 {},
                 0x00,
-                Lpf2Mode::Flags{{0x00}}
+                Mode::Flags{{0x00}}
             },
         }
     };
 
     // Device 0x3C
-    const Lpf2DeviceDescriptor LPF2_DEVICE_TECHNIC_MEDIUM_HUB_TEMPERATURE_SENSOR =
+    const DeviceDescriptor LPF2_DEVICE_TECHNIC_MEDIUM_HUB_TEMPERATURE_SENSOR =
     {
-        .type = Lpf2DeviceType::TECHNIC_MEDIUM_HUB_TEMPERATURE_SENSOR,
+        .type = DeviceType::TECHNIC_MEDIUM_HUB_TEMPERATURE_SENSOR,
         .inModes = 0x0001,
         .outModes = 0x0000,
         .caps = 0x02,
@@ -318,14 +321,14 @@ namespace Lpf2DeviceDescriptors
                 1, DATA16, 5, 1,
                 {},
                 0x00,
-                Lpf2Mode::Flags{{0x00}}
+                Mode::Flags{{0x00}}
             },
         }
     };
     // Device 0x4C
-    const Lpf2DeviceDescriptor LPF2_DEVICE_TECHNIC_LARGE_ANGULAR_MOTOR_GREY =
+    const DeviceDescriptor LPF2_DEVICE_TECHNIC_LARGE_ANGULAR_MOTOR_GREY =
     {
-        .type = Lpf2DeviceType::TECHNIC_LARGE_ANGULAR_MOTOR_GREY,
+        .type = DeviceType::TECHNIC_LARGE_ANGULAR_MOTOR_GREY,
         .inModes = 0x0000,
         .outModes = 0x0000,
         .caps = 0x00,
@@ -342,7 +345,7 @@ namespace Lpf2DeviceDescriptors
                 1, DATA8, 4, 0,
                 {},
                 0x00,
-                Lpf2Mode::Flags{{ 0x04, 0x05, 0x00, 0x00, 0x00, 0x30 }}
+                Mode::Flags{{ 0x04, 0x05, 0x00, 0x00, 0x00, 0x30 }}
             },
             {
                 "SPEED",
@@ -354,7 +357,7 @@ namespace Lpf2DeviceDescriptors
                 1, DATA8, 4, 0,
                 {},
                 0x00,
-                Lpf2Mode::Flags{{ 0x04, 0x05, 0x00, 0x00, 0x00, 0x21 }}
+                Mode::Flags{{ 0x04, 0x05, 0x00, 0x00, 0x00, 0x21 }}
             },
             {
                 "POS",
@@ -366,7 +369,7 @@ namespace Lpf2DeviceDescriptors
                 1, DATA32, 11, 0,
                 {},
                 0x00,
-                Lpf2Mode::Flags{{ 0x00, 0x00, 0x00, 0x24, 0x00, 0x00 }}
+                Mode::Flags{{ 0x00, 0x00, 0x00, 0x24, 0x00, 0x00 }}
             },
             {
                 "APOS",
@@ -378,7 +381,7 @@ namespace Lpf2DeviceDescriptors
                 1, DATA16, 3, 0,
                 {},
                 0x00,
-                Lpf2Mode::Flags{{ 0x05, 0x00, 0x00, 0x00, 0x22, 0x00 }}
+                Mode::Flags{{ 0x05, 0x00, 0x00, 0x00, 0x22, 0x00 }}
             },
             {
                 "CALIB",
@@ -390,7 +393,7 @@ namespace Lpf2DeviceDescriptors
                 2, DATA16, 5, 0,
                 {},
                 0x00,
-                Lpf2Mode::Flags{{ 0x04, 0x05, 0x00, 0x00, 0x40, 0x22 }}
+                Mode::Flags{{ 0x04, 0x05, 0x00, 0x00, 0x40, 0x22 }}
             },
             {
                 "STATS",
@@ -402,15 +405,15 @@ namespace Lpf2DeviceDescriptors
                 14, DATA16, 5, 0,
                 {},
                 0x00,
-                Lpf2Mode::Flags{{ 0x04, 0x05, 0x00, 0x00, 0x00, 0x00 }}
+                Mode::Flags{{ 0x04, 0x05, 0x00, 0x00, 0x00, 0x00 }}
             },
         }
     };
 
     // Device 0x3E
-    const Lpf2DeviceDescriptor LPF2_DEVICE_TECHNIC_DISTANCE_SENSOR =
+    const DeviceDescriptor LPF2_DEVICE_TECHNIC_DISTANCE_SENSOR =
     {
-        .type = Lpf2DeviceType::TECHNIC_DISTANCE_SENSOR,
+        .type = DeviceType::TECHNIC_DISTANCE_SENSOR,
         .inModes = 0x0000,
         .outModes = 0x0000,
         .caps = 0x00,
@@ -427,7 +430,7 @@ namespace Lpf2DeviceDescriptors
                 1, DATA16, 5, 1,
                 {},
                 0x00,
-                Lpf2Mode::Flags{{ 0x84, 0x04, 0x00, 0x00, 0x00, 0x40 }}
+                Mode::Flags{{ 0x84, 0x04, 0x00, 0x00, 0x00, 0x40 }}
             },
             {
                 "DISTS",
@@ -439,7 +442,7 @@ namespace Lpf2DeviceDescriptors
                 1, DATA16, 4, 1,
                 {},
                 0x00,
-                Lpf2Mode::Flags{{ 0x84, 0x04, 0x00, 0x00, 0x00, 0x40 }}
+                Mode::Flags{{ 0x84, 0x04, 0x00, 0x00, 0x00, 0x40 }}
             },
             {
                 "SINGL",
@@ -451,7 +454,7 @@ namespace Lpf2DeviceDescriptors
                 1, DATA16, 5, 1,
                 {},
                 0x00,
-                Lpf2Mode::Flags{{ 0x84, 0x04, 0x00, 0x00, 0x00, 0x40 }}
+                Mode::Flags{{ 0x84, 0x04, 0x00, 0x00, 0x00, 0x40 }}
             },
             {
                 "LISTN",
@@ -463,7 +466,7 @@ namespace Lpf2DeviceDescriptors
                 1, DATA8, 1, 0,
                 {},
                 0x00,
-                Lpf2Mode::Flags{{ 0x84, 0x04, 0x00, 0x00, 0x00, 0x40 }}
+                Mode::Flags{{ 0x84, 0x04, 0x00, 0x00, 0x00, 0x40 }}
             },
             {
                 "TRAW",
@@ -475,7 +478,7 @@ namespace Lpf2DeviceDescriptors
                 1, DATA32, 5, 0,
                 {},
                 0x00,
-                Lpf2Mode::Flags{{ 0x04, 0x00, 0x00, 0x00, 0x40, 0x00 }}
+                Mode::Flags{{ 0x04, 0x00, 0x00, 0x00, 0x40, 0x00 }}
             },
             {
                 "LIGHT",
@@ -487,7 +490,7 @@ namespace Lpf2DeviceDescriptors
                 4, DATA8, 3, 0,
                 {},
                 0x00,
-                Lpf2Mode::Flags{{ 0x84, 0x04, 0x00, 0x00, 0x20, 0x40 }}
+                Mode::Flags{{ 0x84, 0x04, 0x00, 0x00, 0x20, 0x40 }}
             },
             {
                 "PING",
@@ -499,7 +502,7 @@ namespace Lpf2DeviceDescriptors
                 1, DATA8, 1, 0,
                 {},
                 0x00,
-                Lpf2Mode::Flags{{ 0x04, 0x00, 0x00, 0x80, 0x40, 0x00 }}
+                Mode::Flags{{ 0x04, 0x00, 0x00, 0x80, 0x40, 0x00 }}
             },
             {
                 "ADRAW",
@@ -511,7 +514,7 @@ namespace Lpf2DeviceDescriptors
                 1, DATA16, 4, 0,
                 {},
                 0x00,
-                Lpf2Mode::Flags{{ 0x84, 0x04, 0x00, 0x00, 0x00, 0x40 }}
+                Mode::Flags{{ 0x84, 0x04, 0x00, 0x00, 0x00, 0x40 }}
             },
             {
                 "CALIB",
@@ -523,15 +526,15 @@ namespace Lpf2DeviceDescriptors
                 7, DATA8, 3, 0,
                 {},
                 0x00,
-                Lpf2Mode::Flags{{ 0x84, 0x04, 0x00, 0x00, 0x40, 0x40 }}
+                Mode::Flags{{ 0x84, 0x04, 0x00, 0x00, 0x40, 0x40 }}
             },
         }
     };
 
     // Device 0x4B
-    const Lpf2DeviceDescriptor LPF2_DEVICE_TECHNIC_MEDIUM_ANGULAR_MOTOR_GREY =
+    const DeviceDescriptor LPF2_DEVICE_TECHNIC_MEDIUM_ANGULAR_MOTOR_GREY =
     {
-        .type = Lpf2DeviceType::TECHNIC_MEDIUM_ANGULAR_MOTOR_GREY,
+        .type = DeviceType::TECHNIC_MEDIUM_ANGULAR_MOTOR_GREY,
         .inModes = 0x0000,
         .outModes = 0x0000,
         .caps = 0x00,
@@ -548,7 +551,7 @@ namespace Lpf2DeviceDescriptors
                 1, DATA8, 4, 0,
                 {},
                 0x00,
-                Lpf2Mode::Flags{{ 0x04, 0x05, 0x00, 0x00, 0x00, 0x30 }}
+                Mode::Flags{{ 0x04, 0x05, 0x00, 0x00, 0x00, 0x30 }}
             },
             {
                 "SPEED",
@@ -560,7 +563,7 @@ namespace Lpf2DeviceDescriptors
                 1, DATA8, 4, 0,
                 {},
                 0x00,
-                Lpf2Mode::Flags{{ 0x04, 0x05, 0x00, 0x00, 0x00, 0x21 }}
+                Mode::Flags{{ 0x04, 0x05, 0x00, 0x00, 0x00, 0x21 }}
             },
             {
                 "POS",
@@ -572,7 +575,7 @@ namespace Lpf2DeviceDescriptors
                 1, DATA32, 11, 0,
                 {},
                 0x00,
-                Lpf2Mode::Flags{{ 0x00, 0x00, 0x00, 0x24, 0x00, 0x00 }}
+                Mode::Flags{{ 0x00, 0x00, 0x00, 0x24, 0x00, 0x00 }}
             },
             {
                 "APOS",
@@ -584,7 +587,7 @@ namespace Lpf2DeviceDescriptors
                 1, DATA16, 3, 0,
                 {},
                 0x00,
-                Lpf2Mode::Flags{{ 0x05, 0x00, 0x00, 0x00, 0x22, 0x00 }}
+                Mode::Flags{{ 0x05, 0x00, 0x00, 0x00, 0x22, 0x00 }}
             },
             {
                 "CALIB",
@@ -596,7 +599,7 @@ namespace Lpf2DeviceDescriptors
                 2, DATA16, 5, 0,
                 {},
                 0x00,
-                Lpf2Mode::Flags{{ 0x04, 0x05, 0x00, 0x00, 0x40, 0x22 }}
+                Mode::Flags{{ 0x04, 0x05, 0x00, 0x00, 0x40, 0x22 }}
             },
             {
                 "STATS",
@@ -608,15 +611,15 @@ namespace Lpf2DeviceDescriptors
                 14, DATA16, 5, 0,
                 {},
                 0x00,
-                Lpf2Mode::Flags{{ 0x04, 0x05, 0x00, 0x00, 0x00, 0x00 }}
+                Mode::Flags{{ 0x04, 0x05, 0x00, 0x00, 0x00, 0x00 }}
             },
         }
     };
 
     // Device 0x3D
-    const Lpf2DeviceDescriptor LPF2_DEVICE_TECHNIC_COLOR_SENSOR =
+    const DeviceDescriptor LPF2_DEVICE_TECHNIC_COLOR_SENSOR =
     {
-        .type = Lpf2DeviceType::TECHNIC_COLOR_SENSOR,
+        .type = DeviceType::TECHNIC_COLOR_SENSOR,
         .inModes = 0x0000,
         .outModes = 0x0000,
         .caps = 0x00,
@@ -633,7 +636,7 @@ namespace Lpf2DeviceDescriptors
                 1, DATA8, 2, 0,
                 {},
                 0x00,
-                Lpf2Mode::Flags{{ 0x84, 0x04, 0x00, 0x00, 0x00, 0x40 }}
+                Mode::Flags{{ 0x84, 0x04, 0x00, 0x00, 0x00, 0x40 }}
             },
             {
                 "REFLT",
@@ -645,7 +648,7 @@ namespace Lpf2DeviceDescriptors
                 1, DATA8, 3, 0,
                 {},
                 0x00,
-                Lpf2Mode::Flags{{ 0x84, 0x04, 0x00, 0x00, 0x00, 0x40 }}
+                Mode::Flags{{ 0x84, 0x04, 0x00, 0x00, 0x00, 0x40 }}
             },
             {
                 "AMBI",
@@ -657,7 +660,7 @@ namespace Lpf2DeviceDescriptors
                 1, DATA8, 3, 0,
                 {},
                 0x00,
-                Lpf2Mode::Flags{{ 0x04, 0x00, 0x00, 0x00, 0x40, 0x00 }}
+                Mode::Flags{{ 0x04, 0x00, 0x00, 0x00, 0x40, 0x00 }}
             },
             {
                 "LIGHT",
@@ -669,7 +672,7 @@ namespace Lpf2DeviceDescriptors
                 3, DATA8, 3, 0,
                 {},
                 0x00,
-                Lpf2Mode::Flags{{ 0x04, 0x05, 0x00, 0x00, 0x00, 0x40 }}
+                Mode::Flags{{ 0x04, 0x05, 0x00, 0x00, 0x00, 0x40 }}
             },
             {
                 "RREFL",
@@ -681,7 +684,7 @@ namespace Lpf2DeviceDescriptors
                 2, DATA16, 4, 0,
                 {},
                 0x00,
-                Lpf2Mode::Flags{{ 0x84, 0x04, 0x00, 0x00, 0x00, 0x40 }}
+                Mode::Flags{{ 0x84, 0x04, 0x00, 0x00, 0x00, 0x40 }}
             },
             {
                 "RGB I",
@@ -693,7 +696,7 @@ namespace Lpf2DeviceDescriptors
                 4, DATA16, 4, 0,
                 {},
                 0x00,
-                Lpf2Mode::Flags{{ 0x84, 0x04, 0x00, 0x00, 0x00, 0x40 }}
+                Mode::Flags{{ 0x84, 0x04, 0x00, 0x00, 0x00, 0x40 }}
             },
             {
                 "HSV",
@@ -705,7 +708,7 @@ namespace Lpf2DeviceDescriptors
                 3, DATA16, 4, 0,
                 {},
                 0x00,
-                Lpf2Mode::Flags{{ 0x00, 0x00, 0x00, 0x40, 0x00, 0x00 }}
+                Mode::Flags{{ 0x00, 0x00, 0x00, 0x40, 0x00, 0x00 }}
             },
             {
                 "SHSV",
@@ -717,7 +720,7 @@ namespace Lpf2DeviceDescriptors
                 4, DATA16, 4, 0,
                 {},
                 0x00,
-                Lpf2Mode::Flags{{ 0x04, 0x00, 0x00, 0x00, 0x40, 0x00 }}
+                Mode::Flags{{ 0x04, 0x00, 0x00, 0x00, 0x40, 0x00 }}
             },
             {
                 "DEBUG",
@@ -729,7 +732,7 @@ namespace Lpf2DeviceDescriptors
                 4, DATA16, 4, 0,
                 {},
                 0x00,
-                Lpf2Mode::Flags{{ 0x84, 0x04, 0x00, 0x00, 0x00, 0x40 }}
+                Mode::Flags{{ 0x84, 0x04, 0x00, 0x00, 0x00, 0x40 }}
             },
             {
                 "CALIB",
@@ -741,15 +744,15 @@ namespace Lpf2DeviceDescriptors
                 7, DATA16, 5, 0,
                 {},
                 0x00,
-                Lpf2Mode::Flags{{ 0x84, 0x04, 0x00, 0x00, 0x40, 0x40 }}
+                Mode::Flags{{ 0x84, 0x04, 0x00, 0x00, 0x40, 0x40 }}
             },
         }
     };
 
     // Device 0x2E
-    const Lpf2DeviceDescriptor LPF2_DEVICE_TECHNIC_LARGE_LINEAR_MOTOR =
+    const DeviceDescriptor LPF2_DEVICE_TECHNIC_LARGE_LINEAR_MOTOR =
     {
-        .type = Lpf2DeviceType::TECHNIC_LARGE_LINEAR_MOTOR,
+        .type = DeviceType::TECHNIC_LARGE_LINEAR_MOTOR,
         .inModes = 0x001E,
         .outModes = 0x001F,
         .caps = 0x0F,
@@ -766,7 +769,7 @@ namespace Lpf2DeviceDescriptors
                 1, DATA8, 4, 0,
                 {},
                 0x00,
-                Lpf2Mode::Flags{{ 0x04, 0x05, 0x00, 0x00, 0x00, 0x30 }}
+                Mode::Flags{{ 0x04, 0x05, 0x00, 0x00, 0x00, 0x30 }}
             },
             {
                 "SPEED",
@@ -778,7 +781,7 @@ namespace Lpf2DeviceDescriptors
                 1, DATA8, 4, 0,
                 {},
                 0x00,
-                Lpf2Mode::Flags{{ 0x04, 0x05, 0x00, 0x00, 0x00, 0x21 }}
+                Mode::Flags{{ 0x04, 0x05, 0x00, 0x00, 0x00, 0x21 }}
             },
             {
                 "POS",
@@ -790,7 +793,7 @@ namespace Lpf2DeviceDescriptors
                 1, DATA32, 11, 0,
                 {},
                 0x00,
-                Lpf2Mode::Flags{{ 0x00, 0x00, 0x00, 0x24, 0x00, 0x00 }}
+                Mode::Flags{{ 0x00, 0x00, 0x00, 0x24, 0x00, 0x00 }}
             },
             {
                 "APOS",
@@ -802,7 +805,7 @@ namespace Lpf2DeviceDescriptors
                 1, DATA16, 3, 0,
                 {},
                 0x00,
-                Lpf2Mode::Flags{{ 0x05, 0x00, 0x00, 0x00, 0x22, 0x00 }}
+                Mode::Flags{{ 0x05, 0x00, 0x00, 0x00, 0x22, 0x00 }}
             },
             {
                 "CALIB",
@@ -814,7 +817,7 @@ namespace Lpf2DeviceDescriptors
                 2, DATA16, 5, 0,
                 {},
                 0x00,
-                Lpf2Mode::Flags{{ 0x04, 0x05, 0x00, 0x00, 0x40, 0x22 }}
+                Mode::Flags{{ 0x04, 0x05, 0x00, 0x00, 0x40, 0x22 }}
             },
             {
                 "STATS",
@@ -826,8 +829,8 @@ namespace Lpf2DeviceDescriptors
                 14, DATA16, 5, 0,
                 {},
                 0x00,
-                Lpf2Mode::Flags{{ 0x04, 0x05, 0x00, 0x00, 0x00, 0x00 }}
+                Mode::Flags{{ 0x04, 0x05, 0x00, 0x00, 0x00, 0x00 }}
             },
         }
     };
-}; // namespace Lpf2DeviceDescriptors
+}; // namespace Lpf2::DeviceDescriptors

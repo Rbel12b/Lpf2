@@ -1,66 +1,63 @@
 #pragma once
-#ifndef _LPF2_COLOR_SENSOR_H_
-#define _LPF2_COLOR_SENSOR_H_
 
 #include "Lpf2/config.hpp"
 #include "Lpf2/Device.hpp"
 
-
-class TechnicColorSensorControl
+namespace Lpf2::Devices
 {
-public:
-    virtual ~TechnicColorSensorControl() = default;
-    /**
-     * @brief Get the color idx from the sensor.
-     */
-    virtual Lpf2Color getColorIdx() = 0;
-};
-
-class TechnicColorSensor : public Lpf2Device, public TechnicColorSensorControl
-{
-public:
-    TechnicColorSensor(Lpf2Port &port) : Lpf2Device(port) {}
-
-    bool init() override
+    class TechnicColorSensorControl
     {
-        return true;
-    }
+    public:
+        virtual ~TechnicColorSensorControl() = default;
+        /**
+         * @brief Get the color idx from the sensor.
+         */
+        virtual ColorIDX getColorIdx() = 0;
+    };
 
-    void poll() override
+    class TechnicColorSensor : public Device, public TechnicColorSensorControl
     {
-    }
+    public:
+        TechnicColorSensor(Port &port) : Device(port) {}
 
-    const char *name() const override
+        bool init() override
+        {
+            return true;
+        }
+
+        void poll() override
+        {
+        }
+
+        const char *name() const override
+        {
+            return "Technic Color Sensor";
+        }
+
+        ColorIDX getColorIdx() override;
+
+        bool hasCapability(DeviceCapabilityId id) const override;
+        void *getCapability(DeviceCapabilityId id) override;
+
+        inline static const DeviceCapabilityId CAP =
+            Lpf2CapabilityRegistry::registerCapability("technic_color_sensor");
+
+        static void registerFactory(DeviceRegistry &reg);
+    };
+
+    class TechnicColorSensorFactory : public DeviceFactory
     {
-        return "Technic Color Sensor";
-    }
+    public:
+        bool matches(Port &port) const override;
 
-    Lpf2Color getColorIdx() override;
+        Device *create(Port &port) const override
+        {
+            return new TechnicColorSensor(port);
+        }
 
-    bool hasCapability(Lpf2DeviceCapabilityId id) const override;
-    void *getCapability(Lpf2DeviceCapabilityId id) override;
-
-
-    inline static const Lpf2DeviceCapabilityId CAP =
-        Lpf2CapabilityRegistry::registerCapability("technic_color_sensor");
-
-    static void registerFactory(Lpf2DeviceRegistry& reg);
-};
-
-class TechnicColorSensorFactory : public Lpf2DeviceFactory
-{
-public:
-    bool matches(Lpf2Port &port) const override;
-
-    Lpf2Device *create(Lpf2Port &port) const override
-    {
-        return new TechnicColorSensor(port);
-    }
-
-    const char *name() const
-    {
-        return "Technic Color Sensor Factory";
-    }
-};
-
-#endif
+        const char *name() const
+        {
+            return "Technic Color Sensor Factory";
+        }
+    };
+}; // namespace Lpf2::Devices

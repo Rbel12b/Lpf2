@@ -3,6 +3,13 @@
 #if defined(LPF2_USE_FREERTOS)
 #include <freertos/FreeRTOS.h>
 #include <freertos/semphr.h>
+#elif __has_include(<mutex>)
+#include <mutex>
+#endif // LPF2_USE_FREERTOS
+
+namespace Lpf2::Utils
+{
+#if defined(LPF2_USE_FREERTOS)
 
 using Mutex = xQueueHandle;
 #define LPF2_MUTEX_LOCK(m) xSemaphoreTake(m, portMAX_DELAY)
@@ -11,7 +18,6 @@ using Mutex = xQueueHandle;
 #define LPF2_MUTEX_INVALID nullptr
 
 #elif __has_include(<mutex>)
-#include <mutex>
 
 using Mutex = std::mutex;
 #define LPF2_MUTEX_LOCK(m) m.lock()
@@ -27,20 +33,20 @@ using Mutex = int;
 #define LPF2_MUTEX_INVALID 0
 
 #endif // LPF2_USE_FREERTOS
-
-class MutexLock
-{
-public:
-    MutexLock(Mutex& mutex)
-        : m_mutex(mutex)
+    class MutexLock
     {
-        LPF2_MUTEX_LOCK(m_mutex);
-    }
-    ~MutexLock()
-    {
-        LPF2_MUTEX_UNLOCK(m_mutex);
-    }
+    public:
+        MutexLock(Mutex &mutex)
+            : m_mutex(mutex)
+        {
+            LPF2_MUTEX_LOCK(m_mutex);
+        }
+        ~MutexLock()
+        {
+            LPF2_MUTEX_UNLOCK(m_mutex);
+        }
 
-private:
-    Mutex& m_mutex;
-};
+    private:
+        Mutex &m_mutex;
+    };
+}; // namespace Lpf2::Utils

@@ -1,13 +1,13 @@
 #include "Lpf2/DeviceManager.hpp"
 
 #if defined(LPF2_USE_FREERTOS)
-void Lpf2DeviceManager::taskEntryPoint(void *pvParameters)
+void DeviceManager::taskEntryPoint(void *pvParameters)
 {
-    Lpf2DeviceManager *self = static_cast<Lpf2DeviceManager *>(pvParameters);
+    DeviceManager *self = static_cast<DeviceManager *>(pvParameters);
     self->loopTask(); // Call actual member function
 }
 
-void Lpf2DeviceManager::loopTask()
+void DeviceManager::loopTask()
 {
     while (1)
     {

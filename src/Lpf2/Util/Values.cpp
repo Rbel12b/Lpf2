@@ -3,7 +3,7 @@
 #include <sstream>
 #include <iomanip>
 
-namespace Lpf2Utils
+namespace Lpf2::Utils
 {
     std::string bytes_to_hexString(const std::vector<uint8_t> &data)
     {
@@ -42,7 +42,7 @@ namespace Lpf2Utils
         return oss.str();
     }
 
-    std::vector<uint8_t> packVersion(Lpf2Version version)
+    std::vector<uint8_t> packVersion(Version version)
     {
         std::vector<uint8_t> v;
         v.push_back(version.Build);
@@ -52,12 +52,12 @@ namespace Lpf2Utils
         return v;
     }
 
-    Lpf2Version unPackVersion(std::vector<uint8_t> version)
+    Version unPackVersion(std::vector<uint8_t> version)
     {
         if (version.size() < 4)
-            return Lpf2Version();
+            return Version();
 
-        Lpf2Version v;
+        Version v;
         v.Build = version[0] | (version[1] << 8);
         v.Bugfix = version[2];
         v.Minor = version[3] & 0x0F;

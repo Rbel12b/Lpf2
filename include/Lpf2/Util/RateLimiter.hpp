@@ -1,25 +1,27 @@
 #pragma once
 
 #include "Lpf2/config.hpp"
-
-class RateLimiter
+namespace Lpf2::Utils
 {
-public:
-    RateLimiter(size_t interval_ms)
+    class RateLimiter
     {
-        m_interval_ms = interval_ms;
-        m_start = LPF2_GET_TIME();
-    }
-    bool okayToSend()
-    {
-        return LPF2_GET_TIME() - m_start > m_interval_ms;
-    }
-    void reset()
-    {
-        m_start = LPF2_GET_TIME();
-    }
+    public:
+        RateLimiter(size_t interval_ms)
+        {
+            m_interval_ms = interval_ms;
+            m_start = LPF2_GET_TIME();
+        }
+        bool okayToSend()
+        {
+            return LPF2_GET_TIME() - m_start > m_interval_ms;
+        }
+        void reset()
+        {
+            m_start = LPF2_GET_TIME();
+        }
 
-private:
-    size_t m_start;
-    size_t m_interval_ms;
-};
+    private:
+        size_t m_start;
+        size_t m_interval_ms;
+    };
+}; // namespace Lpf2::Utils
