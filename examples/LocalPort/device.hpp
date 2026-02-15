@@ -8,7 +8,7 @@
 #include <Arduino.h>
 #include <HardwareSerial.h>
 
-class Esp32s3Uart : public Lpf2Uart
+class Esp32s3Uart : public Lpf2::Local::Uart
 {
 public:
     explicit Esp32s3Uart(int uart_num)
@@ -143,7 +143,7 @@ private:
 
 #include "driver/mcpwm.h"
 
-class Esp32s3MotorPWM : public Lpf2PWM
+class Esp32s3MotorPWM : public Lpf2::Local::PWM
 {
 public:
     explicit Esp32s3MotorPWM() = default;
@@ -197,17 +197,17 @@ private:
     uint32_t freq_ = 1000;
 };
 
-class Esp32IO : public Lpf2IO
+class Esp32IO : public Lpf2::Local::IO
 {
 public:
     Esp32IO(int uartNum) : m_uart(uartNum) {}
 
-    Lpf2PWM *getPWM() override
+    Lpf2::Local::PWM *getPWM() override
     {
         return &m_pwm;
     }
 
-    Lpf2Uart *getUart() override
+    Lpf2::Local::Uart *getUart() override
     {
         return &m_uart;
     }
@@ -223,7 +223,7 @@ public:
      * @param channel1 The PWM channel for the first pin.
      * @param channel2 The PWM channel for the second pin.
      * @return 0 if initialization was successful, -1 otherwise.
-     * @note Must be called before any IO operations. (Before calling init on Lpf2Port or update on Lpf2DeviceManager)
+     * @note Must be called before any IO operations. (Before calling init on Port or update on Lpf2DeviceManager)
      */
     int init(int id1_pin = -1, int id2_pin = -1, int pwm_pin1 = -1, int pwm_pin2 = -1, mcpwm_unit_t unit = mcpwm_unit_t(0), mcpwm_timer_t timer = mcpwm_timer_t(0), uint32_t freq = 1000)
     {

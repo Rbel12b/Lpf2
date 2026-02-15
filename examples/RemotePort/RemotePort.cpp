@@ -7,13 +7,13 @@
 #include "Lpf2/Devices/BasicMotor.hpp"
 #include "Lpf2/Devices/EncoderMotor.hpp"
 
-Lpf2Hub hub;
+Lpf2::Hub hub;
 
 void setup()
 {
     Serial.begin(981200);
-    Lpf2DeviceRegistry::registerDefault();
-    Lpf2DeviceDescRegistry::registerDefault();
+    Lpf2::DeviceRegistry::registerDefault();
+    Lpf2::DeviceDescRegistry::registerDefault();
     hub.init();
 }
 
@@ -34,8 +34,8 @@ void loop()
         {
             Serial.println("Connected to HUB");
             vTaskDelay(10); // wait a bit for devices to be registered
-            auto &port = *hub.getPort(Lpf2PortNum(Lpf2ControlPlusHubPort::LED));
-            port.setRgbColorIdx(Lpf2Color::GREEN);
+            auto &port = *hub.getPort(Lpf2::PortNum(Lpf2::ControlPlusHubPort::LED));
+            port.setRgbColorIdx(Lpf2::ColorIDX::GREEN);
         }
         else
         {
@@ -47,21 +47,21 @@ void loop()
     {
         hub.update();
 
-        auto &portA = *hub.getPort(Lpf2PortNum(Lpf2ControlPlusHubPort::A));
+        auto &portA = *hub.getPort(Lpf2::PortNum(Lpf2::ControlPlusHubPort::A));
 
-        static Lpf2DeviceManager portADeviceManager(portA);
+        static Lpf2::DeviceManager portADeviceManager(portA);
         portADeviceManager.update();
 
         if (portADeviceManager.device())
         {
-            if (auto device = static_cast<TechnicColorSensorControl *>
-                (portADeviceManager.device()->getCapability(TechnicColorSensor::CAP)))
+            if (auto device = static_cast<Lpf2::Devices::TechnicColorSensorControl *>
+                (portADeviceManager.device()->getCapability(Lpf2::Devices::TechnicColorSensor::CAP)))
             {
                 Serial.print("Color idx: ");
                 Serial.println(device->getColorIdx());
             }
-            else if (auto device = static_cast<BasicMotorControl *>
-                (portADeviceManager.device()->getCapability(BasicMotor::CAP)))
+            else if (auto device = static_cast<Lpf2::Devices::BasicMotorControl *>
+                (portADeviceManager.device()->getCapability(Lpf2::Devices::BasicMotor::CAP)))
             {
                 device->startPower(-50);
             }
