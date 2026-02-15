@@ -116,6 +116,8 @@ extern "C"
 
 #ifndef log_n
 
+#define LPF2_LOG_IMPL 1
+
 #define ARDUHAL_LOG_LEVEL_NONE (0)
 #define ARDUHAL_LOG_LEVEL_ERROR (1)
 #define ARDUHAL_LOG_LEVEL_WARN (2)

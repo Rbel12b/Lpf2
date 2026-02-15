@@ -957,41 +957,39 @@ void Lpf2HubEmulation::start()
     _pAdvertising->enableScanResponse(true);
     _pAdvertising->setMinInterval(32); // 0.625ms units -> 20ms
     _pAdvertising->setMaxInterval(64); // 0.625ms units -> 40ms
+    
+    std::vector<uint8_t> manufacturerData;
 
-    std::string manufacturerData;
     if (m_hubType == Lpf2HubType::POWERED_UP_HUB)
     {
         LPF2_LOG_D("PoweredUp Hub");
-        // this is the minimal change that makes PoweredUp working on devices with Android <6
-        // https://lego.github.io/lego-ble-wireless-protocol-docs/index.html#last-network-id
-        // set Last Network ID to UNKNOWN (0x00)
-        const char poweredUpHub[8] = {0x97, 0x03, 0x00, 0x41, 0x07, 0x00, 0x63, 0x00};
-        manufacturerData = std::string(poweredUpHub, sizeof(poweredUpHub));
+        manufacturerData = {0x97, 0x03, 0x00, 0x41, 0x07, 0x00, 0x63, 0x00};
     }
     else if (m_hubType == Lpf2HubType::CONTROL_PLUS_HUB)
     {
         LPF2_LOG_D("ControlPlus Hub");
-        const char controlPlusHub[8] = {0x97, 0x03, 0x00, 0x80, 0x06, 0x00, 0x41, 0x00};
-        manufacturerData = std::string(controlPlusHub, sizeof(controlPlusHub));
+        manufacturerData = {0x97, 0x03, 0x00, 0x80, 0x06, 0x00, 0x41, 0x00};
     }
     NimBLEAdvertisementData advertisementData = NimBLEAdvertisementData();
     // flags must be present to make PoweredUp working on devices with Android >=6
     // (however it seems to be not needed for devices with Android <6)
     advertisementData.setFlags(BLE_HS_ADV_F_DISC_GEN);
-    advertisementData.setManufacturerData(manufacturerData);
     advertisementData.setCompleteServices(NimBLEUUID(LPF2_UUID));
+    advertisementData.setManufacturerData(manufacturerData);
+
     // scan response data is needed because the uuid128 and manufacturer data takes almost all space in the advertisement data
     // the name is therefore stored in the scan response data
     NimBLEAdvertisementData scanResponseData = NimBLEAdvertisementData();
-    scanResponseData.setName(getHubName());
-    // set the advertisment flags to 0x06
-    scanResponseData.setFlags(BLE_HS_ADV_F_DISC_GEN);
-    // set the power level to 0dB
-    uint8_t powerLevelData[3] = {0x02, 0x0A, 0x00};
-    scanResponseData.addData(powerLevelData, sizeof(powerLevelData));
+
     // set the slave connection interval range to 20-40ms
     uint8_t slaveConnectionIntervalRangeData[6] = {0x05, 0x12, 0x10, 0x00, 0x20, 0x00};
     scanResponseData.addData(slaveConnectionIntervalRangeData, sizeof(slaveConnectionIntervalRangeData));
+
+    // set the power level to 0dB
+    uint8_t powerLevelData[3] = {0x02, 0x0A, 0x00};
+    scanResponseData.addData(powerLevelData, sizeof(powerLevelData));
+
+    scanResponseData.setName(getHubName());
 
     LPF2_LOG_D("advertisment data payload(%d): %s", advertisementData.getPayload().size(), Lpf2Utils::bytes_to_hexString(advertisementData.getPayload()).c_str());
     LPF2_LOG_D("scan response data payload(%d): %s", scanResponseData.getPayload().size(), Lpf2Utils::bytes_to_hexString(scanResponseData.getPayload()).c_str());
