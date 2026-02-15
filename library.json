@@ -1,7 +1,7 @@
 {
   "name": "Lpf2",
   "version": "1.0.2",
-  "description": "A library for controlling and emulating LEGO Power Functions 2.0 devices (hubs, motors, sensors...)",
+  "description": "A library for controlling and emulating LEGO Power Functions 2.0 devices (hubs, motors, sensors...) with an esp32",
   "keywords": [
     "lego",
     "lpf2",
