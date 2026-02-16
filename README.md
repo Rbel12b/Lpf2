@@ -4,6 +4,8 @@
 
 Lpf2 is a LEGO PoweredUp Protocol 2 (LPF2) communication library for ESP32 microcontrollers. It provides device communication, serial port management, and device abstraction for LEGO Devices.
 
+Download the library from the platformio registry: [rbel12b/Lpf2](https://registry.platformio.org/libraries/rbel12b/Lpf2)
+
 ## Credits
 
 - Thanks to Cornelius Munz for the Legoino [library](https://github.com/corneliusmunz/legoino), and to all its contributors [see Credits in Legoino repo](https://github.com/corneliusmunz/legoino/tree/master?tab=readme-ov-file#credits).
