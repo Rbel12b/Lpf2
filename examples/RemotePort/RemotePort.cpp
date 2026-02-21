@@ -21,6 +21,14 @@ void loop()
 {
     vTaskDelay(1);
 
+    if (Serial.available()) {
+        uint8_t c = Serial.read();
+        if (c == 0x03) {
+            // Ctrl+C received
+            ESP.restart();
+        }
+    }
+
     if (!hub.isConnected() && !hub.isConnecting())
     {
         hub.init();
