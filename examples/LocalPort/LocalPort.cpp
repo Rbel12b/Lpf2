@@ -11,7 +11,7 @@
 #include "driver/mcpwm.h"
 
 Esp32IO portA_IO(1); // Use UART1
-Lpf2::Local::Port portA(&portA_IO);
+Lpf2::Local::Port portA(portA_IO);
 Lpf2::DeviceManager deviceManager(portA);
 
 // Port pwm pins
@@ -44,6 +44,14 @@ void setup()
 void loop()
 {
     vTaskDelay(1);
+
+    if (Serial.available()) {
+        uint8_t c = Serial.read();
+        if (c == 0x03) {
+            // Ctrl+C received
+            ESP.restart();
+        }
+    }
 
     deviceManager.update();
 
