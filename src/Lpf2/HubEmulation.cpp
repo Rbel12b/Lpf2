@@ -182,7 +182,7 @@ namespace Lpf2
         return;
 
     unimplemented:
-        LPF2_LOG_E("Unimplemented!");
+        LPF2_LOG_E("Unimplemented: %i", (int)type);
         return;
     }
 
@@ -296,14 +296,14 @@ namespace Lpf2
         }
         case HubPropertyType::PRIMARY_MAC_ADDRESS:
         {
+            auto addr = NimBLEDevice::getAddress();
             prop.resize(0);
-            auto mac = ESP.getEfuseMac();
-            prop.push_back((char)((mac >> 40) & 0xFF));
-            prop.push_back((char)((mac >> 32) & 0xFF));
-            prop.push_back((char)((mac >> 24) & 0xFF));
-            prop.push_back((char)((mac >> 16) & 0xFF));
-            prop.push_back((char)((mac >> 8) & 0xFF));
-            prop.push_back((char)(mac & 0xFF));
+            prop.push_back(addr.getVal()[5]);
+            prop.push_back(addr.getVal()[4]);
+            prop.push_back(addr.getVal()[3]);
+            prop.push_back(addr.getVal()[2]);
+            prop.push_back(addr.getVal()[1]);
+            prop.push_back(addr.getVal()[0]);
             break;
         }
         case HubPropertyType::RADIO_FIRMWARE_VERSION:
@@ -321,14 +321,14 @@ namespace Lpf2
         }
         case HubPropertyType::SECONDARY_MAC_ADDRESS:
         {
+            auto addr = NimBLEDevice::getAddress();
             prop.resize(0);
-            auto mac = ESP.getEfuseMac();
-            prop.push_back((char)((mac >> 40) & 0xFF));
-            prop.push_back((char)((mac >> 32) & 0xFF));
-            prop.push_back((char)((mac >> 24) & 0xFF));
-            prop.push_back((char)((mac >> 16) & 0xFF) + 0x3A);
-            prop.push_back((char)((mac >> 8) & 0xFF));
-            prop.push_back((char)(mac & 0xFF));
+            prop.push_back(addr.getVal()[5]);
+            prop.push_back(addr.getVal()[4]);
+            prop.push_back(addr.getVal()[3]);
+            prop.push_back(addr.getVal()[2] + 0x3A);
+            prop.push_back(addr.getVal()[1]);
+            prop.push_back(addr.getVal()[0]);
             break;
         }
         case HubPropertyType::SYSTEM_TYPE_ID:
@@ -341,6 +341,7 @@ namespace Lpf2
         default:
             break;
         }
+        LPF2_LOG_D("Reset prop %i: %s", (int) propId, Hub::getHubPropStr(propId, prop).c_str());
     }
 
     void HubEmulation::updateHubAlert(HubAlertType alert, bool on)
@@ -924,7 +925,6 @@ namespace Lpf2
     void HubEmulation::start()
     {
         destroyBuiltIn();
-        reset();
         if (m_useBuiltInDevices)
         {
             initBuiltInPorts();
@@ -932,7 +932,9 @@ namespace Lpf2
         LPF2_LOG_D("Starting BLE");
 
         NimBLEDevice::init(getHubName());
+        NimBLEDevice::setOwnAddrType(BLE_OWN_ADDR_PUBLIC);
         NimBLEDevice::setPower(ESP_PWR_LVL_N0, NimBLETxPowerType::Advertise); // 0dB, Advertisment
+        reset();
 
         LPF2_LOG_D("Create server");
         _pServer = NimBLEDevice::createServer();

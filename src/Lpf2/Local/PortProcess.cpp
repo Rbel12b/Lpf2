@@ -20,10 +20,12 @@ namespace Lpf2::Local
         }
 #endif
 
-        if (!m_IO->ready())
+        if (!m_IO.ready())
         {
             return;
         }
+        m_serial = m_IO.getUart();
+        m_pwm = m_IO.getPWM();
         resetDevice();
 
 #if defined(LPF2_USE_FREERTOS)
@@ -73,7 +75,7 @@ namespace Lpf2::Local
         while (1)
         {
             vTaskDelay(1);
-            if (!m_IO->ready())
+            if (!m_IO.ready())
             {
                 return;
             }
@@ -84,7 +86,7 @@ namespace Lpf2::Local
 
     void Port::update()
     {
-        if (!m_IO->ready())
+        if (!m_IO.ready())
         {
             return;
         }

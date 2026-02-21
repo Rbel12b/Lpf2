@@ -21,7 +21,7 @@ public:
                int rx_pin = -1,
                int tx_pin = -1,
                int id1_pin = -1,
-               int id2_pin = -1) override
+               int id2_pin = -1)
     {
         rx_pin_ = rx_pin;
         tx_pin_ = tx_pin;
