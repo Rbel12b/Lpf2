@@ -14,7 +14,7 @@ namespace Lpf2::Local
     {
     public:
         Port() = delete;
-        Port(IO &IO) : m_IO(IO), m_serial(m_IO.getUart()), m_pwm(m_IO.getPWM()), m_parser(m_serial) {};
+        Port(IO &IO) : m_IO(IO), m_serial(m_IO.getUart()), m_pwm(m_IO.getPWM()) {};
 
         void init(
 #if defined(LPF2_USE_FREERTOS)
