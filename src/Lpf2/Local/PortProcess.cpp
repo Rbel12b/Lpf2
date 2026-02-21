@@ -26,6 +26,7 @@ namespace Lpf2::Local
         }
         m_serial = m_IO.getUart();
         m_pwm = m_IO.getPWM();
+        m_parser.init(m_serial);
         resetDevice();
 
 #if defined(LPF2_USE_FREERTOS)
