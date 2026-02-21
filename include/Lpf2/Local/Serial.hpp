@@ -20,7 +20,12 @@ namespace Lpf2::Local
     class Parser
     {
     public:
-        Parser(Uart *serial) : m_serial(serial) {}
+        Parser() {};
+
+        void init(Uart *serial)
+        {
+            m_serial = serial;
+        }
 
         std::vector<Message> update();
         static void printMessage(const Message &msg);
@@ -31,7 +36,7 @@ namespace Lpf2::Local
         uint8_t getChecksum() { return checksum; }
 
     private:
-        Uart *m_serial;
+        Uart *m_serial = nullptr;
         std::vector<uint8_t> buffer;
         uint8_t checksum;
         uint32_t m_lastReceivedTime = 0;
