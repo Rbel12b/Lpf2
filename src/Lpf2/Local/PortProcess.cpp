@@ -176,6 +176,10 @@ namespace Lpf2::Local
             requestSpeedChange(baud);
             break;
         case LPF2_STATUS::STATUS_SPEED:
+            if (!m_deviceDataReceived && m_new_status != LPF2_STATUS::STATUS_SPEED)
+            {
+                break; // we don't know the device yet.
+            }
             changeBaud(baud);
             sendACK(true);
             LPF2_LOG_D("Succesfully changed speed to %i baud", baud);
@@ -266,6 +270,7 @@ namespace Lpf2::Local
         }
         baud = 115200;
         m_deviceType = DeviceType::UNKNOWNDEVICE;
+        m_deviceDataReceived = false;
         modes = views = 0;
         comboNum = 0;
         modeData.resize(0);

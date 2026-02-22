@@ -130,5 +130,7 @@ namespace Lpf2::Local
         const int m_detectionThreshold = 5; // Number of consecutive detections required - 1, so 2 means 3 times
         int m_detectionCounter = 0;
         int m_lastDetectedType = -1;
+
+        bool m_deviceDataReceived = false;
     };
 }; // namespace Lpf2::Local
