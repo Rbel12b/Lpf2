@@ -1,6 +1,7 @@
 #include "Lpf2/Local/Port.hpp"
 #include <cstring>
 #include "Lpf2/Util/Values.hpp"
+#include "Lpf2/DeviceDescLib.hpp"
 
 namespace Lpf2::Local
 {
@@ -107,6 +108,11 @@ namespace Lpf2::Local
             m_deviceConnected = true;
             m_status = LPF2_STATUS::STATUS_INFO;
             nextModeExt = false;
+            if (auto desc = DeviceDescRegistry::instance().getDescriptor(m_deviceType))
+            {
+                setFromDesc(desc);
+                m_deviceDataReceived = true;
+            }
             break;
         }
         case CMD_MODES:
@@ -282,6 +288,11 @@ namespace Lpf2::Local
             modeData[mode].format = msg.data[2];
             modeData[mode].figures = msg.data[3];
             modeData[mode].decimals = msg.data[4];
+
+            if (mode == modes - 1)
+            {
+                m_deviceDataReceived = true;
+            }
             break;
         }
         default:
