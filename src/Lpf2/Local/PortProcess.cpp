@@ -117,7 +117,10 @@ namespace Lpf2::Local
                     // do not print SYNC and other messages because, they're not relevant in this state
                     // (Speed change - lot of garbage is received).
                     break;
-                } m_parser.printMessage(msg););
+                }
+                else if (m_status == LPF2_STATUS::STATUS_DATA_START && msg.header == BYTE_SYNC) {
+                    break;
+                }  m_parser.printMessage(msg););
             if (m_status == LPF2_STATUS::STATUS_SYNCING)
             {
                 if (msg.msg == MESSAGE_SYS)
@@ -137,7 +140,12 @@ namespace Lpf2::Local
 
             parseMessage(msg);
             auto now = millis();
-            m_startRec = now;
+            if (msg.header != BYTE_SYNC)
+            {
+                // when speed is mismatched we receive 0 bytes or garbage, so we should not update the last received time because of that.
+                m_startRec = now;
+                continue;
+            }
 
             if (process(now) != 0)
             {
@@ -151,7 +159,7 @@ namespace Lpf2::Local
 
     uint8_t Port::process(unsigned long now)
     {
-        if (now - m_startRec > 1500)
+        if (now - m_startRec > 2000)
         {
             if (m_deviceConnected)
             {
@@ -160,6 +168,17 @@ namespace Lpf2::Local
             }
             resetDevice();
             sendACK(true);
+            m_startRec = now;
+        }
+
+        if (now - m_startRec > 1000 && m_status == LPF2_STATUS::STATUS_SPEED_CHANGE)
+        {
+            // device does not support speed change
+            baud = 2400;
+            changeBaud(baud);
+            LPF2_LOG_W("Speed change not supported, continuing at %i baud", baud);
+            m_status = LPF2_STATUS::STATUS_SYNC_WAIT;
+            m_new_status = LPF2_STATUS::STATUS_INFO;
             m_startRec = now;
         }
 
@@ -245,6 +264,9 @@ namespace Lpf2::Local
             break;
 
         case LPF2_STATUS::STATUS_ACK_SENDING:
+            sendACK(false);
+            sendACK(false);
+            sendACK(false);
             sendACK(false);
             LPF2_LOG_D("Sent ACK after info, changing speed.");
             m_status = LPF2_STATUS::STATUS_DATA_START;

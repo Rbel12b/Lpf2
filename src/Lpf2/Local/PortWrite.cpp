@@ -25,10 +25,12 @@ namespace Lpf2::Local
 
         if (modeData[mode].flags.pin1())
         {
+            LPF2_LOG_D("Setting pin1 high, pin2 low");
             m_pwm->out(255, 0);
         }
-        if (modeData[mode].flags.pin2())
+        else if (modeData[mode].flags.pin2())
         {
+            LPF2_LOG_D("Setting pin2 high, pin1 low");
             m_pwm->out(0, 255);
         }
 

@@ -34,6 +34,11 @@ namespace Lpf2::Local
                 else if (m_status == LPF2_STATUS::STATUS_INFO)
                 {
                     LPF2_LOG_D("Info end ACK received.");
+                    if (!m_deviceDataReceived)
+                    {
+                        LPF2_LOG_D("Device data not received, waiting for more info.");
+                        break; // we don't know the device yet.
+                    }
                     m_status = LPF2_STATUS::STATUS_ACK_SENDING;
                     m_new_status = LPF2_STATUS::STATUS_DATA_START;
                 }
