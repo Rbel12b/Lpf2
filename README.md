@@ -2,7 +2,7 @@
 
 ## Overview
 
-Lpf2 is a LEGO PoweredUp Protocol 2 (LPF2) communication library for ESP32 microcontrollers. It provides device communication, serial port management, and device abstraction for LEGO Devices.
+Lpf2 is a LEGO PoweredUp Protocol 2 (LPF2) communication library for ESP32 microcontrollers. It provides device communication, serial port management, and device abstraction for LEGO Devices. The library supports both local UART communication and remote BLE communication with LEGO Hubs, allowing you to control and interact with LEGO devices in various ways.
 
 Download the library from the platformio registry: [rbel12b/Lpf2](https://registry.platformio.org/libraries/rbel12b/Lpf2)
 
@@ -29,6 +29,40 @@ This library is licensed under the MIT License. See the [LICENSE](LICENSE) file 
 - Port abstraction for device connectivity
 - Controlling LEGO Hubs
 - Emulating a Hub
+
+## Hardware support
+
+Currently only ESP32 microcontrollers are supported, but the library is designed to be portable to other platforms with a UART interface (Currently it uses the arduino framework).
+I only thested on an esp32s3, but it should work on other esp32 variants as well, as long as they have the required UART and BLE capabilities.
+The library uses the C++20 standard, so a compatible compiler is required.
+
+These are my build flags for an esp32s3, they might need to be adjusted for other variants:
+
+```ini
+; I found that this core works better (latest commit at the time of writing).
+platform = https://github.com/platformio/platform-espressif32.git#3c076807e1f55b90799b50b946e76a0508e97778
+board = esp32-s3-devkitc-1
+
+build_flags = 
+    -std=gnu++2a ; C++ standard
+    -Wformat ; format warnings
+
+    -DCORE_DEBUG_LEVEL=0 ; disable esp32 core debug logs, so uart0 can be used to communicate with the devices without interference from the logs
+    -DLPF2_LOG_LEVEL=4 ; the library uses the LPF2_LOG_x macros for logging, this sets the log level to debug (4)
+
+    -DARDUINO_USB_CDC_ON_BOOT=1 ; enables the USB CDC serial port on boot -> logs will go to the USB serial port.
+    -DCONFIG_ESP_CONSOLE_USB_SERIAL_JTAG=1
+    -DCONFIG_ARDUHAL_LOG_COLORS=1 ; prertty logs
+
+    -DBOARD_HAS_PSRAM=1 ; if your board has psram, the library itself doesn't require it.
+    -DCONFIG_SPIRAM_USE=1
+    -mfix-esp32-psram-cache-issue
+
+build_unflags = -std=gnu++11 ; unflag the default C++11 standard, to avoid conflicts with the C++20 standard used by the library
+
+board_build.arduino.memory_type = qio_opi ; my board qio flash and opi psram, adjust if your board has a different flash or psram type
+board_build.psram_type = opi ; psram type
+```
 
 ## Library Structure
 
