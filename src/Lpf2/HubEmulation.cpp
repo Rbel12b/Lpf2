@@ -23,6 +23,7 @@ namespace Lpf2
         {
             LPF2_LOG_D("Device connected");
             _lpf2HubEmulation->isConnected = true;
+            _lpf2HubEmulation->connHandle = connInfo.getConnHandle();
             pServer->updateConnParams(connInfo.getConnHandle(), 24, 48, 0, 60);
         };
 
@@ -32,6 +33,7 @@ namespace Lpf2
             _lpf2HubEmulation->isConnected = false;
             _lpf2HubEmulation->isSubscribed = false;
             _lpf2HubEmulation->isPortInitialized = false;
+            _lpf2HubEmulation->connHandle = 0xFFFF;
         }
     };
 
@@ -60,7 +62,7 @@ namespace Lpf2
         void onWrite(NimBLECharacteristic *pCharacteristic, NimBLEConnInfo &connInfo) override
         {
             std::vector<uint8_t> msgReceived = pCharacteristic->getValue();
-            pCharacteristic->setValue(nullptr, 0);
+            // pCharacteristic->setValue(nullptr, 0);
 
             if (msgReceived.size() == 0)
             {
@@ -68,7 +70,10 @@ namespace Lpf2
                 return;
             }
 
-            _lpf2HubEmulation->onMessageReceived(msgReceived);
+            HubEmulation::MessagePacket pkt;
+            pkt.lenght = msgReceived.size();
+            memcpy(pkt.data, msgReceived.data(), pkt.lenght);
+            _lpf2HubEmulation->onMessageReceived(pkt);
         }
 
         void onRead(NimBLECharacteristic *pCharacteristic, NimBLEConnInfo &connInfo) override
@@ -77,7 +82,12 @@ namespace Lpf2
         }
     };
 
-    void HubEmulation::onMessageReceived(std::vector<uint8_t> message)
+    void HubEmulation::onMessageReceived(const MessagePacket &pkt)
+    {
+        xQueueSend(m_msgQueue, &pkt, 0);   // no wait
+    }
+
+    void HubEmulation::processMessages(const std::vector<uint8_t>& message)
     {
         MessageType type = (MessageType)message[(byte)MessageHeader::MESSAGE_TYPE];
         LPF2_DEBUG_EXPR_D(
@@ -127,58 +137,6 @@ namespace Lpf2
         default:
             goto unimplemented;
         }
-
-        //   // It's a port out command:
-        //   // execute and send feedback to the App
-        //   if (msgReceived[(byte)MessageHeader::MESSAGE_TYPE] == (char)MessageType::PORT_OUTPUT_COMMAND)
-        //   {
-        //     byte port = msgReceived[(byte)PortOutputMessage::PORT_ID];
-        //     byte startCompleteInfo = msgReceived[(byte)PortOutputMessage::STARTUP_AND_COMPLETION];
-        //     byte subCommand = msgReceived[(byte)PortOutputMessage::SUB_COMMAND];
-
-        //     // Reply to the App "Command excecuted" if the App requests a feedback.
-        //     // https://lego.github.io/lego-ble-wireless-protocol-docs/index.html#port-output-command-feedback-format
-        //     if ((startCompleteInfo & 0x01) != 0) // Command feedback (status) requested
-        //     {
-        //       std::string payload;
-        //       payload.push_back((char)port);
-        //       payload.push_back((byte)PortFeedbackMessage::BUFFER_EMPTY_AND_COMMAND_COMPLETED | (byte)PortFeedbackMessage::IDLE);
-        //       _lpf2HubEmulation->writeValue(MessageType::PORT_OUTPUT_COMMAND_FEEDBACK, payload);
-        //     }
-
-        //     if (subCommand == 0x51) // OUT_PORT_CMD_WRITE_DIRECT
-        //     {
-        //       byte commandMode = msgReceived[0x06];
-        //       byte power = msgReceived[0x07];
-        //       if (_lpf2HubEmulation->writePortCallback != nullptr)
-        //       {
-        //         _lpf2HubEmulation->writePortCallback(msgReceived[(byte)PortOutputMessage::PORT_ID], power); // WRITE_DIRECT_VALUE
-        //       }
-        //     }
-        //     else if (subCommand == 0x07) // StartSpeed (Speed, MaxPower, UseProfile)
-        //     {
-        //       byte speed = msgReceived[0x06];
-        //       byte maxSpeed = msgReceived[0x07];
-        //       byte useProfile = msgReceived[0x08];
-        //       if (_lpf2HubEmulation->writePortCallback != nullptr)
-        //       {
-        //         _lpf2HubEmulation->writePortCallback(msgReceived[(byte)PortOutputMessage::PORT_ID], speed); // WRITE_DIRECT_VALUE
-        //       }
-        //     }
-        //   }
-
-        //   if (msgReceived[(byte)MessageHeader::MESSAGE_TYPE] == (byte)MessageType::HUB_ACTIONS && msgReceived[3] == (byte)ActionType::SWITCH_OFF_HUB)
-        //   {
-        //     LPF2_LOG_D("disconnect");
-        //     std::string payload;
-        //     payload.push_back(0x31);
-        //     _lpf2HubEmulation->writeValue(MessageType::HUB_ACTIONS, payload);
-        //     delay(100);
-        //     LPF2_LOG_D("restart ESP");
-        //     delay(1000);
-        //     ESP.restart();
-        //   }
-
         return;
 
     unimplemented:
@@ -341,7 +299,7 @@ namespace Lpf2
         default:
             break;
         }
-        LPF2_LOG_D("Reset prop %i: %s", (int) propId, Hub::getHubPropStr(propId, prop).c_str());
+        LPF2_LOG_D("Reset prop %i: %s", (int)propId, Hub::getHubPropStr(propId, prop).c_str());
     }
 
     void HubEmulation::updateHubAlert(HubAlertType alert, bool on)
@@ -415,7 +373,7 @@ namespace Lpf2
         }
         return;
     unimplemented:
-        LPF2_LOG_E("Unimplemented!");
+        LPF2_LOG_E("Unimplemented: %i", alertOperation);
         return;
     }
 
@@ -592,12 +550,12 @@ namespace Lpf2
 
     void HubEmulation::initBuiltInPorts()
     {
-#define INIT_PORT(portNum)                      \
-    do                                          \
-    {                                           \
-        auto port = new Virtual::Port();        \
-        attachPort((PortNum)portNum, port);     \
-        ownedPorts[(PortNum)portNum] = port;    \
+#define INIT_PORT(portNum)                   \
+    do                                       \
+    {                                        \
+        auto port = new Virtual::Port();     \
+        attachPort((PortNum)portNum, port);  \
+        ownedPorts[(PortNum)portNum] = port; \
     } while (0)
 
         switch (m_hubType)
@@ -738,12 +696,14 @@ namespace Lpf2
         {
             LPF2_LOG_D("Enable Hub prop: %i", (int)propId);
             updateHubPropertyEnabled[(uint8_t)propId] = true;
+            sendHubPropertyUpdate(propId);
             break;
         }
         case HubPropertyOperation::RESET_DOWNSTREAM:
         {
             LPF2_LOG_D("Reset Hub prop: %i", (int)propId);
             resetHubProperty(propId);
+            sendHubPropertyUpdate(propId);
             break;
         }
         default:
@@ -751,7 +711,7 @@ namespace Lpf2
         }
         return;
     unimplemented:
-        LPF2_LOG_E("Unimplemented!");
+        LPF2_LOG_E("Unimplemented: %i", propId);
         return;
     }
 
@@ -826,6 +786,8 @@ namespace Lpf2
     {
         if (!isSubscribed)
             return;
+
+        size_t now = LPF2_GET_TIME();
         if (m_firstUpdate)
         {
             m_firstUpdate = false;
@@ -834,11 +796,33 @@ namespace Lpf2
                 initBuiltInDevices();
             }
         }
+
+        MessagePacket pkt;
+        while(xQueueReceive(m_msgQueue, &pkt, 0))
+        {
+            std::vector message(pkt.data, pkt.data + pkt.lenght);
+            processMessages(message);
+        }
+
         std::for_each(attachedPorts.begin(), attachedPorts.end(),
                       [this](auto &pair)
                       {
                           this->checkPort(pair.first, pair.second);
                       });
+
+        if (now - m_lastRssiUpdate >= 1000)
+        {
+            m_lastRssiUpdate = now;
+            int8_t rssi;
+            int rc = ble_gap_conn_rssi(connHandle, &rssi);
+
+            if (rc == 0 && m_lastRssi != rssi)
+            {
+                m_lastRssi = rssi;
+                LPF2_LOG_D("RSSI: %d", rssi);
+                setHubRssi(rssi);
+            }
+        }
     }
 
     void HubEmulation::setUseBuiltInDevices(bool use)
@@ -924,6 +908,10 @@ namespace Lpf2
 
     void HubEmulation::start()
     {
+        if (m_msgQueue == nullptr)
+        {
+            m_msgQueue = xQueueCreate(8, sizeof(MessagePacket)); // 8 items should be enough
+        }
         destroyBuiltIn();
         if (m_useBuiltInDevices)
         {

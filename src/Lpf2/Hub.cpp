@@ -1290,7 +1290,7 @@ namespace Lpf2
         case HubPropertyType::RSSI:
         {
             prop.resize(1);
-            str = Utils::bytes_to_hexString(prop);
+            str = std::to_string((int8_t)prop[0]);
             break;
         }
         case HubPropertyType::SYSTEM_TYPE_ID:

@@ -128,7 +128,7 @@ namespace Lpf2::Local
                     continue; // system messages are one byte so they are not useful for syncing
                 }
                 LPF2_LOG_D("Synced with device.");
-                m_startRec = millis();
+                m_startRec = LPF2_GET_TIME();
                 m_status = m_new_status;
                 if (m_new_status == LPF2_STATUS::STATUS_ACK_WAIT)
                     m_new_status = LPF2_STATUS::STATUS_SPEED_CHANGE;
@@ -139,7 +139,7 @@ namespace Lpf2::Local
             }
 
             parseMessage(msg);
-            auto now = millis();
+            auto now = LPF2_GET_TIME();
             if (msg.header != BYTE_SYNC)
             {
                 // when speed is mismatched we receive 0 bytes or garbage, so we should not update the last received time because of that.
@@ -154,7 +154,7 @@ namespace Lpf2::Local
         }
     end_loop:
 
-        process(millis());
+        process(LPF2_GET_TIME());
     }
 
     uint8_t Port::process(unsigned long now)
@@ -232,7 +232,7 @@ namespace Lpf2::Local
             break;
 
         case LPF2_STATUS::STATUS_ACK_WAIT:
-            if (now - m_start > 100)
+            if (now - m_start > 25)
             {
                 // if (m_status == LPF2_STATUS::STATUS_ACK_WAIT && m_new_status == LPF2_STATUS::STATUS_SPEED)
                 // {
@@ -305,7 +305,7 @@ namespace Lpf2::Local
         nextModeExt = false;
         measurementNum = 0;
         m_status = LPF2_STATUS::STATUS_ANALOD_ID;
-        m_start = millis();
+        m_start = LPF2_GET_TIME();
         m_startRec = m_start;
     }
 
@@ -330,7 +330,7 @@ namespace Lpf2::Local
         measurementNum = 0;
         m_status = LPF2_STATUS::STATUS_SPEED_CHANGE;
         m_new_status = LPF2_STATUS::STATUS_SPEED_CHANGE;
-        m_start = millis();
+        m_start = LPF2_GET_TIME();
         m_startRec = m_start;
     }
 }; // namespace Lpf2::Local

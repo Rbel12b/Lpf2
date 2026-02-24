@@ -4,7 +4,7 @@ namespace Lpf2::Local
 {
     void Port::doAnalogID()
     {
-        uint64_t now = millis();
+        size_t now = LPF2_GET_TIME();
         if (now - lastMeasurement < 5)
         {
             return;

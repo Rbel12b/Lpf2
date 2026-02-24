@@ -11,13 +11,13 @@ namespace Lpf2::Local
         {
         case MESSAGE_CMD:
         {
-            m_startRec = millis();
+            m_startRec = LPF2_GET_TIME();
             parseMessageCMD(msg);
             break;
         }
         case MESSAGE_INFO:
         {
-            m_startRec = millis();
+            m_startRec = LPF2_GET_TIME();
             parseMessageInfo(msg);
             break;
         }
@@ -63,7 +63,7 @@ namespace Lpf2::Local
                 LPF2_LOG_I("Device connected, type: 0x%02X", (int)m_deviceType);
                 m_status = LPF2_STATUS::STATUS_DATA_RECEIVED;
             }
-            m_startRec = millis();
+            m_startRec = LPF2_GET_TIME();
             uint8_t mode = GET_MODE(msg.header);
 
             if (nextModeExt)

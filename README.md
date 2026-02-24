@@ -32,9 +32,7 @@ This library is licensed under the MIT License. See the [LICENSE](LICENSE) file 
 
 ## Hardware support
 
-Currently only ESP32 microcontrollers are supported, but the library is designed to be portable to other platforms with a UART interface (Currently it uses the arduino framework).
-I only thested on an esp32s3, but it should work on other esp32 variants as well, as long as they have the required UART and BLE capabilities.
-The library uses the C++20 standard, so a compatible compiler is required.
+Currently only ESP32 microcontrollers are supported, since the library relies on FreeRTOS features, and the Arduino framework. However it should be possible to port it to other platforms with some adjustments.
 
 These are my build flags for an esp32s3, they might need to be adjusted for other variants:
 

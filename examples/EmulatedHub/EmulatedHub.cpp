@@ -8,7 +8,7 @@
 
 Lpf2::HubEmulation hub("Technic Hub", Lpf2::HubType::CONTROL_PLUS_HUB);
 
-#define USE_LOCAL_PORT 1
+// #define USE_LOCAL_PORT 1
 
 #ifdef USE_LOCAL_PORT
 #include "../LocalPort/device.hpp"

@@ -174,7 +174,7 @@ extern "C"
 #endif
 
 #define ARDUHAL_SHORT_LOG_FORMAT(letter, format) ARDUHAL_LOG_COLOR_##letter format ARDUHAL_LOG_RESET_COLOR "\r\n"
-#define ARDUHAL_LOG_FORMAT(letter, format) ARDUHAL_LOG_COLOR_##letter "[%6u][" #letter "][%s:%u] %s(): " format ARDUHAL_LOG_RESET_COLOR "\r\n", (unsigned long)(millis() / 1000ULL), pathToFileName(__FILE__), __LINE__, __FUNCTION__
+#define ARDUHAL_LOG_FORMAT(letter, format) ARDUHAL_LOG_COLOR_##letter "[%6u][" #letter "][%s:%u] %s(): " format ARDUHAL_LOG_RESET_COLOR "\r\n", (unsigned long)LPF2_GET_TIME(), pathToFileName(__FILE__), __LINE__, __FUNCTION__
 
 const char *pathToFileName(const char *path);
 
