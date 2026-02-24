@@ -119,7 +119,7 @@ namespace Lpf2::Local
         }
         m_status = LPF2_STATUS::STATUS_ACK_WAIT;
         m_new_status = LPF2_STATUS::STATUS_SPEED;
-        m_start = millis();
+        m_start = LPF2_GET_TIME();
     }
 
     void Port::changeBaud(uint32_t baud)

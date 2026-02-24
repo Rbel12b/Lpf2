@@ -13,7 +13,7 @@ namespace Lpf2::Local
         {
             uint8_t b = m_serial->read();
             buffer.push_back(b);
-            m_lastReceivedTime = millis();
+            m_lastReceivedTime = LPF2_GET_TIME();
         }
 
         while (buffer.size())
@@ -49,7 +49,7 @@ namespace Lpf2::Local
 
             if (buffer.size() < message.length + 2)
             {
-                // if (m_lastReceivedTime - millis() >= 500)
+                // if (m_lastReceivedTime - LPF2_GET_TIME() >= 500)
                 // {
                 //     // Probably corrupted message
                 //     buffer.erase(buffer.begin());

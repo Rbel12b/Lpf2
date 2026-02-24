@@ -15,7 +15,17 @@ namespace Lpf2
 
     class HubEmulation
     {
+        friend class Lpf2HubServerCallbacks;
+        friend class Lpf2HubCharacteristicCallbacks;
     private:
+
+        struct MessagePacket
+        {
+            uint8_t data[256];
+            uint8_t lenght = 0;
+        };
+        QueueHandle_t m_msgQueue = nullptr;
+
         // Notification callbacks if values are written to the characteristic
         BLEUUID _bleUuid;
         BLEUUID _charachteristicUuid;
@@ -24,6 +34,8 @@ namespace Lpf2
         BLEService *_pService;
         BLEAddress *_hubAddress = nullptr;
         BLEAdvertising *_pAdvertising;
+
+        uint16_t connHandle;
 
         HubType m_hubType = HubType::UNKNOWNHUB;
 
@@ -54,6 +66,9 @@ namespace Lpf2
 
         bool m_firstUpdate = true;
 
+        size_t m_lastRssiUpdate = 0;
+        int8_t m_lastRssi = 0;
+
     public:
         void updateHubAlert(HubAlertType alert, bool on);
 
@@ -71,6 +86,8 @@ namespace Lpf2
         void initBuiltInDevices();
 
         void destroyBuiltIn();
+
+        void processMessages(const std::vector<uint8_t>& message);
 
     public:
         HubEmulation();
@@ -120,7 +137,7 @@ namespace Lpf2
 
         void writeValue(MessageType messageType, std::vector<uint8_t> payload);
 
-        void onMessageReceived(std::vector<uint8_t> message);
+        void onMessageReceived(const MessagePacket &pkt);
 
         bool isConnected = false;
         bool isSubscribed = false;
