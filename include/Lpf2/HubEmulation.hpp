@@ -4,6 +4,8 @@
 #include "Lpf2/LWPConst.hpp"
 #include <NimBLEDevice.h>
 #include <unordered_map>
+#include <list>
+
 namespace Lpf2
 {
     class Port;
@@ -34,6 +36,10 @@ namespace Lpf2
         BLEService *_pService;
         BLEAddress *_hubAddress = nullptr;
         BLEAdvertising *_pAdvertising;
+
+        void writeValue(MessageType messageType, std::vector<uint8_t> payload);
+        void writeValue(std::vector<uint8_t> message);
+        void onMessageReceived(const MessagePacket &pkt);
 
         uint16_t connHandle;
 
@@ -69,6 +75,18 @@ namespace Lpf2
         size_t m_lastRssiUpdate = 0;
         int8_t m_lastRssi = 0;
 
+        struct PortInputSetupSingle
+        {
+            PortNum portNum;
+            uint8_t mode;
+            uint32_t delta;
+            bool notify;
+            
+            std::vector<uint8_t> lastRaw;
+        };
+        // map<PortNum, map<ModeNum, Setup>>
+        std::unordered_map<PortNum, std::unordered_map<uint8_t, PortInputSetupSingle>> m_portSetupSingle;
+
     public:
         void updateHubAlert(HubAlertType alert, bool on);
 
@@ -79,8 +97,13 @@ namespace Lpf2
 
         void handlePortInformationRequestMessage(std::vector<uint8_t> message);
         void handlePortModeInformationRequestMessage(std::vector<uint8_t> message);
+        void handlePortInputFormatSetupSingleMessage(std::vector<uint8_t> message);
+        void handlePortOutputCommandMessage(std::vector<uint8_t> message);
 
         void checkPort(PortNum portNum, Port* port);
+        void checkPortModeValueSingle(PortInputSetupSingle &setup, Port* port);
+
+        void sendPortValueSingle(PortInputSetupSingle &setup, Port* port);
 
         void initBuiltInPorts();
         void initBuiltInDevices();
@@ -134,10 +157,6 @@ namespace Lpf2
          * @param port The port object, it's lifetime must exceed the HubEmulation instance's lifetime.
          */
         void attachPort(PortNum portNum, Port* port);
-
-        void writeValue(MessageType messageType, std::vector<uint8_t> payload);
-
-        void onMessageReceived(const MessagePacket &pkt);
 
         bool isConnected = false;
         bool isSubscribed = false;

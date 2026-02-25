@@ -222,6 +222,7 @@ namespace Lpf2::Local
             break;
 
         case LPF2_STATUS::STATUS_DATA_START:
+            m_rawDataSizeEnsured = false;
         case LPF2_STATUS::STATUS_DATA:
             if (now - m_start >= 100)
             {

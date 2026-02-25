@@ -97,7 +97,9 @@ extern "C"
     } while (0)
 #endif
 #if LPF2_LOG_LEVEL > 4
-#define LPF2_LOG_V(format, ...) lpf2_log_printf(ARDUHAL_LOG_FORMAT(V, format), ##__VA_ARGS__)
+#define LPF2_ARDUHAL_LOG_COLOR_V ARDUHAL_LOG_COLOR(ARDUHAL_LOG_COLOR_MAGENTA)
+#define LPF2_ARDUHAL_LOG_FORMAT(letter, format) LPF2_ARDUHAL_LOG_COLOR_##letter "[%6u][" #letter "][%s:%u] %s(): " format ARDUHAL_LOG_RESET_COLOR "\r\n", (unsigned long)LPF2_GET_TIME(), pathToFileName(__FILE__), __LINE__, __FUNCTION__
+#define LPF2_LOG_V(format, ...) lpf2_log_printf(LPF2_ARDUHAL_LOG_FORMAT(V, format), ##__VA_ARGS__)
 #define LPF2_DEBUG_EXPR_V(...) \
     do                         \
     {                          \
@@ -146,9 +148,9 @@ extern "C"
 #define ARDUHAL_LOG_COLOR_GREEN "32"  // INFO
 #define ARDUHAL_LOG_COLOR_YELLOW "33" // WARNING
 #define ARDUHAL_LOG_COLOR_BLUE "34"
-#define ARDUHAL_LOG_COLOR_MAGENTA "35"
+#define ARDUHAL_LOG_COLOR_MAGENTA "35" // VERBOSE
 #define ARDUHAL_LOG_COLOR_CYAN "36" // DEBUG
-#define ARDUHAL_LOG_COLOR_GRAY "37" // VERBOSE
+#define ARDUHAL_LOG_COLOR_GRAY "37"
 #define ARDUHAL_LOG_COLOR_WHITE "38"
 
 #define ARDUHAL_LOG_COLOR(COLOR) "\033[0;" COLOR "m"
@@ -159,7 +161,7 @@ extern "C"
 #define ARDUHAL_LOG_COLOR_W ARDUHAL_LOG_COLOR(ARDUHAL_LOG_COLOR_YELLOW)
 #define ARDUHAL_LOG_COLOR_I ARDUHAL_LOG_COLOR(ARDUHAL_LOG_COLOR_GREEN)
 #define ARDUHAL_LOG_COLOR_D ARDUHAL_LOG_COLOR(ARDUHAL_LOG_COLOR_CYAN)
-#define ARDUHAL_LOG_COLOR_V ARDUHAL_LOG_COLOR(ARDUHAL_LOG_COLOR_GRAY)
+#define ARDUHAL_LOG_COLOR_V ARDUHAL_LOG_COLOR(ARDUHAL_LOG_COLOR_MAGENTA)
 #define ARDUHAL_LOG_COLOR_PRINT(letter) lpf2_log_printf(ARDUHAL_LOG_COLOR_##letter)
 #define ARDUHAL_LOG_COLOR_PRINT_END lpf2_log_printf(ARDUHAL_LOG_RESET_COLOR)
 #else

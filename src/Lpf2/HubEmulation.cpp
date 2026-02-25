@@ -90,9 +90,9 @@ namespace Lpf2
     void HubEmulation::processMessages(const std::vector<uint8_t>& message)
     {
         MessageType type = (MessageType)message[(byte)MessageHeader::MESSAGE_TYPE];
-        LPF2_DEBUG_EXPR_D(
+        LPF2_DEBUG_EXPR_V(
             std::string hexMessage = Utils::bytes_to_hexString(message);
-            LPF2_LOG_D("message received (%d): %s", message.size(), hexMessage.c_str()););
+            LPF2_LOG_V("message received (%d): %s", message.size(), hexMessage.c_str()););
         LPF2_LOG_V("message type: %d", (byte)type);
 
         switch (type)
@@ -107,7 +107,7 @@ namespace Lpf2
             handleHubAlertsMessage(message);
             break;
         case MessageType::HW_NETWORK_COMMANDS:
-            LPF2_LOG_W("HW_NETWORK_COMMANDSnot implemented yet");
+            LPF2_LOG_W("HW_NETWORK_COMMANDS not implemented yet");
             break;
         case MessageType::FW_UPDATE_GO_INTO_BOOT_MODE:
             LPF2_LOG_W("FW_UPDATE_GO_INTO_BOOT_MODE not implemented yet");
@@ -127,11 +127,14 @@ namespace Lpf2
         case MessageType::PORT_INPUT_FORMAT_SETUP_COMBINEDMODE:
             LPF2_LOG_W("PORT_INPUT_FORMAT_SETUP_COMBINEDMODE not implemented yet");
             break;
+        case MessageType::PORT_INPUT_FORMAT_SETUP_SINGLE:
+            handlePortInputFormatSetupSingleMessage(message);
+            break;
         case MessageType::VIRTUAL_PORT_SETUP:
             LPF2_LOG_W("VIRTUAL_PORT_SETUP not implemented yet");
             break;
         case MessageType::PORT_OUTPUT_COMMAND:
-            LPF2_LOG_W("PORT_OUTPUT_COMMAND not implemented yet");
+            handlePortOutputCommandMessage(message);
             break;
 
         default:
@@ -520,32 +523,151 @@ namespace Lpf2
         writeValue(MessageType::PORT_MODE_INFORMATION, payload);
     }
 
+    void HubEmulation::handlePortInputFormatSetupSingleMessage(std::vector<uint8_t> message)
+    {
+        PortNum portNum = (PortNum)message[(uint8_t)MessageByte::PORT_ID];
+        if (attachedPorts.find(portNum) == attachedPorts.end())
+        {
+            LPF2_LOG_W("Port input format setup (single) for unattached port %d", portNum);
+            return;
+        }
+        Port *port = attachedPorts[portNum];
+        uint8_t modeNum = message[(uint8_t)MessageByte::OPERATION];
+
+        PortInputSetupSingle setup;
+        setup.portNum = portNum;
+        setup.mode = modeNum;
+        message.resize(10);
+        std::memcpy(&setup.delta, message.data() + 5, 4);
+        setup.notify = message[9];
+
+        m_portSetupSingle[portNum][modeNum] = setup;
+
+        writeValue(message);
+    }
+
+    void Lpf2::HubEmulation::handlePortOutputCommandMessage(std::vector<uint8_t> message)
+    {
+        if (message.size() < 6)
+        {
+            LPF2_LOG_E("Unexpected message length: %i", message.size());
+            return;
+        }
+        PortNum portNum = (PortNum)message[(uint8_t)MessageByte::PORT_ID];
+        if (attachedPorts.find(portNum) == attachedPorts.end())
+        {
+            LPF2_LOG_W("Port output command for unattached port %d", portNum);
+            return;
+        }
+        Port *port = attachedPorts[portNum];
+        uint8_t startupAndCompletion = message[(uint8_t)MessageByte::OPERATION];
+        PortOutputSubCommand subcommand = (PortOutputSubCommand)message[(uint8_t)MessageByte::SUB_COMMAND];
+        std::vector<uint8_t> payload(message.begin() + 6, message.end());
+
+        switch (subcommand)
+        {
+        case PortOutputSubCommand::WRITE_DIRECT_MODE:
+            if (payload.size() < 2)
+                break;
+            port->writeData(payload[0], std::vector<uint8_t>(payload.begin() + 1, payload.end()));
+            break;
+
+        case PortOutputSubCommand::SET_ACC_TIME:
+            payload.resize(3);
+            port->setAccTime(payload[0] | payload[1] << 8,
+                payload[2]);
+            break;
+
+        case PortOutputSubCommand::SET_DEC_TIME:
+            payload.resize(3);
+            port->setDecTime(payload[0] | payload[1] << 8,
+                payload[2]);
+            break;
+
+        case PortOutputSubCommand::START_SPEED_SINGLE:
+            payload.resize(3);
+            port->startSpeed((int8_t)payload[0], payload[1], payload[2]);
+            break;
+
+        case PortOutputSubCommand::START_SPEED_FOR_TIME_SINGLE:
+            payload.resize(6);
+            port->startSpeedForTime(payload[0] | payload[1] << 8,
+                (int8_t)payload[2], payload[3], (BrakingStyle)payload[4], payload[5]);
+            break;
+
+        case PortOutputSubCommand::START_SPEED_FOR_DEG_SINGLE:
+            payload.resize(8);
+            port->startSpeedForDegrees(payload[0] | payload[1] << 8 | payload[2] << 16 | payload[3] << 24,
+                (int8_t)payload[4], payload[5], (BrakingStyle)payload[6], payload[7]);
+            break;
+
+        case PortOutputSubCommand::GOTO_ABS_POS_SINGLE:
+            payload.resize(8);
+            port->gotoAbsPosition(payload[0] | payload[1] << 8 | payload[2] << 16 | payload[3] << 24,
+                (int8_t)payload[4], payload[5], (BrakingStyle)payload[6], payload[7]);
+            break;
+        
+        default:
+            LPF2_LOG_E("Unimplemented: %i", (int)subcommand);
+            break;
+        }
+    }
+
     void HubEmulation::checkPort(PortNum portNum, Port *port)
     {
-        if (connectedDevices[portNum] == port->deviceConnected())
-            return;
-
-        connectedDevices[portNum] = port->deviceConnected();
-
-        if (connectedDevices[portNum])
+        port->ensureRawDataSize();
+        if (connectedDevices[portNum] != port->deviceConnected())
         {
-            LPF2_LOG_I("Device connected to port %d", portNum);
-            std::vector<uint8_t> payload;
-            payload.push_back((uint8_t)portNum);
-            payload.push_back((uint8_t)IOEvent::ATTACHED_IO);
-            payload.push_back((uint8_t)port->getDeviceType());
-            payload.push_back(0x00);
-            payload.insert(payload.end(), {0x00, 0x00, 0x00, 0x10, 0x00, 0x00, 0x00, 0x10}); // version numbers
-            writeValue(MessageType::HUB_ATTACHED_IO, payload);
+            connectedDevices[portNum] = port->deviceConnected();
+
+            if (connectedDevices[portNum])
+            {
+                LPF2_LOG_I("Device connected to port %d", portNum);
+                std::vector<uint8_t> payload;
+                payload.push_back((uint8_t)portNum);
+                payload.push_back((uint8_t)IOEvent::ATTACHED_IO);
+                payload.push_back((uint8_t)port->getDeviceType());
+                payload.push_back(0x00);
+                payload.insert(payload.end(), {0x00, 0x00, 0x00, 0x10, 0x00, 0x00, 0x00, 0x10}); // version numbers
+                writeValue(MessageType::HUB_ATTACHED_IO, payload);
+            }
+            else
+            {
+                LPF2_LOG_I("Device disconnected from port %d", portNum);
+                std::vector<uint8_t> payload;
+                payload.push_back((char)portNum);
+                payload.push_back((char)IOEvent::DETACHED_IO);
+                writeValue(MessageType::HUB_ATTACHED_IO, payload);
+            }
         }
-        else
+
+        std::for_each(m_portSetupSingle[portNum].begin(), m_portSetupSingle[portNum].end(),
+            [this, port](auto &pair)
+            {
+                checkPortModeValueSingle(pair.second, port);
+            });
+    }
+
+    void HubEmulation::checkPortModeValueSingle(PortInputSetupSingle &setup, Port *port)
+    {
+        uint8_t mode = setup.mode;
+        uint8_t dataSets = port->getModes()[mode].data_sets;
+        auto &raw = port->getModes()[mode].rawData;
+        for (uint8_t dataSet; dataSet < dataSets; dataSet++)
         {
-            LPF2_LOG_I("Device disconnected from port %d", portNum);
-            std::vector<uint8_t> payload;
-            payload.push_back((char)portNum);
-            payload.push_back((char)IOEvent::DETACHED_IO);
-            writeValue(MessageType::HUB_ATTACHED_IO, payload);
+            if (std::abs(port->getValue(mode, dataSet) - port->getValue(mode, setup.lastRaw, dataSet)) >= setup.delta)
+            {
+                setup.lastRaw.assign(raw.begin(), raw.end());
+                sendPortValueSingle(setup, port);
+                break;
+            }
         }
+    }
+
+    void Lpf2::HubEmulation::sendPortValueSingle(PortInputSetupSingle &setup, Port *port)
+    {
+        //TODO: implement
+        LPF2_LOG_E("Unimplemented!");
     }
 
     void HubEmulation::initBuiltInPorts()
@@ -763,10 +885,21 @@ namespace Lpf2
         message.push_back(0x00);                       // hub id (not used)
         message.push_back((char)messageType);          // message type
         message.insert(message.end(), payload.begin(), payload.end());
-        LPF2_DEBUG_EXPR_D(
+        LPF2_DEBUG_EXPR_V(
             std::string hexMessage = Utils::bytes_to_hexString(message);
-            LPF2_LOG_D("write message (%d): %s", message.size(), hexMessage.c_str()););
+            LPF2_LOG_V("write message (%d): %s", message.size(), hexMessage.c_str()););
 
+        pCharacteristic->setValue(message);
+        pCharacteristic->notify();
+    }
+
+    void HubEmulation::writeValue(std::vector<uint8_t> message)
+    {
+        if (!isConnected || !pCharacteristic)
+            return;
+        LPF2_DEBUG_EXPR_V(
+            std::string hexMessage = Utils::bytes_to_hexString(message);
+            LPF2_LOG_V("write message (%d): %s", message.size(), hexMessage.c_str()););
         pCharacteristic->setValue(message);
         pCharacteristic->notify();
     }
@@ -810,7 +943,7 @@ namespace Lpf2
                           this->checkPort(pair.first, pair.second);
                       });
 
-        if (now - m_lastRssiUpdate >= 1000)
+        if (now - m_lastRssiUpdate >= 5000)
         {
             m_lastRssiUpdate = now;
             int8_t rssi;

@@ -7,6 +7,7 @@ namespace Lpf2::Remote
     {
         if (m_lastDevType != m_deviceType)
         {
+            m_rawDataSizeEnsured = false;
             m_lastDevType = m_deviceType;
             if (m_deviceType != DeviceType::UNKNOWNDEVICE)
             {

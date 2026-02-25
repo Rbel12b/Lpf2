@@ -17,12 +17,12 @@ namespace Lpf2
         oss << "OutModes: 0x" << std::hex << std::setw(4) << std::setfill('0') << getOutputModes() << "\n";
         oss << "Caps: 0x" << std::hex << std::setw(2) << std::setfill('0') << static_cast<unsigned int>(getCapatibilities()) << "\n";
         oss << std::dec << "Combos:\n";
-        for (int i = 0; i < getModeComboCount(); i++)
+        for (uint8_t i = 0; i < getModeComboCount(); i++)
         {
             oss << "\t0x" << std::hex << std::setw(4) << std::setfill('0') << getModeCombo(i);
         }
         oss << "\n";
-        for (int i = 0; i < getModes().size(); i++)
+        for (size_t i = 0; i < getModes().size(); i++)
         {
             auto &mode = getModes()[i];
             oss << std::dec << "Mode " << i << ":\n";
@@ -85,31 +85,16 @@ namespace Lpf2
         return 0;
     }
 
-    float Port::getValue(const Mode &modeData, uint8_t dataSet)
+    float Port::getValue(const Mode &modeData, const std::vector<uint8_t> &raw, uint8_t dataSet)
     {
         if (dataSet >= modeData.data_sets)
             return 0.0f;
 
-        const std::vector<uint8_t> &raw = modeData.rawData;
         std::string result;
 
-        // Determine byte size per dataset based on format
-        size_t bytesPerDataset;
-        switch (modeData.format)
-        {
-        case DATA8:
-            bytesPerDataset = 1;
-            break;
-        case DATA16:
-            bytesPerDataset = 2;
-            break;
-        case DATA32:
-        case DATAF:
-            bytesPerDataset = 4;
-            break;
-        default:
+        const size_t bytesPerDataset = getDataSize(modeData.format);
+        if (!bytesPerDataset)
             return 0.0f;
-        }
 
         // Check that rawData contains enough bytes
         size_t offset = bytesPerDataset * dataSet;
@@ -117,26 +102,48 @@ namespace Lpf2
         if (raw.size() < offset + bytesPerDataset)
             return 0.0f;
 
-        const uint8_t *ptr = raw.data() + (bytesPerDataset * dataSet);
+        const uint8_t *ptr = raw.data() + offset;
         float value = 0.0f;
+
+        static constexpr float pow10lut[] = {
+            1.f, 10.f, 100.f, 1000.f,
+            10000.f, 100000.f, 1000000.f
+        };
+
+        const float scale =
+            (modeData.decimals < std::size(pow10lut))
+                ? pow10lut[modeData.decimals]
+                : std::pow<uint64_t, uint64_t>(10, modeData.decimals);
 
         // Parse based on format
         switch (modeData.format)
         {
         case DATA8:
-            value = parseData8(ptr) / pow(10, modeData.decimals);
+            value = parseData8(ptr) / scale;
             break;
         case DATA16:
-            value = parseData16(ptr) / pow(10, modeData.decimals);
+            value = parseData16(ptr) / scale;
             break;
         case DATA32:
-            value = parseData32(ptr) / pow(10, modeData.decimals);
+            value = parseData32(ptr) / scale;
             break;
         case DATAF:
             value = parseDataF(ptr);
             break;
         }
         return value;
+    }
+
+    float Lpf2::Port::getValue(const Mode &modeData, uint8_t dataSet)
+    {
+        return getValue(modeData, modeData.rawData, dataSet);
+    }
+
+    float Port::getValue(uint8_t modeNum, const std::vector<uint8_t> &raw, uint8_t dataSet) const
+    {
+        if (modeNum >= modeData.size())
+            return 0.0f;
+        return getValue(modeData[modeNum], raw, dataSet);
     }
 
     float Port::getValue(uint8_t modeNum, uint8_t dataSet) const
@@ -148,28 +155,20 @@ namespace Lpf2
 
     std::string Port::formatValue(float value, const Mode &modeData)
     {
-        std::ostringstream os;
+        std::string str;
 
-        // Use fixed precision from modeData.decimals
-        os << std::fixed << std::setprecision(modeData.decimals);
-
-        if (modeData.PCTmin < 0.0f)
-        {
-            value = value - 100;
-        }
-
-        os << value;
+        str += std::to_string(value);
 
         // Append unit if present
         if (!modeData.unit.empty())
         {
-            os << " " << modeData.unit;
+            str += " " + modeData.unit;
         }
 
-        return os.str();
+        return str;
     }
 
-    std::string Port::convertValue(Mode modeData)
+    std::string Port::convertValue(const Mode& modeData)
     {
         std::string result;
 
@@ -258,5 +257,20 @@ namespace Lpf2
     void Port::setRgbColor(uint8_t r, uint8_t g, uint8_t b)
     {
         writeData(1, {r, g, b});
+    }
+
+    void Lpf2::Port::ensureRawDataSize()
+    {
+        if (m_rawDataSizeEnsured)
+            return;
+        m_rawDataSizeEnsured = true;
+        for (auto &mode : modeData)
+        {
+            const size_t expectedSize = getDataSize(mode.format) * mode.data_sets;
+            if (mode.rawData.size() < expectedSize)
+            {
+                mode.rawData.resize(expectedSize, 0);
+            }
+        }
     }
 };
