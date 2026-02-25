@@ -271,6 +271,24 @@ namespace Lpf2
         INTERNAL_ERROR = 0x08,
     };
 
+    enum class PortOutputSubCommand
+    {
+        START_POWER_SYNC = 0x02,
+        SET_ACC_TIME = 0x05,
+        SET_DEC_TIME = 0x06,
+        START_SPEED_SINGLE = 0x07,
+        START_SPEED_SYNC = 0x08,
+        START_SPEED_FOR_TIME_SINGLE = 0x09,
+        START_SPEED_FOR_TIME_SYNC = 0x0A,
+        START_SPEED_FOR_DEG_SINGLE = 0x0B,
+        START_SPEED_FOR_DEG_SYNC = 0x0C,
+        GOTO_ABS_POS_SINGLE = 0x0D,
+        GOTO_ABS_POS_SYNC = 0x0E,
+        PRESET_ENCODER_SYNC = 0x14,
+        WRITE_DIRECT = 0x50,
+        WRITE_DIRECT_MODE = 0x51
+    };
+
     enum class DuploTrainBaseSound
     {
         BRAKE = 3,

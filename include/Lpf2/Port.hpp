@@ -8,6 +8,7 @@ namespace Lpf2
 {
     class Port
     {
+        friend class HubEmulation;
     public:
         virtual void update() = 0;
 
@@ -116,10 +117,12 @@ namespace Lpf2
 
         virtual bool deviceConnected() = 0;
 
+        static float getValue(const Mode &modeData, const std::vector<uint8_t> &raw, uint8_t dataSet);
         static float getValue(const Mode &modeData, uint8_t dataSet);
+        float getValue(uint8_t modeNum, const std::vector<uint8_t> &raw, uint8_t dataSet)  const;
         float getValue(uint8_t modeNum, uint8_t dataSet) const;
         static std::string formatValue(float value, const Mode &modeData);
-        static std::string convertValue(Mode modeData);
+        static std::string convertValue(const Mode& modeData);
         std::string convertValue(uint8_t modeNum) const
         {
             if (modeNum >= modeData.size())
@@ -166,6 +169,7 @@ namespace Lpf2
         {
             if (!desc || desc->type != m_deviceType)
                 return;
+            m_rawDataSizeEnsured = false;
             modeData = desc->modes;
             modes = modeData.size();
             views = 0; // TODO: add to desc
@@ -213,6 +217,9 @@ namespace Lpf2
 
         /// Parse a 32-bit IEEE-754 little-endian float
         static float parseDataF(const uint8_t *ptr);
+
+        bool m_rawDataSizeEnsured = false;
+        void ensureRawDataSize();
 
     protected:
         DeviceType m_deviceType = DeviceType::UNKNOWNDEVICE;
