@@ -6,7 +6,7 @@ namespace Lpf2
     {
     #define REGISTER_DEVICE_DESC(dev) \
         DeviceDescRegistry::instance().registerDesc( \
-            DeviceType::dev, &DeviceDescriptors::LPF2_DEVICE_ ## dev)
+            DeviceType::dev, &DeviceDescriptors:: dev)
 
         REGISTER_DEVICE_DESC(TECHNIC_MEDIUM_HUB_GEST_SENSOR);
         REGISTER_DEVICE_DESC(TECHNIC_MEDIUM_HUB_TILT_SENSOR);
@@ -30,7 +30,7 @@ namespace Lpf2
 namespace Lpf2::DeviceDescriptors
 {
     // Device 0x36
-    const DeviceDescriptor LPF2_DEVICE_TECHNIC_MEDIUM_HUB_GEST_SENSOR =
+    const DeviceDescriptor TECHNIC_MEDIUM_HUB_GEST_SENSOR =
     {
         .type = DeviceType::TECHNIC_MEDIUM_HUB_GEST_SENSOR,
         .inModes = 0x0001,
@@ -55,7 +55,7 @@ namespace Lpf2::DeviceDescriptors
     };
 
     // Device 0x3B
-    const DeviceDescriptor LPF2_DEVICE_TECHNIC_MEDIUM_HUB_TILT_SENSOR =
+    const DeviceDescriptor TECHNIC_MEDIUM_HUB_TILT_SENSOR =
     {
         .type = DeviceType::TECHNIC_MEDIUM_HUB_TILT_SENSOR,
         .inModes = 0x0003,
@@ -104,7 +104,7 @@ namespace Lpf2::DeviceDescriptors
     };
 
     // Device 0x3A
-    const DeviceDescriptor LPF2_DEVICE_TECHNIC_MEDIUM_HUB_GYRO_SENSOR =
+    const DeviceDescriptor TECHNIC_MEDIUM_HUB_GYRO_SENSOR =
     {
         .type = DeviceType::TECHNIC_MEDIUM_HUB_GYRO_SENSOR,
         .inModes = 0x0001,
@@ -129,7 +129,7 @@ namespace Lpf2::DeviceDescriptors
     };
 
     // Device 0x39
-    const DeviceDescriptor LPF2_DEVICE_TECHNIC_MEDIUM_HUB_ACCELEROMETER =
+    const DeviceDescriptor TECHNIC_MEDIUM_HUB_ACCELEROMETER =
     {
         .type = DeviceType::TECHNIC_MEDIUM_HUB_ACCELEROMETER,
         .inModes = 0x0003,
@@ -166,7 +166,7 @@ namespace Lpf2::DeviceDescriptors
     };
 
     // Device 0x17
-    const DeviceDescriptor LPF2_DEVICE_HUB_LED =
+    const DeviceDescriptor HUB_LED =
     {
         .type = DeviceType::HUB_LED,
         .inModes = 0x0000,
@@ -203,7 +203,7 @@ namespace Lpf2::DeviceDescriptors
     };
 
     // Device 0x02
-    const DeviceDescriptor LPF2_DEVICE_TRAIN_MOTOR =
+    const DeviceDescriptor TRAIN_MOTOR =
     {
         .type = DeviceType::TRAIN_MOTOR,
         .inModes = 0x0000,
@@ -228,7 +228,7 @@ namespace Lpf2::DeviceDescriptors
     };
 
     // Device 0x15
-    const DeviceDescriptor LPF2_DEVICE_CURRENT_SENSOR =
+    const DeviceDescriptor CURRENT_SENSOR =
     {
         .type = DeviceType::CURRENT_SENSOR,
         .inModes = 0x0003,
@@ -265,7 +265,7 @@ namespace Lpf2::DeviceDescriptors
     };
 
     // Device 0x14
-    const DeviceDescriptor LPF2_DEVICE_VOLTAGE_SENSOR =
+    const DeviceDescriptor VOLTAGE_SENSOR =
     {
         .type = DeviceType::VOLTAGE_SENSOR,
         .inModes = 0x0003,
@@ -302,7 +302,7 @@ namespace Lpf2::DeviceDescriptors
     };
 
     // Device 0x3C
-    const DeviceDescriptor LPF2_DEVICE_TECHNIC_MEDIUM_HUB_TEMPERATURE_SENSOR =
+    const DeviceDescriptor TECHNIC_MEDIUM_HUB_TEMPERATURE_SENSOR =
     {
         .type = DeviceType::TECHNIC_MEDIUM_HUB_TEMPERATURE_SENSOR,
         .inModes = 0x0001,
@@ -326,7 +326,7 @@ namespace Lpf2::DeviceDescriptors
         }
     };
     // Device 0x4C
-    const DeviceDescriptor LPF2_DEVICE_TECHNIC_LARGE_ANGULAR_MOTOR_GREY =
+    const DeviceDescriptor TECHNIC_LARGE_ANGULAR_MOTOR_GREY =
     {
         .type = DeviceType::TECHNIC_LARGE_ANGULAR_MOTOR_GREY,
         .inModes = 0x0000,
@@ -411,7 +411,7 @@ namespace Lpf2::DeviceDescriptors
     };
 
     // Device 0x3E
-    const DeviceDescriptor LPF2_DEVICE_TECHNIC_DISTANCE_SENSOR =
+    const DeviceDescriptor TECHNIC_DISTANCE_SENSOR =
     {
         .type = DeviceType::TECHNIC_DISTANCE_SENSOR,
         .inModes = 0x0000,
@@ -532,7 +532,7 @@ namespace Lpf2::DeviceDescriptors
     };
 
     // Device 0x4B
-    const DeviceDescriptor LPF2_DEVICE_TECHNIC_MEDIUM_ANGULAR_MOTOR_GREY =
+    const DeviceDescriptor TECHNIC_MEDIUM_ANGULAR_MOTOR_GREY =
     {
         .type = DeviceType::TECHNIC_MEDIUM_ANGULAR_MOTOR_GREY,
         .inModes = 0x0000,
@@ -617,7 +617,7 @@ namespace Lpf2::DeviceDescriptors
     };
 
     // Device 0x3D
-    const DeviceDescriptor LPF2_DEVICE_TECHNIC_COLOR_SENSOR =
+    const DeviceDescriptor TECHNIC_COLOR_SENSOR =
     {
         .type = DeviceType::TECHNIC_COLOR_SENSOR,
         .inModes = 0x0000,
@@ -750,7 +750,7 @@ namespace Lpf2::DeviceDescriptors
     };
 
     // Device 0x2E
-    const DeviceDescriptor LPF2_DEVICE_TECHNIC_LARGE_LINEAR_MOTOR =
+    const DeviceDescriptor TECHNIC_LARGE_LINEAR_MOTOR =
     {
         .type = DeviceType::TECHNIC_LARGE_LINEAR_MOTOR,
         .inModes = 0x001E,

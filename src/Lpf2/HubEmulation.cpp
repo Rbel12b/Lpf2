@@ -61,19 +61,8 @@ namespace Lpf2
 
         void onWrite(NimBLECharacteristic *pCharacteristic, NimBLEConnInfo &connInfo) override
         {
-            std::vector<uint8_t> msgReceived = pCharacteristic->getValue();
-            // pCharacteristic->setValue(nullptr, 0);
-
-            if (msgReceived.size() == 0)
-            {
-                LPF2_LOG_W("empty message received");
-                return;
-            }
-
-            HubEmulation::MessagePacket pkt;
-            pkt.lenght = msgReceived.size();
-            memcpy(pkt.data, msgReceived.data(), pkt.lenght);
-            _lpf2HubEmulation->onMessageReceived(pkt);
+            auto* value = new NimBLEAttValue(std::move(pCharacteristic->getValue()));
+            xQueueSend(_lpf2HubEmulation->m_msgQueue, &value, 1);
         }
 
         void onRead(NimBLECharacteristic *pCharacteristic, NimBLEConnInfo &connInfo) override
@@ -81,18 +70,10 @@ namespace Lpf2
             LPF2_LOG_D("read request");
         }
     };
-
-    void HubEmulation::onMessageReceived(const MessagePacket &pkt)
-    {
-        xQueueSend(m_msgQueue, &pkt, 0);   // no wait
-    }
-
     void HubEmulation::processMessages(const std::vector<uint8_t>& message)
     {
         MessageType type = (MessageType)message[(byte)MessageHeader::MESSAGE_TYPE];
-        LPF2_DEBUG_EXPR_V(
-            std::string hexMessage = Utils::bytes_to_hexString(message);
-            LPF2_LOG_V("message received (%d): %s", message.size(), hexMessage.c_str()););
+        LPF2_LOG_D("message received (%d): %s", message.size(), Utils::bytes_to_hexString(message).c_str());
         LPF2_LOG_V("message type: %d", (byte)type);
 
         switch (type)
@@ -543,6 +524,8 @@ namespace Lpf2
 
         m_portSetupSingle[portNum][modeNum] = setup;
 
+        message[2] = (uint8_t)MessageType::PORT_INPUT_FORMAT_SINGLE;
+
         writeValue(message);
     }
 
@@ -611,6 +594,8 @@ namespace Lpf2
             LPF2_LOG_E("Unimplemented: %i", (int)subcommand);
             break;
         }
+
+        writeValue(MessageType::PORT_OUTPUT_COMMAND_FEEDBACK, {(uint8_t)portNum, 0x08});
     }
 
     void HubEmulation::checkPort(PortNum portNum, Port *port)
@@ -639,6 +624,7 @@ namespace Lpf2
                 payload.push_back((char)IOEvent::DETACHED_IO);
                 writeValue(MessageType::HUB_ATTACHED_IO, payload);
             }
+            vTaskDelay(1);
         }
 
         std::for_each(m_portSetupSingle[portNum].begin(), m_portSetupSingle[portNum].end(),
@@ -659,6 +645,7 @@ namespace Lpf2
             {
                 setup.lastRaw.assign(raw.begin(), raw.end());
                 sendPortValueSingle(setup, port);
+                vTaskDelay(1);
                 break;
             }
         }
@@ -666,8 +653,15 @@ namespace Lpf2
 
     void Lpf2::HubEmulation::sendPortValueSingle(PortInputSetupSingle &setup, Port *port)
     {
-        //TODO: implement
-        LPF2_LOG_E("Unimplemented!");
+        std::vector<uint8_t> message;
+        message.push_back(setup.portNum);
+
+        if (!port || port->modeData.size() <= setup.mode)
+            return;
+        
+        auto &raw = port->modeData[setup.mode].rawData;
+        message.insert(message.end(), raw.begin(), raw.end());
+        writeValue(MessageType::PORT_VALUE_SINGLE, message);
     }
 
     void HubEmulation::initBuiltInPorts()
@@ -718,31 +712,31 @@ namespace Lpf2
         case HubType::CONTROL_PLUS_HUB:
         {
             INIT_DEVICE(ControlPlusHubPort::ACCELEROMETER,
-                        DeviceDescriptors::LPF2_DEVICE_TECHNIC_MEDIUM_HUB_ACCELEROMETER);
+                        DeviceDescriptors::TECHNIC_MEDIUM_HUB_ACCELEROMETER);
 
             INIT_DEVICE(ControlPlusHubPort::CURRENT,
-                        DeviceDescriptors::LPF2_DEVICE_CURRENT_SENSOR);
+                        DeviceDescriptors::CURRENT_SENSOR);
 
             INIT_DEVICE(ControlPlusHubPort::GESTURE,
-                        DeviceDescriptors::LPF2_DEVICE_TECHNIC_MEDIUM_HUB_GEST_SENSOR);
+                        DeviceDescriptors::TECHNIC_MEDIUM_HUB_GEST_SENSOR);
 
             INIT_DEVICE(ControlPlusHubPort::GYRO,
-                        DeviceDescriptors::LPF2_DEVICE_TECHNIC_MEDIUM_HUB_GYRO_SENSOR);
+                        DeviceDescriptors::TECHNIC_MEDIUM_HUB_GYRO_SENSOR);
 
             INIT_DEVICE(ControlPlusHubPort::LED,
-                        DeviceDescriptors::LPF2_DEVICE_HUB_LED);
+                        DeviceDescriptors::HUB_LED);
 
             INIT_DEVICE(ControlPlusHubPort::TEMP2,
-                        DeviceDescriptors::LPF2_DEVICE_TECHNIC_MEDIUM_HUB_TEMPERATURE_SENSOR);
+                        DeviceDescriptors::TECHNIC_MEDIUM_HUB_TEMPERATURE_SENSOR);
 
             INIT_DEVICE(ControlPlusHubPort::TEMP,
-                        DeviceDescriptors::LPF2_DEVICE_TECHNIC_MEDIUM_HUB_TEMPERATURE_SENSOR);
+                        DeviceDescriptors::TECHNIC_MEDIUM_HUB_TEMPERATURE_SENSOR);
 
             INIT_DEVICE(ControlPlusHubPort::TILT,
-                        DeviceDescriptors::LPF2_DEVICE_TECHNIC_MEDIUM_HUB_TILT_SENSOR);
+                        DeviceDescriptors::TECHNIC_MEDIUM_HUB_TILT_SENSOR);
 
             INIT_DEVICE(ControlPlusHubPort::VOLTAGE,
-                        DeviceDescriptors::LPF2_DEVICE_VOLTAGE_SENSOR);
+                        DeviceDescriptors::VOLTAGE_SENSOR);
             break;
         }
         default:
@@ -833,7 +827,7 @@ namespace Lpf2
         }
         return;
     unimplemented:
-        LPF2_LOG_E("Unimplemented: %i", propId);
+        LPF2_LOG_E("Unimplemented: %i, msg: %s", op, Utils::bytes_to_hexString(message).c_str());
         return;
     }
 
@@ -885,9 +879,8 @@ namespace Lpf2
         message.push_back(0x00);                       // hub id (not used)
         message.push_back((char)messageType);          // message type
         message.insert(message.end(), payload.begin(), payload.end());
-        LPF2_DEBUG_EXPR_V(
-            std::string hexMessage = Utils::bytes_to_hexString(message);
-            LPF2_LOG_V("write message (%d): %s", message.size(), hexMessage.c_str()););
+
+        LPF2_LOG_D("write message (%d): %s", message.size(), Utils::bytes_to_hexString(message).c_str());
 
         pCharacteristic->setValue(message);
         pCharacteristic->notify();
@@ -897,9 +890,9 @@ namespace Lpf2
     {
         if (!isConnected || !pCharacteristic)
             return;
-        LPF2_DEBUG_EXPR_V(
-            std::string hexMessage = Utils::bytes_to_hexString(message);
-            LPF2_LOG_V("write message (%d): %s", message.size(), hexMessage.c_str()););
+
+        LPF2_LOG_D("write message (%d): %s", message.size(), Utils::bytes_to_hexString(message).c_str());
+
         pCharacteristic->setValue(message);
         pCharacteristic->notify();
     }
@@ -915,6 +908,20 @@ namespace Lpf2
         updateHubProperty(HubPropertyType::BUTTON);
     }
 
+    void Lpf2::HubEmulation::msgTaskLoop()
+    {
+        NimBLEAttValue* value;
+        while(true)
+        {
+            if (xQueueReceive(m_msgQueue, &value, portMAX_DELAY))
+            {
+                std::vector<uint8_t> message(value->data(), value->data() + value->length());
+                processMessages(message);
+                delete value;
+            }
+        }
+    }
+
     void HubEmulation::update()
     {
         if (!isSubscribed)
@@ -928,13 +935,6 @@ namespace Lpf2
             {
                 initBuiltInDevices();
             }
-        }
-
-        MessagePacket pkt;
-        while(xQueueReceive(m_msgQueue, &pkt, 0))
-        {
-            std::vector message(pkt.data, pkt.data + pkt.lenght);
-            processMessages(message);
         }
 
         std::for_each(attachedPorts.begin(), attachedPorts.end(),
@@ -1043,7 +1043,7 @@ namespace Lpf2
     {
         if (m_msgQueue == nullptr)
         {
-            m_msgQueue = xQueueCreate(8, sizeof(MessagePacket)); // 8 items should be enough
+            m_msgQueue = xQueueCreate(16, sizeof(NimBLEAttValue*)); // 16 items should be enough
         }
         destroyBuiltIn();
         if (m_useBuiltInDevices)
@@ -1127,5 +1127,7 @@ namespace Lpf2
         NimBLEDevice::startAdvertising();
         LPF2_LOG_D("Characteristic defined! Now you can connect with your PoweredUp App!");
         m_firstUpdate = true;
+
+        xTaskCreate(msgTask, "msgTask", 4096, (void*)this, HUB_EMULATION_MSG_RECEIVE_TASK_PRIORITY, nullptr);
     }
 };

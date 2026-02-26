@@ -7,20 +7,20 @@ namespace Lpf2
 {
     namespace DeviceDescriptors
     {
-        extern const DeviceDescriptor LPF2_DEVICE_TECHNIC_MEDIUM_HUB_GEST_SENSOR;
-        extern const DeviceDescriptor LPF2_DEVICE_TECHNIC_MEDIUM_HUB_TILT_SENSOR;
-        extern const DeviceDescriptor LPF2_DEVICE_TECHNIC_MEDIUM_HUB_GYRO_SENSOR;
-        extern const DeviceDescriptor LPF2_DEVICE_TECHNIC_MEDIUM_HUB_ACCELEROMETER;
-        extern const DeviceDescriptor LPF2_DEVICE_HUB_LED;
-        extern const DeviceDescriptor LPF2_DEVICE_TRAIN_MOTOR;
-        extern const DeviceDescriptor LPF2_DEVICE_CURRENT_SENSOR;
-        extern const DeviceDescriptor LPF2_DEVICE_VOLTAGE_SENSOR;
-        extern const DeviceDescriptor LPF2_DEVICE_TECHNIC_MEDIUM_HUB_TEMPERATURE_SENSOR;
-        extern const DeviceDescriptor LPF2_DEVICE_TECHNIC_LARGE_ANGULAR_MOTOR_GREY;
-        extern const DeviceDescriptor LPF2_DEVICE_TECHNIC_DISTANCE_SENSOR;
-        extern const DeviceDescriptor LPF2_DEVICE_TECHNIC_MEDIUM_ANGULAR_MOTOR_GREY;
-        extern const DeviceDescriptor LPF2_DEVICE_TECHNIC_COLOR_SENSOR;
-        extern const DeviceDescriptor LPF2_DEVICE_TECHNIC_LARGE_LINEAR_MOTOR;
+        extern const DeviceDescriptor TECHNIC_MEDIUM_HUB_GEST_SENSOR;
+        extern const DeviceDescriptor TECHNIC_MEDIUM_HUB_TILT_SENSOR;
+        extern const DeviceDescriptor TECHNIC_MEDIUM_HUB_GYRO_SENSOR;
+        extern const DeviceDescriptor TECHNIC_MEDIUM_HUB_ACCELEROMETER;
+        extern const DeviceDescriptor HUB_LED;
+        extern const DeviceDescriptor TRAIN_MOTOR;
+        extern const DeviceDescriptor CURRENT_SENSOR;
+        extern const DeviceDescriptor VOLTAGE_SENSOR;
+        extern const DeviceDescriptor TECHNIC_MEDIUM_HUB_TEMPERATURE_SENSOR;
+        extern const DeviceDescriptor TECHNIC_LARGE_ANGULAR_MOTOR_GREY;
+        extern const DeviceDescriptor TECHNIC_DISTANCE_SENSOR;
+        extern const DeviceDescriptor TECHNIC_MEDIUM_ANGULAR_MOTOR_GREY;
+        extern const DeviceDescriptor TECHNIC_COLOR_SENSOR;
+        extern const DeviceDescriptor TECHNIC_LARGE_LINEAR_MOTOR;
     };
 
     class DeviceDescRegistry
