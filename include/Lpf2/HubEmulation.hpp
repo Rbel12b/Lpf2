@@ -20,12 +20,6 @@ namespace Lpf2
         friend class Lpf2HubServerCallbacks;
         friend class Lpf2HubCharacteristicCallbacks;
     private:
-
-        struct MessagePacket
-        {
-            uint8_t data[256];
-            uint8_t lenght = 0;
-        };
         QueueHandle_t m_msgQueue = nullptr;
 
         // Notification callbacks if values are written to the characteristic
@@ -39,7 +33,6 @@ namespace Lpf2
 
         void writeValue(MessageType messageType, std::vector<uint8_t> payload);
         void writeValue(std::vector<uint8_t> message);
-        void onMessageReceived(const MessagePacket &pkt);
 
         uint16_t connHandle;
 
@@ -111,6 +104,14 @@ namespace Lpf2
         void destroyBuiltIn();
 
         void processMessages(const std::vector<uint8_t>& message);
+
+        static void msgTask(void *pvParams)
+        {
+            HubEmulation *hubEmulation = static_cast<HubEmulation*>(pvParams);
+            hubEmulation->msgTaskLoop();
+        }
+
+        void msgTaskLoop();
 
     public:
         HubEmulation();

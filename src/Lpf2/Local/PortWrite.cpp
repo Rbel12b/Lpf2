@@ -56,6 +56,7 @@ namespace Lpf2::Local
         if (!forward)
             std::swap(pwr1, pwr2);
 
+        LPF2_LOG_D("startPower: %i -> %i, %i", (int8_t)pw, pwr1, pwr2);
         setPower(pwr1, pwr2);
     }
 
@@ -148,6 +149,14 @@ namespace Lpf2::Local
         {
             return 1;
         }
+        LPF2_LOG_D("writeData: mode %i, data size %i", modeNum, (int)data.size());
+        if (deviceIsAbsMotor(m_deviceType) && modeNum == 0 && data.size())
+        {
+            LPF2_LOG_D("startPower: %i", (int8_t)data[0]);
+            startPower((int8_t)data[0]);
+            return 0;
+        }
+
         if (modeNum >= modeData.size())
         {
             return 1;
