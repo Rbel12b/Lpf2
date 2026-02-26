@@ -145,8 +145,25 @@ namespace Lpf2::Virtual
             return m_desc.combos;
         }
 
-        int writeData(uint8_t mode, const std::vector<uint8_t> &data) override
+        void setUserData(void* data)
         {
+            m_userData = data;
+        }
+
+        using WriteDataCallback = std::function<int(uint8_t mode, const std::vector<uint8_t> &data, void* userData)>;
+
+        void setWriteDataCallback(WriteDataCallback callback)
+        {
+            m_writeDataCallback = callback;
+        };
+
+        virtual int writeData(uint8_t mode, const std::vector<uint8_t> &data) override
+        {
+            if (m_writeDataCallback)
+            {
+                return m_writeDataCallback(mode, data, m_userData);
+            }
+
             LPF2_LOG_I("[%02X] write mode %d: %s",
                        static_cast<uint8_t>(m_desc.type),
                        mode,
@@ -154,14 +171,14 @@ namespace Lpf2::Virtual
             return 0;
         }
 
-        void setPower(uint8_t pin1, uint8_t pin2) override
+        virtual void setPower(uint8_t pin1, uint8_t pin2) override
         {
             LPF2_LOG_I("[%02X] power %d %d",
                        static_cast<uint8_t>(m_desc.type),
                        pin1, pin2);
         }
 
-        int setMode(uint8_t mode) override
+        virtual int setMode(uint8_t mode) override
         {
             LPF2_LOG_I("[%02X] set mode %d",
                        static_cast<uint8_t>(m_desc.type),
@@ -169,7 +186,7 @@ namespace Lpf2::Virtual
             return 0;
         }
 
-        int setModeCombo(uint8_t idx) override
+        virtual int setModeCombo(uint8_t idx) override
         {
             LPF2_LOG_I("[%02X] set mode combo %d",
                        static_cast<uint8_t>(m_desc.type),
@@ -177,56 +194,56 @@ namespace Lpf2::Virtual
             return 0;
         }
 
-        void startPower(int8_t pw) override
+        virtual void startPower(int8_t pw) override
         {
             LPF2_LOG_I("[%02X] start power %d",
                        static_cast<uint8_t>(m_desc.type),
                        pw);
         }
 
-        void setAccTime(uint16_t accTime, AccelerationProfile accProfile) override
+        virtual void setAccTime(uint16_t accTime, AccelerationProfile accProfile) override
         {
             LPF2_LOG_I("[%02X] set acc time %d profile %d",
                        static_cast<uint8_t>(m_desc.type),
                        accTime, accProfile);
         }
 
-        void setDecTime(uint16_t decTime, AccelerationProfile decProfile) override
+        virtual void setDecTime(uint16_t decTime, AccelerationProfile decProfile) override
         {
             LPF2_LOG_I("[%02X] set dec time %d profile %d",
                        static_cast<uint8_t>(m_desc.type),
                        decTime, decProfile);
         }
 
-        void startSpeed(int8_t speed, uint8_t maxPower, uint8_t useProfile) override
+        virtual void startSpeed(int8_t speed, uint8_t maxPower, uint8_t useProfile) override
         {
             LPF2_LOG_I("[%02X] start speed %d max power %d profile %d",
                        static_cast<uint8_t>(m_desc.type),
                        speed, maxPower, useProfile);
         }
 
-        void startSpeedForTime(uint16_t time, int8_t speed, uint8_t maxPower, BrakingStyle endState, uint8_t useProfile) override
+        virtual void startSpeedForTime(uint16_t time, int8_t speed, uint8_t maxPower, BrakingStyle endState, uint8_t useProfile) override
         {
             LPF2_LOG_I("[%02X] start speed for time %d speed %d max power %d end state %d profile %d",
                        static_cast<uint8_t>(m_desc.type),
                        time, speed, maxPower, static_cast<uint8_t>(endState), useProfile);
         }
 
-        void startSpeedForDegrees(uint32_t degrees, int8_t speed, uint8_t maxPower, BrakingStyle endState, uint8_t useProfile) override
+        virtual void startSpeedForDegrees(uint32_t degrees, int8_t speed, uint8_t maxPower, BrakingStyle endState, uint8_t useProfile) override
         {
             LPF2_LOG_I("[%02X] start speed for degrees %d speed %d max power %d end state %d profile %d",
                        static_cast<uint8_t>(m_desc.type),
                        degrees, speed, maxPower, static_cast<uint8_t>(endState), useProfile);
         }
 
-        void gotoAbsPosition(int32_t absPos, uint8_t speed, uint8_t maxPower, BrakingStyle endState, uint8_t useProfile) override
+        virtual void gotoAbsPosition(int32_t absPos, uint8_t speed, uint8_t maxPower, BrakingStyle endState, uint8_t useProfile) override
         {
             LPF2_LOG_I("[%02X] goto abs position %d speed %d max power %d end state %d profile %d",
                        static_cast<uint8_t>(m_desc.type),
                        absPos, speed, maxPower, static_cast<uint8_t>(endState), useProfile);
         }
 
-        void presetEncoder(int32_t pos) override
+        virtual void presetEncoder(int32_t pos) override
         {
             LPF2_LOG_I("[%02X] preset encoder %d",
                        static_cast<uint8_t>(m_desc.type),
@@ -235,5 +252,8 @@ namespace Lpf2::Virtual
 
     private:
         const DeviceDescriptor &m_desc;
+
+        void *m_userData = nullptr;
+        WriteDataCallback m_writeDataCallback = nullptr;
     };
 }; // namespace Lpf2
