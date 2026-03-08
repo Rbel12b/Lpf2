@@ -201,6 +201,8 @@ it is also possible to [use a device manager](#device-manager) with a remote por
 
 ### Local ports
 
+Local ports require a motor driver (a H-bridge), and 47k pull-up resistors for the ID pins.
+
 Examples:
 
 - [Local port](examples/LocalPort/LocalPort.cpp)
