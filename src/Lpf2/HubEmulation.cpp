@@ -87,6 +87,7 @@ namespace Lpf2
             LPF2_LOG_D("read request");
         }
     };
+
     void HubEmulation::processMessages(const std::vector<uint8_t>& message)
     {
         MessageType type = (MessageType)message[(byte)MessageHeader::MESSAGE_TYPE];
@@ -612,7 +613,7 @@ namespace Lpf2
             break;
         }
 
-        writeValue(MessageType::PORT_OUTPUT_COMMAND_FEEDBACK, {(uint8_t)portNum, 0x08});
+        writeValue(MessageType::PORT_OUTPUT_COMMAND_FEEDBACK, {(uint8_t)portNum, 0x0A});
     }
 
     void HubEmulation::checkPort(PortNum portNum, Port *port)
