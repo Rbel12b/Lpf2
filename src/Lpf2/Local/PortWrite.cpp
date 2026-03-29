@@ -170,7 +170,10 @@ namespace Lpf2::Local
         if (deviceIsAbsMotor(m_deviceType) && modeNum == 0 && data.size())
         {
             LPF2_LOG_D("startPower: %i", (int8_t)data[0]);
-            startPower((int8_t)data[0]);
+            int8_t speed = data[0];
+            if (speed == 127)
+                speed = 0;
+            startPower(speed);
             return 0;
         }
 

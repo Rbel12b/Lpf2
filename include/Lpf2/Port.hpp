@@ -1,6 +1,6 @@
 /**
  *  Copyright (C) 2026 - Rbel12b
- * 
+ *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU Affero General Public License as
  *  published by the Free Software Foundation, either version 3 of the
@@ -26,6 +26,7 @@ namespace Lpf2
     class Port
     {
         friend class HubEmulation;
+
     public:
         virtual void update() = 0;
 
@@ -136,10 +137,10 @@ namespace Lpf2
 
         static float getValue(const Mode &modeData, const std::vector<uint8_t> &raw, uint8_t dataSet);
         static float getValue(const Mode &modeData, uint8_t dataSet);
-        float getValue(uint8_t modeNum, const std::vector<uint8_t> &raw, uint8_t dataSet)  const;
+        float getValue(uint8_t modeNum, const std::vector<uint8_t> &raw, uint8_t dataSet) const;
         float getValue(uint8_t modeNum, uint8_t dataSet) const;
         static std::string formatValue(float value, const Mode &modeData);
-        static std::string convertValue(const Mode& modeData);
+        static std::string convertValue(const Mode &modeData);
         std::string convertValue(uint8_t modeNum) const
         {
             if (modeNum >= modeData.size())
@@ -200,7 +201,7 @@ namespace Lpf2
          * @brief convert speed to a 8 bit raw value
          * @param speed -100..100
          */
-        uint8_t speedToRaw(int8_t speed)
+        static uint8_t speedToRaw(int8_t speed)
         {
             uint8_t raw;
             if (speed == 0)
@@ -216,6 +217,29 @@ namespace Lpf2
                 raw = map(-speed, 0, 100, 255, 128);
             }
             return raw;
+        }
+
+        /**
+         * @brief convert 8 bit raw value to speed
+         * @param raw raw value
+         * @returns speed -100..100
+         */
+        static int8_t rawToSpeed(uint8_t raw)
+        {
+            int8_t speed;
+            if (raw == 127)
+            {
+                speed = 0;
+            }
+            else if (raw < 127)
+            {
+                speed = map(raw, 0, 126, 0, 100);
+            }
+            else
+            {
+                speed = map(raw, 255, 128, -100, 0);
+            }
+            return speed;
         }
 
     protected:
