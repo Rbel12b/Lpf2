@@ -161,7 +161,7 @@ namespace Lpf2
             std::vector<uint8_t> payload;
             payload.push_back((uint8_t)MessageType::HUB_PROPERTIES);
             payload.push_back((uint8_t)GenericErrorType::CMD_NOT_RECOGNIZED);
-            writeValue(MessageType::GENERIC_ERROR_MESSAGES, payload);
+            writeResponse(MessageType::GENERIC_ERROR_MESSAGES, payload);
         }
         auto &prop = hubProperty[(uint8_t)propId];
         LPF2_LOG_D("Sent prop update: %s", Hub::getHubPropStr(propId, prop).c_str());
@@ -169,7 +169,7 @@ namespace Lpf2
         payload.push_back((uint8_t)propId);
         payload.push_back((uint8_t)HubPropertyOperation::UPDATE_UPSTREAM);
         payload.insert(payload.end(), prop.begin(), prop.end());
-        writeValue(MessageType::HUB_PROPERTIES, payload);
+        writeResponse(MessageType::HUB_PROPERTIES, payload);
     }
 
     void HubEmulation::resetHubProperty(HubPropertyType propId)
@@ -324,7 +324,7 @@ namespace Lpf2
         payload.push_back((uint8_t)alert);
         payload.push_back((uint8_t)HubAlertOperation::UPDATE_UPSTREAM);
         payload.push_back(hubAlert[(uint8_t)alert] ? 255 : 0);
-        writeValue(MessageType::HUB_ALERTS, payload);
+        writeResponse(MessageType::HUB_ALERTS, payload);
     }
 
     void HubEmulation::resetHubAlerts()
@@ -425,7 +425,7 @@ namespace Lpf2
             return;
         }
 
-        writeValue(MessageType::PORT_INFORMATION, payload);
+        writeResponse(MessageType::PORT_INFORMATION, payload);
     }
 
     void HubEmulation::handlePortModeInformationRequestMessage(std::vector<uint8_t> message)
@@ -519,7 +519,7 @@ namespace Lpf2
             break;
         }
 
-        writeValue(MessageType::PORT_MODE_INFORMATION, payload);
+        writeResponse(MessageType::PORT_MODE_INFORMATION, payload);
     }
 
     void HubEmulation::handlePortInputFormatSetupSingleMessage(std::vector<uint8_t> message)
@@ -542,9 +542,9 @@ namespace Lpf2
 
         m_portSetupSingle[portNum][modeNum] = setup;
 
-        message[2] = (uint8_t)MessageType::PORT_INPUT_FORMAT_SINGLE;
+        message.erase(message.begin(), message.begin() + 2);
 
-        writeValue(message);
+        writeResponse(MessageType::PORT_INPUT_FORMAT_SINGLE, message);
     }
 
     void Lpf2::HubEmulation::handlePortOutputCommandMessage(std::vector<uint8_t> message)
@@ -613,7 +613,7 @@ namespace Lpf2
             break;
         }
 
-        writeValue(MessageType::PORT_OUTPUT_COMMAND_FEEDBACK, {(uint8_t)portNum, 0x0A});
+        writeResponse(MessageType::PORT_OUTPUT_COMMAND_FEEDBACK, {(uint8_t)portNum, 0x0A});
     }
 
     void HubEmulation::checkPort(PortNum portNum, Port *port)
@@ -632,7 +632,7 @@ namespace Lpf2
                 payload.push_back((uint8_t)port->getDeviceType());
                 payload.push_back(0x00);
                 payload.insert(payload.end(), {0x00, 0x00, 0x00, 0x10, 0x00, 0x00, 0x00, 0x10}); // version numbers
-                writeValue(MessageType::HUB_ATTACHED_IO, payload);
+                writeResponse(MessageType::HUB_ATTACHED_IO, payload);
             }
             else
             {
@@ -640,7 +640,7 @@ namespace Lpf2
                 std::vector<uint8_t> payload;
                 payload.push_back((char)portNum);
                 payload.push_back((char)IOEvent::DETACHED_IO);
-                writeValue(MessageType::HUB_ATTACHED_IO, payload);
+                writeResponse(MessageType::HUB_ATTACHED_IO, payload);
             }
             vTaskDelay(1);
         }
@@ -679,7 +679,7 @@ namespace Lpf2
         
         auto &raw = port->modeData[setup.mode].rawData;
         message.insert(message.end(), raw.begin(), raw.end());
-        writeValue(MessageType::PORT_VALUE_SINGLE, message);
+        writeResponse(MessageType::PORT_VALUE_SINGLE, message);
     }
 
     void HubEmulation::initBuiltInPorts()
@@ -830,14 +830,12 @@ namespace Lpf2
         {
             LPF2_LOG_D("Enable Hub prop: %i", (int)propId);
             updateHubPropertyEnabled[(uint8_t)propId] = true;
-            sendHubPropertyUpdate(propId);
             break;
         }
         case HubPropertyOperation::RESET_DOWNSTREAM:
         {
             LPF2_LOG_D("Reset Hub prop: %i", (int)propId);
             resetHubProperty(propId);
-            sendHubPropertyUpdate(propId);
             break;
         }
         default:
@@ -888,10 +886,11 @@ namespace Lpf2
         attachedPorts[portNum] = port;
     }
 
-    void HubEmulation::writeValue(MessageType messageType, std::vector<uint8_t> payload)
+    void HubEmulation::writeResponse(MessageType messageType, std::vector<uint8_t> payload)
     {
         if (!isConnected || !pCharacteristic)
             return;
+        vTaskDelay(10); // Do not overload client
         std::vector<uint8_t> message;
         message.push_back((char)(payload.size() + 3)); // length of message
         message.push_back(0x00);                       // hub id (not used)
