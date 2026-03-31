@@ -48,7 +48,7 @@ namespace Lpf2
         BLEAddress *_hubAddress = nullptr;
         BLEAdvertising *_pAdvertising;
 
-        void writeValue(MessageType messageType, std::vector<uint8_t> payload);
+        void writeResponse(MessageType messageType, std::vector<uint8_t> payload);
         void writeValue(std::vector<uint8_t> message);
 
         uint16_t connHandle;
