@@ -162,9 +162,9 @@ namespace Lpf2::Devices
         Mode m_mode;
         union
         {
-            uint16_t m_absPos = 0;
+            int32_t m_absPos = 0;
             uint64_t m_relPos;
-            uint16_t m_deg;
+            int32_t m_deg;
         };
         uint8_t m_moveSpeed = 0;
         int64_t m_currentRelPos = 0;

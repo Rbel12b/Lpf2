@@ -25,12 +25,12 @@ namespace Lpf2::Local
 {
     struct Message
     {
-        uint8_t header;
-        uint8_t length;
+        uint8_t header = 0;
+        uint8_t length = 0;
         std::vector<uint8_t> data;
-        uint8_t checksum;
-        uint8_t msg;
-        uint8_t cmd;
+        uint8_t checksum = 0;
+        uint8_t msg = 0;
+        uint8_t cmd = 0;
         bool system = false;
     };
 

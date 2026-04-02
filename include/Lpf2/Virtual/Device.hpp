@@ -28,6 +28,7 @@ namespace Lpf2::Virtual
     class Device
     {
     public:
+        virtual ~Device() = default;
         virtual DeviceType getDeviceType() const = 0;
         virtual const std::vector<Mode> &getModes() const = 0;
         virtual std::vector<uint16_t> getModeCombos() const = 0;

@@ -299,6 +299,7 @@ namespace Lpf2::Local
                     comboNum = i;
                 }
             }
+            break;
         }
         case INFO_FORMAT:
         {

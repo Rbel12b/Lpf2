@@ -548,6 +548,8 @@ namespace Lpf2
                 mode.SImax = max;
                 break;
             }
+            default:
+                break;
             }
             break;
         }
@@ -1070,7 +1072,7 @@ namespace Lpf2
         /** No client to reuse? Create a new one. */
         if (!pClient)
         {
-            if (NimBLEDevice::getCreatedClientCount() >= NIMBLE_MAX_CONNECTIONS)
+            if (NimBLEDevice::getCreatedClientCount() >= MYNEWT_VAL(BLE_MAX_CONNECTIONS))
             {
                 LPF2_LOG_W("max clients reached - no more connections available: %d", NimBLEDevice::getCreatedClientCount());
                 return false;

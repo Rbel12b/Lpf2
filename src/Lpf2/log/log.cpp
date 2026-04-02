@@ -37,7 +37,7 @@ extern "C" const char *pathToFileName(const char *path)
 
 #endif // LPF2_LOG_IMPL
 
-xQueueHandle logMutex = xSemaphoreCreateMutex();
+QueueHandle_t logMutex = xSemaphoreCreateMutex();
 
 extern "C" int lpf2_log_printf(const char *fmt, ...)
 {

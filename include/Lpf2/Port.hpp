@@ -28,6 +28,7 @@ namespace Lpf2
         friend class HubEmulation;
 
     public:
+        virtual ~Port() = default;
         virtual void update() = 0;
 
         virtual int writeData(uint8_t modeNum, const std::vector<uint8_t> &data) = 0;
