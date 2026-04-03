@@ -26,10 +26,15 @@ namespace Lpf2::Local
     std::vector<Message> Parser::update()
     {
         std::vector<Message> messages;
-        while (m_serial->available())
+        int available = m_serial->available();
+        if (available <= 0)
         {
-            uint8_t b = m_serial->read();
-            buffer.push_back(b);
+            return messages;
+        }
+        else
+        {
+            buffer.resize(buffer.size() + available);
+            m_serial->read(buffer.data() + buffer.size() - available, available);
             m_lastReceivedTime = LPF2_GET_TIME();
         }
 

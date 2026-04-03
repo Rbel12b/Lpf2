@@ -63,6 +63,14 @@ namespace Lpf2::Local
         virtual int read() = 0;
 
         /**
+         * @brief Read lenght bytes from the UART port into a buffer.
+         * @param data Pointer to the buffer where read bytes will be stored.
+         * @param length The maximum number of bytes to read.
+         * @return The number of bytes actually read.
+         */
+        virtual size_t read(const uint8_t *data, size_t length) = 0;
+
+        /**
          * @brief Get the number of bytes available to read from the UART receive buffer.
          * @return The number of available bytes ready to read.
          */

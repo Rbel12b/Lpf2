@@ -55,12 +55,17 @@ esp_err_t lpf2_log_init(void)
 extern "C" int lpf2_log_printf(const char *fmt, ...)
 {
     xSemaphoreTake(logMutex, portMAX_DELAY);
+    if (!fmt || strlen(fmt) == 0 || !usb_serial_jtag_is_connected())
+    {
+        xSemaphoreGive(logMutex);
+        return 0;
+    }
     va_list args;
     va_start(args, fmt);
     char buffer[512];
     int len = vsnprintf(buffer, sizeof(buffer), fmt, args);
     va_end(args);
-    usb_serial_jtag_write_bytes((const uint8_t *)buffer, len, portMAX_DELAY);
+    usb_serial_jtag_write_bytes((const uint8_t *)buffer, len, 10);
     xSemaphoreGive(logMutex);
     return len;
 }
