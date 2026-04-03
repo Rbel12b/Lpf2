@@ -23,6 +23,7 @@
 #include "Lpf2/Remote/Port_internal.hpp"
 #include <sstream>
 #include <iomanip>
+#include <algorithm>
 
 namespace Lpf2
 {
@@ -131,8 +132,6 @@ namespace Lpf2
 
     /**
      * @brief Write value to the remote characteristic
-     * @param [in] command byte array which contains the ble command
-     * @param [in] size length of the command byte array
      */
     void Hub::writeValue(MessageType type, const std::vector<uint8_t> &data)
     {
@@ -311,8 +310,8 @@ namespace Lpf2
         {
             return;
         }
-        HubPropertyOperation op = (HubPropertyOperation)message[(byte)MessageByte::OPERATION];
-        HubPropertyType propId = (HubPropertyType)message[(byte)MessageByte::PROPERTY];
+        HubPropertyOperation op = (HubPropertyOperation)message[(uint8_t)MessageByte::OPERATION];
+        HubPropertyType propId = (HubPropertyType)message[(uint8_t)MessageByte::PROPERTY];
         if (propId >= HubPropertyType::END)
         {
             LPF2_LOG_E("Invalid HUB property.");
@@ -349,8 +348,8 @@ namespace Lpf2
         {
             return;
         }
-        GenericErrorType errorType = (GenericErrorType)message[(byte)MessageByte::OPERATION];
-        MessageType msgType = (MessageType)message[(byte)MessageByte::PROPERTY];
+        GenericErrorType errorType = (GenericErrorType)message[(uint8_t)MessageByte::OPERATION];
+        MessageType msgType = (MessageType)message[(uint8_t)MessageByte::PROPERTY];
 
         if (pendingRequest.msgType == msgType)
         {
@@ -379,8 +378,8 @@ namespace Lpf2
         {
             return;
         }
-        PortNum portNum = (PortNum)message[(byte)MessageByte::PORT_ID];
-        IOEvent event = (IOEvent)message[(byte)MessageByte::OPERATION];
+        PortNum portNum = (PortNum)message[(uint8_t)MessageByte::PORT_ID];
+        IOEvent event = (IOEvent)message[(uint8_t)MessageByte::OPERATION];
 
         switch (event)
         {
@@ -440,8 +439,8 @@ namespace Lpf2
         {
             return;
         }
-        PortNum portNum = (PortNum)message[(byte)MessageByte::PORT_ID];
-        uint8_t infoType = message[(byte)MessageByte::OPERATION];
+        PortNum portNum = (PortNum)message[(uint8_t)MessageByte::PORT_ID];
+        uint8_t infoType = message[(uint8_t)MessageByte::OPERATION];
 
         if (pendingRequest.msgType == MessageType::PORT_INFORMATION_REQUEST)
         {
@@ -491,9 +490,9 @@ namespace Lpf2
         {
             return;
         }
-        PortNum portNum = (PortNum)message[(byte)MessageByte::PORT_ID];
-        uint8_t modeNum = message[(byte)MessageByte::OPERATION];
-        ModeInfoType infoType = (ModeInfoType)message[(byte)MessageByte::PAYLOAD];
+        PortNum portNum = (PortNum)message[(uint8_t)MessageByte::PORT_ID];
+        uint8_t modeNum = message[(uint8_t)MessageByte::OPERATION];
+        ModeInfoType infoType = (ModeInfoType)message[(uint16_t)MessageByte::PAYLOAD];
 
         if (pendingRequest.msgType == MessageType::PORT_MODE_INFORMATION_REQUEST)
         {
@@ -626,8 +625,8 @@ namespace Lpf2
 
         PortInputFormatSingle inputFormat;
 
-        inputFormat.portNum = (PortNum)message[(byte)MessageByte::PORT_ID];
-        inputFormat.mode = message[(byte)MessageByte::OPERATION];
+        inputFormat.portNum = (PortNum)message[(uint8_t)MessageByte::PORT_ID];
+        inputFormat.mode = message[(uint8_t)MessageByte::OPERATION];
         std::memcpy(&inputFormat.delta, message.data() + 5, 4);
         inputFormat.notify = message[9];
 
@@ -643,7 +642,7 @@ namespace Lpf2
             return;
         }
 
-        PortNum portNum = (PortNum)message[(byte)MessageByte::PORT_ID];
+        PortNum portNum = (PortNum)message[(uint16_t)MessageByte::PORT_ID];
         if (!m_portInputFormatMap.count(portNum))
         {
             return;

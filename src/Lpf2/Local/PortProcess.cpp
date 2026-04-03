@@ -184,7 +184,6 @@ namespace Lpf2::Local
                 m_deviceConnected = false;
             }
             resetDevice();
-            sendACK(true);
             m_startRec = now;
         }
 
@@ -302,8 +301,7 @@ namespace Lpf2::Local
 
     void Port::resetDevice()
     {
-        // enterUartState();
-        // return;
+        LPF2_LOG_D("Resetting device.");
         m_pwm->off();
         {
             Utils::MutexLock lock(m_serialMutex);

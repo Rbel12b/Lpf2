@@ -21,7 +21,7 @@
 #include "Lpf2/LWPConst.hpp"
 #include "Lpf2/Util/Values.hpp"
 #include "Lpf2/Device.hpp"
-#include <vector>
+#include <functional>
 
 namespace Lpf2::Virtual
 {

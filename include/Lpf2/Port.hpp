@@ -211,11 +211,11 @@ namespace Lpf2
             }
             else if (speed > 0)
             {
-                raw = map(speed, 0, 100, 0, 126);
+                raw = Utils::map(speed, 0, 100, 0, 126);
             }
             else
             {
-                raw = map(-speed, 0, 100, 255, 128);
+                raw = Utils::map(-speed, 0, 100, 255, 128);
             }
             return raw;
         }
@@ -234,11 +234,11 @@ namespace Lpf2
             }
             else if (raw < 127)
             {
-                speed = map(raw, 0, 126, 0, 100);
+                speed = Utils::map(raw, 0, 126, 0, 100);
             }
             else
             {
-                speed = map(raw, 255, 128, -100, 0);
+                speed = Utils::map(raw, 255, 128, -100, 0);
             }
             return speed;
         }

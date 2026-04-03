@@ -17,14 +17,11 @@
 
 #pragma once
 
-#define LPF2_LOG_LEVEL 4
-
-#include <esp_timer.h>
 #include <string>
 #include <vector>
-#include "Lpf2/log/log.h"
-#include "Lpf2/Util/Utils.hpp"
+#include <cstdint>
 
-#define LPF2_GET_TIME() (((size_t)esp_timer_get_time() / 1000))
-
-#define HUB_EMULATION_MSG_RECEIVE_TASK_PRIORITY 20
+namespace Lpf2::Utils
+{
+    float map(float x, float in_min, float in_max, float out_min, float out_max);
+} // namespace Lpf2::Utils

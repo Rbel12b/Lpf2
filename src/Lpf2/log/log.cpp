@@ -16,16 +16,18 @@
  *  */
 
 #include "Lpf2/log/log.h"
-#include <Arduino.h>
-#include <freertos/FreeRTOS.h>
-#include <freertos/semphr.h>
+#include "driver/usb_serial_jtag.h"
+#include "freertos/semphr.h"
+#include <stdarg.h>
+#include <stdio.h>
+#include <cstring>
 
 #ifdef LPF2_LOG_IMPL
 
-extern "C" const char *pathToFileName(const char *path)
+extern "C" const char *lpf2_pathToFileName(const char *path)
 {
     int i = 0;
-    for (int i = strlen(path) - 1; i >= 0; i--)
+    for (i = strlen(path) - 1; i >= 0; i--)
     {
         if (path[i] == '/' || path[i] == '\\')
         {
@@ -38,6 +40,17 @@ extern "C" const char *pathToFileName(const char *path)
 #endif // LPF2_LOG_IMPL
 
 QueueHandle_t logMutex = xSemaphoreCreateMutex();
+static usb_serial_jtag_driver_config_t usb_jtag_cfg = USB_SERIAL_JTAG_DRIVER_CONFIG_DEFAULT();
+
+esp_err_t lpf2_log_init(void)
+{
+    esp_err_t ret = usb_serial_jtag_driver_install(&usb_jtag_cfg);
+    if (ret != ESP_OK) {
+        return ret;
+    }
+
+    return ESP_OK;
+}
 
 extern "C" int lpf2_log_printf(const char *fmt, ...)
 {
@@ -47,7 +60,7 @@ extern "C" int lpf2_log_printf(const char *fmt, ...)
     char buffer[512];
     int len = vsnprintf(buffer, sizeof(buffer), fmt, args);
     va_end(args);
-    Serial.write((uint8_t *)buffer, len);
+    usb_serial_jtag_write_bytes((const uint8_t *)buffer, len, portMAX_DELAY);
     xSemaphoreGive(logMutex);
     return len;
 }

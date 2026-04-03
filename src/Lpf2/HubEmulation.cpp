@@ -22,6 +22,7 @@
 #include "Lpf2/Virtual/Port.hpp"
 #include "Lpf2/Virtual/Device.hpp"
 #include "Lpf2/DeviceDescLib.hpp"
+#include <algorithm>
 
 namespace Lpf2
 {
@@ -90,9 +91,9 @@ namespace Lpf2
 
     void HubEmulation::processMessages(const std::vector<uint8_t>& message)
     {
-        MessageType type = (MessageType)message[(byte)MessageHeader::MESSAGE_TYPE];
+        MessageType type = (MessageType)message[(uint8_t)MessageHeader::MESSAGE_TYPE];
         LPF2_LOG_D("message received (%d): %s", message.size(), Utils::bytes_to_hexString(message).c_str());
-        LPF2_LOG_V("message type: %d", (byte)type);
+        LPF2_LOG_V("message type: %d", (uint8_t)type);
 
         switch (type)
         {
@@ -343,8 +344,8 @@ namespace Lpf2
             LPF2_LOG_E("Unexpected message length: %i", message.size());
             return;
         }
-        HubAlertType alertType = (HubAlertType)message[(byte)MessageByte::PROPERTY];
-        HubAlertOperation alertOperation = (HubAlertOperation)message[(byte)MessageByte::OPERATION];
+        HubAlertType alertType = (HubAlertType)message[(uint8_t)MessageByte::PROPERTY];
+        HubAlertOperation alertOperation = (HubAlertOperation)message[(uint8_t)MessageByte::OPERATION];
         if (alertType >= HubAlertType::END)
         {
             LPF2_LOG_E("Invalid HUB alert type requested.");
@@ -793,8 +794,8 @@ namespace Lpf2
             LPF2_LOG_E("Unexpected message length: %i", message.size());
             return;
         }
-        HubPropertyOperation op = (HubPropertyOperation)message[(byte)MessageByte::OPERATION];
-        HubPropertyType propId = (HubPropertyType)message[(byte)MessageByte::PROPERTY];
+        HubPropertyOperation op = (HubPropertyOperation)message[(uint8_t)MessageByte::OPERATION];
+        HubPropertyType propId = (HubPropertyType)message[(uint8_t)MessageByte::PROPERTY];
         if (propId >= HubPropertyType::END)
         {
             LPF2_LOG_E("Invalid HUB property requested.");
