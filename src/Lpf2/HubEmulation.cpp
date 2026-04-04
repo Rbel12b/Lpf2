@@ -544,7 +544,7 @@ namespace Lpf2
 
         m_portSetupSingle[portNum][modeNum] = setup;
 
-        message.erase(message.begin(), message.begin() + 2);
+        message.erase(message.begin(), message.begin() + 3);
 
         writeResponse(MessageType::PORT_INPUT_FORMAT_SINGLE, message);
     }
