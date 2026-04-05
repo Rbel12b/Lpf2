@@ -621,9 +621,9 @@ namespace Lpf2
     void HubEmulation::checkPort(PortNum portNum, Port *port)
     {
         port->ensureRawDataSize();
-        if (connectedDevices[portNum] != port->deviceConnected())
+        if (connectedDevices[portNum] != port->isDeviceConnected())
         {
-            connectedDevices[portNum] = port->deviceConnected();
+            connectedDevices[portNum] = port->isDeviceConnected();
 
             if (connectedDevices[portNum])
             {

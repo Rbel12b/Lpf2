@@ -72,7 +72,7 @@ namespace Lpf2::Local
 
         int writeData(uint8_t modeNum, const std::vector<uint8_t> &data) override;
         void setPower(uint8_t pin1, uint8_t pin2);
-        bool deviceConnected() override;
+        bool isDeviceConnected() override;
 
         int setMode(uint8_t mode) override;
         int setModeCombo(uint8_t idx) override;
@@ -113,7 +113,7 @@ namespace Lpf2::Local
         LPF2_STATUS m_new_status = LPF2_STATUS::STATUS_ERR;
         LPF2_STATUS m_lastStatus = LPF2_STATUS::STATUS_ERR;
         uint32_t baud = 2400;
-        bool m_deviceConnected = false; // do not rely on this, use deviceConnected() instead
+        bool m_deviceConnected = false; // do not rely on this, use isDeviceConnected() instead
         bool nextModeExt = false;
         bool m_dumb = false;
         IO &m_IO;

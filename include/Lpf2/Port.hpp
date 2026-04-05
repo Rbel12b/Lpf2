@@ -121,34 +121,34 @@ namespace Lpf2
 
         /**
          * @brief Select the mode of the connected device,
-         * has no effect when deviceConnected() == false
+         * has no effect when isDeviceConnected() == false
          * @returns 0 if succesful
          */
         virtual int setMode(uint8_t mode) = 0;
 
         /**
          * @brief Set the mode combination of the connected device,
-         * has no effect when deviceConnected() == false
+         * has no effect when isDeviceConnected() == false
          * @param idx the mode combo index (from getModeCombos())
          * @returns 0 if succesful
          */
         virtual int setModeCombo(uint8_t idx) = 0;
 
-        virtual bool deviceConnected() = 0;
+        virtual bool isDeviceConnected() = 0;
 
         static float getValue(const Mode &modeData, const std::vector<uint8_t> &raw, uint8_t dataSet);
         static float getValue(const Mode &modeData, uint8_t dataSet);
         float getValue(uint8_t modeNum, const std::vector<uint8_t> &raw, uint8_t dataSet) const;
         float getValue(uint8_t modeNum, uint8_t dataSet) const;
         static std::string formatValue(float value, const Mode &modeData);
-        static std::string convertValue(const Mode &modeData);
-        std::string convertValue(uint8_t modeNum) const
+        static std::string getValueStr(const Mode &modeData);
+        std::string getValueStr(uint8_t modeNum) const
         {
             if (modeNum >= modeData.size())
             {
                 return "<mode not found>";
             }
-            return convertValue(modeData[modeNum]);
+            return getValueStr(modeData[modeNum]);
         }
 
         DeviceType getDeviceType() const { return m_deviceType; }

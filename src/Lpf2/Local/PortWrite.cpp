@@ -163,7 +163,7 @@ namespace Lpf2::Local
 
     int Port::writeData(uint8_t modeNum, const std::vector<uint8_t> &data)
     {
-        if (!deviceConnected())
+        if (!isDeviceConnected())
         {
             return 1;
         }

@@ -31,7 +31,7 @@ namespace Lpf2::Virtual
         return m_device->writeData(modeNum, data);
     }
 
-    bool Port::deviceConnected()
+    bool Port::isDeviceConnected()
     {
         return (bool)m_device;
     }

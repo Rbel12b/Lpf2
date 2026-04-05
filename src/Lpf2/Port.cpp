@@ -186,7 +186,7 @@ namespace Lpf2
         return str;
     }
 
-    std::string Port::convertValue(const Mode& modeData)
+    std::string Port::getValueStr(const Mode& modeData)
     {
         std::string result;
 

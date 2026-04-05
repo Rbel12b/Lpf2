@@ -964,7 +964,7 @@ namespace Lpf2
         }
 
         if (attachedPort.second != DeviceType::UNKNOWNDEVICE &&
-            !(remotePorts[attachedPort.first]->deviceConnected()))
+            !(remotePorts[attachedPort.first]->isDeviceConnected()))
         {
             LPF2_LOG_D("Starting requests for: port: 0x%02X, dev: 0x%02X",
                 (int)attachedPort.first, (int)attachedPort.second);

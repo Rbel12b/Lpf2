@@ -61,7 +61,7 @@ namespace Lpf2::Local
 #endif
     }
 
-    bool Port::deviceConnected()
+    bool Port::isDeviceConnected()
     {
         if (m_deviceType == DeviceType::UNKNOWNDEVICE)
         {
