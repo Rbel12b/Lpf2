@@ -150,6 +150,7 @@ namespace Lpf2::Local
     void Port::sendACK(bool NACK)
     {
         Utils::MutexLock lock(m_serialMutex);
+        LPF2_LOG_V("Sending %s", NACK ? "NACK" : "ACK");
         m_serial->write(NACK ? BYTE_NACK : BYTE_ACK);
         m_serial->flush();
     }
@@ -162,7 +163,7 @@ namespace Lpf2::Local
 
     int Port::writeData(uint8_t modeNum, const std::vector<uint8_t> &data)
     {
-        if (!deviceConnected())
+        if (!isDeviceConnected())
         {
             return 1;
         }

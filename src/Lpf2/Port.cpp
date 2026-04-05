@@ -21,6 +21,7 @@
 #include <cstring>
 #include <sstream>
 #include <iomanip>
+#include <cmath>
 
 namespace Lpf2
 {
@@ -185,7 +186,7 @@ namespace Lpf2
         return str;
     }
 
-    std::string Port::convertValue(const Mode& modeData)
+    std::string Port::getValueStr(const Mode& modeData)
     {
         std::string result;
 
@@ -260,6 +261,7 @@ namespace Lpf2
         case DeviceType::TECHNIC_MEDIUM_ANGULAR_MOTOR_GREY:
         case DeviceType::MEDIUM_LINEAR_MOTOR:
         case DeviceType::SIMPLE_MEDIUM_LINEAR_MOTOR:
+        case DeviceType::TRAIN_MOTOR:
             return true;
         default:
             return false;

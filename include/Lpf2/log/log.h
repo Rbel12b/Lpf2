@@ -17,22 +17,49 @@
 #define __LPF2_LOG_H__
 
 #include "Lpf2/config.hpp"
-#include <Arduino.h>
 
 #ifdef __cplusplus
 extern "C"
 {
 #endif
 
-#ifndef LPF2_LOG_LEVEL
-#define LPF2_LOG_LEVEL 2
+#ifndef CONFIG_LPF2_LOG_LEVEL_RUNTIME
+#define CONFIG_LPF2_LOG_LEVEL_RUNTIME 1
 #endif
 
-#if LPF2_LOG_LEVEL > 0
-#define LPF2_LOG_E(format, ...) lpf2_log_printf(ARDUHAL_LOG_FORMAT(E, format), ##__VA_ARGS__)
+#if CONFIG_LPF2_LOG_LEVEL_RUNTIME
+#define LPF2_LOG_LEVEL_USE 5
+#else
+#ifndef CONFIG_LPF2_LOG_LEVEL
+#define CONFIG_LPF2_LOG_LEVEL 2
+#endif
+#define LPF2_LOG_LEVEL_USE CONFIG_LPF2_LOG_LEVEL
+#endif
+
+#if CONFIG_LPF2_LOG_LEVEL_RUNTIME
+#define LPF2_LOG_CHECK_RUNTIME_LEVEL(level) if (lpf2_get_runtime_log_level() < level) break
+#else
+#define LPF2_LOG_CHECK_RUNTIME_LEVEL(level)
+#endif
+
+#define LPF2_LOG_LEVEL_NONE (0)
+#define LPF2_LOG_LEVEL_ERROR (1)
+#define LPF2_LOG_LEVEL_WARN (2)
+#define LPF2_LOG_LEVEL_INFO (3)
+#define LPF2_LOG_LEVEL_DEBUG (4)
+#define LPF2_LOG_LEVEL_VERBOSE (5)
+
+#if LPF2_LOG_LEVEL_USE >= LPF2_LOG_LEVEL_ERROR
+#define LPF2_LOG_E(format, ...) \
+    do \
+    {  \
+        LPF2_LOG_CHECK_RUNTIME_LEVEL(LPF2_LOG_LEVEL_ERROR); \
+        lpf2_log_printf(LPF2_LOG_FORMAT(E, format), ##__VA_ARGS__); \
+    } while (0)
 #define LPF2_DEBUG_EXPR_E(...) \
     do                         \
     {                          \
+        LPF2_LOG_CHECK_RUNTIME_LEVEL(LPF2_LOG_LEVEL_ERROR); \
         __VA_ARGS__            \
     } while (0)
 #else
@@ -45,11 +72,17 @@ extern "C"
     {                          \
     } while (0)
 #endif
-#if LPF2_LOG_LEVEL > 1
-#define LPF2_LOG_W(format, ...) lpf2_log_printf(ARDUHAL_LOG_FORMAT(W, format), ##__VA_ARGS__)
+#if LPF2_LOG_LEVEL_USE >= LPF2_LOG_LEVEL_WARN
+#define LPF2_LOG_W(format, ...) \
+    do \
+    {  \
+        LPF2_LOG_CHECK_RUNTIME_LEVEL(LPF2_LOG_LEVEL_WARN); \
+        lpf2_log_printf(LPF2_LOG_FORMAT(W, format), ##__VA_ARGS__); \
+    } while (0)
 #define LPF2_DEBUG_EXPR_W(...) \
     do                         \
     {                          \
+        LPF2_LOG_CHECK_RUNTIME_LEVEL(LPF2_LOG_LEVEL_WARN); \
         __VA_ARGS__            \
     } while (0)
 #else
@@ -62,11 +95,17 @@ extern "C"
     {                          \
     } while (0)
 #endif
-#if LPF2_LOG_LEVEL > 2
-#define LPF2_LOG_I(format, ...) lpf2_log_printf(ARDUHAL_LOG_FORMAT(I, format), ##__VA_ARGS__)
+#if LPF2_LOG_LEVEL_USE >= LPF2_LOG_LEVEL_INFO
+#define LPF2_LOG_I(format, ...) \
+    do \
+    {  \
+        LPF2_LOG_CHECK_RUNTIME_LEVEL(LPF2_LOG_LEVEL_INFO); \
+        lpf2_log_printf(LPF2_LOG_FORMAT(I, format), ##__VA_ARGS__); \
+    } while (0)
 #define LPF2_DEBUG_EXPR_I(...) \
     do                         \
     {                          \
+        LPF2_LOG_CHECK_RUNTIME_LEVEL(LPF2_LOG_LEVEL_INFO); \
         __VA_ARGS__            \
     } while (0)
 #else
@@ -79,11 +118,17 @@ extern "C"
     {                          \
     } while (0)
 #endif
-#if LPF2_LOG_LEVEL > 3
-#define LPF2_LOG_D(format, ...) lpf2_log_printf(ARDUHAL_LOG_FORMAT(D, format), ##__VA_ARGS__)
+#if LPF2_LOG_LEVEL_USE >= LPF2_LOG_LEVEL_DEBUG
+#define LPF2_LOG_D(format, ...) \
+    do \
+    {  \
+        LPF2_LOG_CHECK_RUNTIME_LEVEL(LPF2_LOG_LEVEL_DEBUG); \
+        lpf2_log_printf(LPF2_LOG_FORMAT(D, format), ##__VA_ARGS__); \
+    } while (0)
 #define LPF2_DEBUG_EXPR_D(...) \
     do                         \
     {                          \
+        LPF2_LOG_CHECK_RUNTIME_LEVEL(LPF2_LOG_LEVEL_DEBUG); \
         __VA_ARGS__            \
     } while (0)
 #else
@@ -96,13 +141,17 @@ extern "C"
     {                          \
     } while (0)
 #endif
-#if LPF2_LOG_LEVEL > 4
-#define LPF2_ARDUHAL_LOG_COLOR_V ARDUHAL_LOG_COLOR(ARDUHAL_LOG_COLOR_MAGENTA)
-#define LPF2_ARDUHAL_LOG_FORMAT(letter, format) LPF2_ARDUHAL_LOG_COLOR_##letter "[%6u][" #letter "][%s:%u] %s(): " format ARDUHAL_LOG_RESET_COLOR "\r\n", (unsigned long)LPF2_GET_TIME(), pathToFileName(__FILE__), __LINE__, __FUNCTION__
-#define LPF2_LOG_V(format, ...) lpf2_log_printf(LPF2_ARDUHAL_LOG_FORMAT(V, format), ##__VA_ARGS__)
+#if LPF2_LOG_LEVEL_USE >= LPF2_LOG_LEVEL_VERBOSE
+#define LPF2_LOG_V(format, ...) \
+    do \
+    {  \
+        LPF2_LOG_CHECK_RUNTIME_LEVEL(LPF2_LOG_LEVEL_VERBOSE); \
+        lpf2_log_printf(LPF2_LOG_FORMAT(V, format), ##__VA_ARGS__); \
+    } while (0)
 #define LPF2_DEBUG_EXPR_V(...) \
     do                         \
     {                          \
+        LPF2_LOG_CHECK_RUNTIME_LEVEL(LPF2_LOG_LEVEL_VERBOSE); \
         __VA_ARGS__            \
     } while (0)
 #else
@@ -116,74 +165,53 @@ extern "C"
     } while (0)
 #endif
 
-#ifndef log_n
+#ifndef CONFIG_LPF2_LOG_COLORS
+#define CONFIG_LPF2_LOG_COLORS 1
+#endif
 
-#define LPF2_LOG_IMPL 1
+#if CONFIG_LPF2_LOG_COLORS
+#define LPF2_LOG_COLOR_BLACK "30"
+#define LPF2_LOG_COLOR_RED "31"    // ERROR
+#define LPF2_LOG_COLOR_GREEN "32"  // INFO
+#define LPF2_LOG_COLOR_YELLOW "33" // WARNING
+#define LPF2_LOG_COLOR_BLUE "34"
+#define LPF2_LOG_COLOR_MAGENTA "35" // VERBOSE
+#define LPF2_LOG_COLOR_CYAN "36" // DEBUG
+#define LPF2_LOG_COLOR_GRAY "37"
+#define LPF2_LOG_COLOR_WHITE "38"
 
-#define ARDUHAL_LOG_LEVEL_NONE (0)
-#define ARDUHAL_LOG_LEVEL_ERROR (1)
-#define ARDUHAL_LOG_LEVEL_WARN (2)
-#define ARDUHAL_LOG_LEVEL_INFO (3)
-#define ARDUHAL_LOG_LEVEL_DEBUG (4)
-#define ARDUHAL_LOG_LEVEL_VERBOSE (5)
+#define LPF2_LOG_COLOR(COLOR) "\033[0;" COLOR "m"
+#define LPF2_LOG_BOLD(COLOR) "\033[1;" COLOR "m"
+#define LPF2_LOG_RESET_COLOR "\033[0m"
 
-#ifndef CORE_DEBUG_LEVEL
-#define ARDUHAL_LOG_LEVEL LPF2_LOG_LEVEL
+#define LPF2_LOG_COLOR_E LPF2_LOG_COLOR(LPF2_LOG_COLOR_RED)
+#define LPF2_LOG_COLOR_W LPF2_LOG_COLOR(LPF2_LOG_COLOR_YELLOW)
+#define LPF2_LOG_COLOR_I LPF2_LOG_COLOR(LPF2_LOG_COLOR_GREEN)
+#define LPF2_LOG_COLOR_D LPF2_LOG_COLOR(LPF2_LOG_COLOR_CYAN)
+#define LPF2_LOG_COLOR_V LPF2_LOG_COLOR(LPF2_LOG_COLOR_MAGENTA)
+#define LPF2_LOG_COLOR_PRINT(letter) lpf2_log_printf(LPF2_LOG_COLOR_##letter)
+#define LPF2_LOG_COLOR_PRINT_END lpf2_log_printf(LPF2_LOG_RESET_COLOR)
 #else
-#define ARDUHAL_LOG_LEVEL CORE_DEBUG_LEVEL
-#ifdef USE_ESP_IDF_LOG
-#ifndef LOG_LOCAL_LEVEL
-#define LOG_LOCAL_LEVEL CORE_DEBUG_LEVEL
-#endif
-#endif
-#endif
-
-#ifndef CONFIG_ARDUHAL_LOG_COLORS
-#define CONFIG_ARDUHAL_LOG_COLORS 1
+#define LPF2_LOG_COLOR_E
+#define LPF2_LOG_COLOR_W
+#define LPF2_LOG_COLOR_I
+#define LPF2_LOG_COLOR_D
+#define LPF2_LOG_COLOR_V
+#define LPF2_LOG_RESET_COLOR
+#define LPF2_LOG_COLOR_PRINT(letter)
+#define LPF2_LOG_COLOR_PRINT_END
 #endif
 
-#if CONFIG_ARDUHAL_LOG_COLORS
-#define ARDUHAL_LOG_COLOR_BLACK "30"
-#define ARDUHAL_LOG_COLOR_RED "31"    // ERROR
-#define ARDUHAL_LOG_COLOR_GREEN "32"  // INFO
-#define ARDUHAL_LOG_COLOR_YELLOW "33" // WARNING
-#define ARDUHAL_LOG_COLOR_BLUE "34"
-#define ARDUHAL_LOG_COLOR_MAGENTA "35" // VERBOSE
-#define ARDUHAL_LOG_COLOR_CYAN "36" // DEBUG
-#define ARDUHAL_LOG_COLOR_GRAY "37"
-#define ARDUHAL_LOG_COLOR_WHITE "38"
+#define LPF2_SHORT_LOG_FORMAT(letter, format) LPF2_LOG_COLOR_##letter format LPF2_LOG_RESET_COLOR "\r\n"
+#define LPF2_LOG_FORMAT(letter, format) LPF2_LOG_COLOR_##letter "[%6u][" #letter "][%s:%u] %s(): " format LPF2_LOG_RESET_COLOR "\r\n", (unsigned long)LPF2_GET_TIME(), lpf2_pathToFileName(__FILE__), __LINE__, __FUNCTION__
 
-#define ARDUHAL_LOG_COLOR(COLOR) "\033[0;" COLOR "m"
-#define ARDUHAL_LOG_BOLD(COLOR) "\033[1;" COLOR "m"
-#define ARDUHAL_LOG_RESET_COLOR "\033[0m"
+const char *lpf2_pathToFileName(const char *path);
 
-#define ARDUHAL_LOG_COLOR_E ARDUHAL_LOG_COLOR(ARDUHAL_LOG_COLOR_RED)
-#define ARDUHAL_LOG_COLOR_W ARDUHAL_LOG_COLOR(ARDUHAL_LOG_COLOR_YELLOW)
-#define ARDUHAL_LOG_COLOR_I ARDUHAL_LOG_COLOR(ARDUHAL_LOG_COLOR_GREEN)
-#define ARDUHAL_LOG_COLOR_D ARDUHAL_LOG_COLOR(ARDUHAL_LOG_COLOR_CYAN)
-#define ARDUHAL_LOG_COLOR_V ARDUHAL_LOG_COLOR(ARDUHAL_LOG_COLOR_MAGENTA)
-#define ARDUHAL_LOG_COLOR_PRINT(letter) lpf2_log_printf(ARDUHAL_LOG_COLOR_##letter)
-#define ARDUHAL_LOG_COLOR_PRINT_END lpf2_log_printf(ARDUHAL_LOG_RESET_COLOR)
-#else
-#define ARDUHAL_LOG_COLOR_E
-#define ARDUHAL_LOG_COLOR_W
-#define ARDUHAL_LOG_COLOR_I
-#define ARDUHAL_LOG_COLOR_D
-#define ARDUHAL_LOG_COLOR_V
-#define ARDUHAL_LOG_RESET_COLOR
-#define ARDUHAL_LOG_COLOR_PRINT(letter)
-#define ARDUHAL_LOG_COLOR_PRINT_END
-#endif
-
-#define ARDUHAL_SHORT_LOG_FORMAT(letter, format) ARDUHAL_LOG_COLOR_##letter format ARDUHAL_LOG_RESET_COLOR "\r\n"
-#define ARDUHAL_LOG_FORMAT(letter, format) ARDUHAL_LOG_COLOR_##letter "[%6u][" #letter "][%s:%u] %s(): " format ARDUHAL_LOG_RESET_COLOR "\r\n", (unsigned long)LPF2_GET_TIME(), pathToFileName(__FILE__), __LINE__, __FUNCTION__
-
-const char *pathToFileName(const char *path);
-
-#endif // log_n
-
+uint16_t lpf2_get_runtime_log_level();
+void lpf2_set_runtime_log_level(uint16_t level);
 
 int lpf2_log_printf(const char *fmt, ...);
+esp_err_t lpf2_log_init(void);
 
 #ifdef __cplusplus
 }

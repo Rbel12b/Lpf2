@@ -31,77 +31,77 @@ namespace Lpf2::Virtual
         return m_device->writeData(modeNum, data);
     }
 
-    bool Port::deviceConnected()
+    bool Port::isDeviceConnected()
     {
         return (bool)m_device;
     }
 
     int Port::setMode(uint8_t mode)
     {
-        if (m_device)
+        if (!m_device)
             return 1;
         return m_device->setMode(mode);
     }
 
     int Port::setModeCombo(uint8_t idx)
     {
-        if (m_device)
+        if (!m_device)
             return 1;
         return m_device->setModeCombo(idx);
     }
 
     void Port::startPower(int8_t pw)
     {
-        if (m_device)
+        if (!m_device)
             return;
         m_device->startPower(pw);
     }
 
     void Port::setAccTime(uint16_t accTime, AccelerationProfile accProfile)
     {
-        if (m_device)
+        if (!m_device)
             return;
         m_device->setAccTime(accTime, accProfile);
     }
 
     void Port::setDecTime(uint16_t decTime, AccelerationProfile decProfile)
     {
-        if (m_device)
+        if (!m_device)
             return;
         m_device->setDecTime(decTime, decProfile);
     }
 
     void Port::startSpeed(int8_t speed, uint8_t maxPower, uint8_t useProfile)
     {
-        if (m_device)
+        if (!m_device)
             return;
         m_device->startSpeed(speed, maxPower, useProfile);
     }
 
     void Port::startSpeedForTime(uint16_t time, int8_t speed, uint8_t maxPower, BrakingStyle endState, uint8_t useProfile)
     {
-        if (m_device)
+        if (!m_device)
             return;
         m_device->startSpeedForTime(time, speed, maxPower, endState, useProfile);
     }
 
     void Port::startSpeedForDegrees(uint32_t degrees, int8_t speed, uint8_t maxPower, BrakingStyle endState, uint8_t useProfile)
     {
-        if (m_device)
+        if (!m_device)
             return;
         m_device->startSpeedForDegrees(degrees, speed, maxPower, endState, useProfile);
     }
 
     void Port::gotoAbsPosition(int32_t absPos, uint8_t speed, uint8_t maxPower, BrakingStyle endState, uint8_t useProfile)
     {
-        if (m_device)
+        if (!m_device)
             return;
         m_device->gotoAbsPosition(absPos, speed, maxPower, endState, useProfile);
     }
 
     void Port::presetEncoder(int32_t pos)
     {
-        if (m_device)
+        if (!m_device)
             return;
         m_device->presetEncoder(pos);
     }

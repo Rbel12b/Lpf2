@@ -31,7 +31,7 @@ namespace Lpf2::Virtual
         void update() override;
 
         int writeData(uint8_t modeNum, const std::vector<uint8_t> &data) override;
-        bool deviceConnected() override;
+        bool isDeviceConnected() override;
         int setMode(uint8_t mode) override;
         int setModeCombo(uint8_t idx) override;
         

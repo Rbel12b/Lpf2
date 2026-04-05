@@ -1,6 +1,6 @@
 /**
  *  Copyright (C) 2026 - Rbel12b
- * 
+ *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU Affero General Public License as
  *  published by the Free Software Foundation, either version 3 of the
@@ -61,7 +61,7 @@ namespace Lpf2::Local
 #endif
     }
 
-    bool Port::deviceConnected()
+    bool Port::isDeviceConnected()
     {
         if (m_deviceType == DeviceType::UNKNOWNDEVICE)
         {
@@ -134,10 +134,10 @@ namespace Lpf2::Local
                     // do not print SYNC and other messages because, they're not relevant in this state
                     // (Speed change - lot of garbage is received).
                     break;
-                }
-                else if (m_status == LPF2_STATUS::STATUS_DATA_START && msg.header == BYTE_SYNC) {
+                } else if (m_status == LPF2_STATUS::STATUS_DATA_START && msg.header == BYTE_SYNC) {
                     break;
-                }  m_parser.printMessage(msg););
+                } m_parser.printMessage(msg););
+
             if (m_status == LPF2_STATUS::STATUS_SYNCING)
             {
                 if (msg.msg == MESSAGE_SYS)
@@ -184,7 +184,6 @@ namespace Lpf2::Local
                 m_deviceConnected = false;
             }
             resetDevice();
-            sendACK(true);
             m_startRec = now;
         }
 
@@ -240,6 +239,7 @@ namespace Lpf2::Local
 
         case LPF2_STATUS::STATUS_DATA_START:
             m_rawDataSizeEnsured = false;
+            [[fallthrough]];
         case LPF2_STATUS::STATUS_DATA:
             if (now - m_start >= 100)
             {
@@ -301,8 +301,7 @@ namespace Lpf2::Local
 
     void Port::resetDevice()
     {
-        // enterUartState();
-        // return;
+        LPF2_LOG_D("Resetting device.");
         m_pwm->off();
         {
             Utils::MutexLock lock(m_serialMutex);

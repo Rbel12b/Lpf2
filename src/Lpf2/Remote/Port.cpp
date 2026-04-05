@@ -35,7 +35,7 @@ namespace Lpf2::Remote
 
     int Port::writeData(uint8_t modeNum, const std::vector<uint8_t> &data)
     {
-        if (!m_remote || !deviceConnected())
+        if (!m_remote || !isDeviceConnected())
             return 1;
         std::vector<uint8_t> payload = {portNum, startupAndCompletion, 0x51, modeNum};
         payload.insert(payload.end(), data.begin(), data.end());
@@ -43,7 +43,7 @@ namespace Lpf2::Remote
         return 0;
     }
 
-    bool Port::deviceConnected()
+    bool Port::isDeviceConnected()
     {
         if (!m_remote)
             return false;
@@ -52,7 +52,7 @@ namespace Lpf2::Remote
 
     int Port::setMode(uint8_t mode)
     {
-        if (!m_remote || !deviceConnected())
+        if (!m_remote || !isDeviceConnected())
             return 1;
         uint32_t delta = 1;
         return m_remote->setPortMode(portNum, mode, delta);
@@ -70,7 +70,7 @@ namespace Lpf2::Remote
 
     void Port::setAccTime(uint16_t accTime, AccelerationProfile accProfile)
     {
-        if (!m_remote || !deviceConnected())
+        if (!m_remote || !isDeviceConnected())
             return;
         std::vector<uint8_t> payload = {portNum, startupAndCompletion, 0x05};
         payload.push_back(accTime & 0xFF);
@@ -81,7 +81,7 @@ namespace Lpf2::Remote
 
     void Port::setDecTime(uint16_t decTime, AccelerationProfile decProfile)
     {
-        if (!m_remote || !deviceConnected())
+        if (!m_remote || !isDeviceConnected())
             return;
         std::vector<uint8_t> payload = {portNum, startupAndCompletion, 0x06};
         payload.push_back(decTime & 0xFF);
@@ -92,7 +92,7 @@ namespace Lpf2::Remote
 
     void Port::startSpeed(int8_t speed, uint8_t maxPower, uint8_t useProfile)
     {
-        if (!m_remote || !deviceConnected())
+        if (!m_remote || !isDeviceConnected())
             return;
         std::vector<uint8_t> payload = {portNum, startupAndCompletion, 0x07};
         payload.push_back(speedToRaw(speed));
@@ -103,7 +103,7 @@ namespace Lpf2::Remote
 
     void Port::startSpeedForTime(uint16_t time, int8_t speed, uint8_t maxPower, BrakingStyle endState, uint8_t useProfile)
     {
-        if (!m_remote || !deviceConnected())
+        if (!m_remote || !isDeviceConnected())
             return;
         std::vector<uint8_t> payload = {portNum, startupAndCompletion, 0x05};
         payload.push_back(time & 0xFF);
@@ -116,7 +116,7 @@ namespace Lpf2::Remote
 
     void Port::startSpeedForDegrees(uint32_t degrees, int8_t speed, uint8_t maxPower, BrakingStyle endState, uint8_t useProfile)
     {
-        if (!m_remote || !deviceConnected())
+        if (!m_remote || !isDeviceConnected())
             return;
         std::vector<uint8_t> payload = {portNum, startupAndCompletion, 0x05};
         payload.push_back(degrees & 0xFF);
@@ -131,7 +131,7 @@ namespace Lpf2::Remote
 
     void Port::gotoAbsPosition(int32_t absPos, uint8_t speed, uint8_t maxPower, BrakingStyle endState, uint8_t useProfile)
     {
-        if (!m_remote || !deviceConnected())
+        if (!m_remote || !isDeviceConnected())
             return;
         std::vector<uint8_t> payload = {portNum, startupAndCompletion, 0x05};
         payload.push_back(absPos & 0xFF);

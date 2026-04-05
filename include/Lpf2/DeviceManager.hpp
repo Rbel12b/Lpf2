@@ -46,13 +46,13 @@ namespace Lpf2
         void update()
         {
             m_port.update();
-            if (!m_port.deviceConnected())
+            if (!m_port.isDeviceConnected())
             {
                 device_.reset(nullptr);
                 return;
             }
 
-            if (!device_ && m_port.deviceConnected())
+            if (!device_ && m_port.isDeviceConnected())
             {
                 attachViaFactory();
             }

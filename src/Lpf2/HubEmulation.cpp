@@ -22,6 +22,7 @@
 #include "Lpf2/Virtual/Port.hpp"
 #include "Lpf2/Virtual/Device.hpp"
 #include "Lpf2/DeviceDescLib.hpp"
+#include <algorithm>
 
 namespace Lpf2
 {
@@ -90,9 +91,9 @@ namespace Lpf2
 
     void HubEmulation::processMessages(const std::vector<uint8_t>& message)
     {
-        MessageType type = (MessageType)message[(byte)MessageHeader::MESSAGE_TYPE];
+        MessageType type = (MessageType)message[(uint8_t)MessageHeader::MESSAGE_TYPE];
         LPF2_LOG_D("message received (%d): %s", message.size(), Utils::bytes_to_hexString(message).c_str());
-        LPF2_LOG_V("message type: %d", (byte)type);
+        LPF2_LOG_V("message type: %d", (uint8_t)type);
 
         switch (type)
         {
@@ -343,8 +344,8 @@ namespace Lpf2
             LPF2_LOG_E("Unexpected message length: %i", message.size());
             return;
         }
-        HubAlertType alertType = (HubAlertType)message[(byte)MessageByte::PROPERTY];
-        HubAlertOperation alertOperation = (HubAlertOperation)message[(byte)MessageByte::OPERATION];
+        HubAlertType alertType = (HubAlertType)message[(uint8_t)MessageByte::PROPERTY];
+        HubAlertOperation alertOperation = (HubAlertOperation)message[(uint8_t)MessageByte::OPERATION];
         if (alertType >= HubAlertType::END)
         {
             LPF2_LOG_E("Invalid HUB alert type requested.");
@@ -388,7 +389,7 @@ namespace Lpf2
             return;
         }
         Port *port = attachedPorts[portNum];
-        DeviceType deviceType = port->getDeviceType();
+        // DeviceType deviceType = port->getDeviceType();
         uint8_t informationType = message[(uint8_t)MessageByte::OPERATION];
 
         std::vector<uint8_t> payload;
@@ -437,7 +438,7 @@ namespace Lpf2
             return;
         }
         Port *port = attachedPorts[portNum];
-        DeviceType deviceType = port->getDeviceType();
+        // DeviceType deviceType = port->getDeviceType();
         uint8_t modeNum = message[(uint8_t)MessageByte::OPERATION];
         ModeInfoType modeInfoType = (ModeInfoType)message[(uint8_t)MessageByte::SUB_COMMAND];
 
@@ -488,6 +489,7 @@ namespace Lpf2
             {
                 payload.insert(payload.end(), mode.unit.begin(), mode.unit.end());
             }
+            break;
 
         case ModeInfoType::MAPPING:
             payload.push_back(mode.in.val);
@@ -530,7 +532,7 @@ namespace Lpf2
             LPF2_LOG_W("Port input format setup (single) for unattached port %d", portNum);
             return;
         }
-        Port *port = attachedPorts[portNum];
+        // Port *port = attachedPorts[portNum];
         uint8_t modeNum = message[(uint8_t)MessageByte::OPERATION];
 
         PortInputSetupSingle setup;
@@ -542,7 +544,7 @@ namespace Lpf2
 
         m_portSetupSingle[portNum][modeNum] = setup;
 
-        message.erase(message.begin(), message.begin() + 2);
+        message.erase(message.begin(), message.begin() + 3);
 
         writeResponse(MessageType::PORT_INPUT_FORMAT_SINGLE, message);
     }
@@ -561,7 +563,7 @@ namespace Lpf2
             return;
         }
         Port *port = attachedPorts[portNum];
-        uint8_t startupAndCompletion = message[(uint8_t)MessageByte::OPERATION];
+        // uint8_t startupAndCompletion = message[(uint8_t)MessageByte::OPERATION];
         PortOutputSubCommand subcommand = (PortOutputSubCommand)message[(uint8_t)MessageByte::SUB_COMMAND];
         std::vector<uint8_t> payload(message.begin() + 6, message.end());
 
@@ -619,9 +621,9 @@ namespace Lpf2
     void HubEmulation::checkPort(PortNum portNum, Port *port)
     {
         port->ensureRawDataSize();
-        if (connectedDevices[portNum] != port->deviceConnected())
+        if (connectedDevices[portNum] != port->isDeviceConnected())
         {
-            connectedDevices[portNum] = port->deviceConnected();
+            connectedDevices[portNum] = port->isDeviceConnected();
 
             if (connectedDevices[portNum])
             {
@@ -657,7 +659,7 @@ namespace Lpf2
         uint8_t mode = setup.mode;
         uint8_t dataSets = port->getModes()[mode].data_sets;
         auto &raw = port->getModes()[mode].rawData;
-        for (uint8_t dataSet; dataSet < dataSets; dataSet++)
+        for (uint8_t dataSet = 0; dataSet < dataSets; dataSet++)
         {
             if (std::abs(port->getValue(mode, dataSet) - port->getValue(mode, setup.lastRaw, dataSet)) >= setup.delta)
             {
@@ -792,8 +794,8 @@ namespace Lpf2
             LPF2_LOG_E("Unexpected message length: %i", message.size());
             return;
         }
-        HubPropertyOperation op = (HubPropertyOperation)message[(byte)MessageByte::OPERATION];
-        HubPropertyType propId = (HubPropertyType)message[(byte)MessageByte::PROPERTY];
+        HubPropertyOperation op = (HubPropertyOperation)message[(uint8_t)MessageByte::OPERATION];
+        HubPropertyType propId = (HubPropertyType)message[(uint8_t)MessageByte::PROPERTY];
         if (propId >= HubPropertyType::END)
         {
             LPF2_LOG_E("Invalid HUB property requested.");
