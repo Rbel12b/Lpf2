@@ -23,15 +23,43 @@ extern "C"
 {
 #endif
 
-#ifndef LPF2_LOG_LEVEL
-#define LPF2_LOG_LEVEL 2
+#ifndef CONFIG_LPF2_LOG_LEVEL_RUNTIME
+#define CONFIG_LPF2_LOG_LEVEL_RUNTIME 1
 #endif
 
-#if LPF2_LOG_LEVEL > 0
-#define LPF2_LOG_E(format, ...) lpf2_log_printf(LPF2_LOG_FORMAT(E, format), ##__VA_ARGS__)
+#if CONFIG_LPF2_LOG_LEVEL_RUNTIME
+#define LPF2_LOG_LEVEL_USE 5
+#else
+#ifndef CONFIG_LPF2_LOG_LEVEL
+#define CONFIG_LPF2_LOG_LEVEL 2
+#endif
+#define LPF2_LOG_LEVEL_USE CONFIG_LPF2_LOG_LEVEL
+#endif
+
+#if CONFIG_LPF2_LOG_LEVEL_RUNTIME
+#define LPF2_LOG_CHECK_RUNTIME_LEVEL(level) if (lpf2_get_runtime_log_level() < level) break
+#else
+#define LPF2_LOG_CHECK_RUNTIME_LEVEL(level)
+#endif
+
+#define LPF2_LOG_LEVEL_NONE (0)
+#define LPF2_LOG_LEVEL_ERROR (1)
+#define LPF2_LOG_LEVEL_WARN (2)
+#define LPF2_LOG_LEVEL_INFO (3)
+#define LPF2_LOG_LEVEL_DEBUG (4)
+#define LPF2_LOG_LEVEL_VERBOSE (5)
+
+#if LPF2_LOG_LEVEL_USE >= LPF2_LOG_LEVEL_ERROR
+#define LPF2_LOG_E(format, ...) \
+    do \
+    {  \
+        LPF2_LOG_CHECK_RUNTIME_LEVEL(LPF2_LOG_LEVEL_ERROR); \
+        lpf2_log_printf(LPF2_LOG_FORMAT(E, format), ##__VA_ARGS__); \
+    } while (0)
 #define LPF2_DEBUG_EXPR_E(...) \
     do                         \
     {                          \
+        LPF2_LOG_CHECK_RUNTIME_LEVEL(LPF2_LOG_LEVEL_ERROR); \
         __VA_ARGS__            \
     } while (0)
 #else
@@ -44,11 +72,17 @@ extern "C"
     {                          \
     } while (0)
 #endif
-#if LPF2_LOG_LEVEL > 1
-#define LPF2_LOG_W(format, ...) lpf2_log_printf(LPF2_LOG_FORMAT(W, format), ##__VA_ARGS__)
+#if LPF2_LOG_LEVEL_USE >= LPF2_LOG_LEVEL_WARN
+#define LPF2_LOG_W(format, ...) \
+    do \
+    {  \
+        LPF2_LOG_CHECK_RUNTIME_LEVEL(LPF2_LOG_LEVEL_WARN); \
+        lpf2_log_printf(LPF2_LOG_FORMAT(W, format), ##__VA_ARGS__); \
+    } while (0)
 #define LPF2_DEBUG_EXPR_W(...) \
     do                         \
     {                          \
+        LPF2_LOG_CHECK_RUNTIME_LEVEL(LPF2_LOG_LEVEL_WARN); \
         __VA_ARGS__            \
     } while (0)
 #else
@@ -61,11 +95,17 @@ extern "C"
     {                          \
     } while (0)
 #endif
-#if LPF2_LOG_LEVEL > 2
-#define LPF2_LOG_I(format, ...) lpf2_log_printf(LPF2_LOG_FORMAT(I, format), ##__VA_ARGS__)
+#if LPF2_LOG_LEVEL_USE >= LPF2_LOG_LEVEL_INFO
+#define LPF2_LOG_I(format, ...) \
+    do \
+    {  \
+        LPF2_LOG_CHECK_RUNTIME_LEVEL(LPF2_LOG_LEVEL_INFO); \
+        lpf2_log_printf(LPF2_LOG_FORMAT(I, format), ##__VA_ARGS__); \
+    } while (0)
 #define LPF2_DEBUG_EXPR_I(...) \
     do                         \
     {                          \
+        LPF2_LOG_CHECK_RUNTIME_LEVEL(LPF2_LOG_LEVEL_INFO); \
         __VA_ARGS__            \
     } while (0)
 #else
@@ -78,11 +118,17 @@ extern "C"
     {                          \
     } while (0)
 #endif
-#if LPF2_LOG_LEVEL > 3
-#define LPF2_LOG_D(format, ...) lpf2_log_printf(LPF2_LOG_FORMAT(D, format), ##__VA_ARGS__)
+#if LPF2_LOG_LEVEL_USE >= LPF2_LOG_LEVEL_DEBUG
+#define LPF2_LOG_D(format, ...) \
+    do \
+    {  \
+        LPF2_LOG_CHECK_RUNTIME_LEVEL(LPF2_LOG_LEVEL_DEBUG); \
+        lpf2_log_printf(LPF2_LOG_FORMAT(D, format), ##__VA_ARGS__); \
+    } while (0)
 #define LPF2_DEBUG_EXPR_D(...) \
     do                         \
     {                          \
+        LPF2_LOG_CHECK_RUNTIME_LEVEL(LPF2_LOG_LEVEL_DEBUG); \
         __VA_ARGS__            \
     } while (0)
 #else
@@ -95,11 +141,17 @@ extern "C"
     {                          \
     } while (0)
 #endif
-#if LPF2_LOG_LEVEL > 4
-#define LPF2_LOG_V(format, ...) lpf2_log_printf(LPF2_LOG_FORMAT(V, format), ##__VA_ARGS__)
+#if LPF2_LOG_LEVEL_USE >= LPF2_LOG_LEVEL_VERBOSE
+#define LPF2_LOG_V(format, ...) \
+    do \
+    {  \
+        LPF2_LOG_CHECK_RUNTIME_LEVEL(LPF2_LOG_LEVEL_VERBOSE); \
+        lpf2_log_printf(LPF2_LOG_FORMAT(V, format), ##__VA_ARGS__); \
+    } while (0)
 #define LPF2_DEBUG_EXPR_V(...) \
     do                         \
     {                          \
+        LPF2_LOG_CHECK_RUNTIME_LEVEL(LPF2_LOG_LEVEL_VERBOSE); \
         __VA_ARGS__            \
     } while (0)
 #else
@@ -111,19 +163,6 @@ extern "C"
     do                         \
     {                          \
     } while (0)
-#endif
-
-#define LPF2_LOG_IMPL 1
-
-#define LPF2_LOG_LEVEL_NONE (0)
-#define LPF2_LOG_LEVEL_ERROR (1)
-#define LPF2_LOG_LEVEL_WARN (2)
-#define LPF2_LOG_LEVEL_INFO (3)
-#define LPF2_LOG_LEVEL_DEBUG (4)
-#define LPF2_LOG_LEVEL_VERBOSE (5)
-
-#ifndef LPF2_LOG_LEVEL
-#define LPF2_LOG_LEVEL CORE_DEBUG_LEVEL
 #endif
 
 #ifndef CONFIG_LPF2_LOG_COLORS
@@ -168,6 +207,8 @@ extern "C"
 
 const char *lpf2_pathToFileName(const char *path);
 
+uint16_t lpf2_get_runtime_log_level();
+void lpf2_set_runtime_log_level(uint16_t level);
 
 int lpf2_log_printf(const char *fmt, ...);
 esp_err_t lpf2_log_init(void);

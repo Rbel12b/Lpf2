@@ -22,8 +22,6 @@
 #include <stdio.h>
 #include <cstring>
 
-#ifdef LPF2_LOG_IMPL
-
 extern "C" const char *lpf2_pathToFileName(const char *path)
 {
     int i = 0;
@@ -37,7 +35,22 @@ extern "C" const char *lpf2_pathToFileName(const char *path)
     return path + i + 1;
 }
 
-#endif // LPF2_LOG_IMPL
+static uint16_t lpf2_log_runtime_level = LPF2_LOG_LEVEL_ERROR;
+
+uint16_t lpf2_get_runtime_log_level()
+{
+    return lpf2_log_runtime_level;
+}
+
+void lpf2_set_runtime_log_level(uint16_t level)
+{
+    if (level > 5)
+    {
+        lpf2_log_runtime_level = 5;
+        return;
+    }
+    lpf2_log_runtime_level = level;
+}
 
 QueueHandle_t logMutex = xSemaphoreCreateMutex();
 static usb_serial_jtag_driver_config_t usb_jtag_cfg = USB_SERIAL_JTAG_DRIVER_CONFIG_DEFAULT();

@@ -17,8 +17,6 @@
 
 #pragma once
 
-#define LPF2_LOG_LEVEL 4
-
 #include <esp_timer.h>
 #include <string>
 #include <vector>
