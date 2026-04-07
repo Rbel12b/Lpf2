@@ -53,10 +53,12 @@ void lpf2_set_runtime_log_level(uint16_t level)
 }
 
 QueueHandle_t logMutex = xSemaphoreCreateMutex();
-static usb_serial_jtag_driver_config_t usb_jtag_cfg = USB_SERIAL_JTAG_DRIVER_CONFIG_DEFAULT();
+static usb_serial_jtag_driver_config_t usb_jtag_cfg;
 
 esp_err_t lpf2_log_init(void)
 {
+    usb_jtag_cfg.rx_buffer_size = 1024;
+    usb_jtag_cfg.tx_buffer_size = 1024;
     esp_err_t ret = usb_serial_jtag_driver_install(&usb_jtag_cfg);
     if (ret != ESP_OK) {
         return ret;
@@ -68,11 +70,20 @@ esp_err_t lpf2_log_init(void)
 extern "C" int lpf2_log_printf(const char *fmt, ...)
 {
     xSemaphoreTake(logMutex, portMAX_DELAY);
+    
+#if ESP_IDF_VERSION_MAJOR > 4
     if (!fmt || strlen(fmt) == 0 || !usb_serial_jtag_is_connected())
     {
         xSemaphoreGive(logMutex);
         return 0;
     }
+#else
+    if (!fmt || strlen(fmt) == 0)
+    {
+        xSemaphoreGive(logMutex);
+        return 0;
+    }
+#endif
     va_list args;
     va_start(args, fmt);
     char buffer[512];

@@ -61,7 +61,6 @@ void loop()
         }
     }
 
-    hub.update();
 #ifdef USE_LOCAL_PORT
     port.update();
 #endif

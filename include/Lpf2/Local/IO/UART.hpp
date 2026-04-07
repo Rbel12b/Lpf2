@@ -68,7 +68,7 @@ namespace Lpf2::Local
          * @param length The maximum number of bytes to read.
          * @return The number of bytes actually read.
          */
-        virtual size_t read(const uint8_t *data, size_t length) = 0;
+        virtual size_t read(uint8_t *data, size_t length) = 0;
 
         /**
          * @brief Get the number of bytes available to read from the UART receive buffer.

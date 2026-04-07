@@ -84,6 +84,11 @@ public:
         return serial_.read();
     }
 
+    size_t read(uint8_t *data, size_t length) override
+    {
+        return serial_.readBytes(data, length);
+    }
+
     int available() override
     {
         return serial_.available();
