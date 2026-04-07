@@ -293,7 +293,7 @@ namespace Lpf2
         LPF2_LOG_D("Reset prop %i: %s", (int)propId, Hub::getHubPropStr(propId, prop).c_str());
     }
 
-    void HubEmulation::setHubAlert(HubAlertType alert, bool on)
+    void HubEmulation::setAlert(HubAlertType alert, bool on)
     {
         if (alert >= HubAlertType::END)
         {
@@ -841,7 +841,7 @@ namespace Lpf2
 
     HubEmulation::HubEmulation(std::string hubName, HubType hubType)
     {
-        setHubName(hubName);
+        setName(hubName);
         m_hubType = hubType;
     }
 
@@ -910,14 +910,14 @@ namespace Lpf2
         m_bleChar->notify();
     }
 
-    void HubEmulation::setHubButton(bool pressed)
+    void HubEmulation::setButtonState(ButtonState state)
     {
         auto &property = m_hubProperty[(unsigned)HubPropertyType::BUTTON];
         if (!property.size())
         {
             property.resize(1);
         }
-        property[0] = uint8_t(pressed ? ButtonState::PRESSED : ButtonState::RELEASED);
+        property[0] = (uint8_t)state;
         updateHubProperty(HubPropertyType::BUTTON);
     }
 
@@ -989,7 +989,7 @@ namespace Lpf2
         updateHubProperty(HubPropertyType::RSSI);
     }
 
-    void HubEmulation::setHubBatteryLevel(uint8_t batteryLevel)
+    void HubEmulation::setBatteryLevel(uint8_t batteryLevel)
     {
         auto &property = m_hubProperty[(unsigned)HubPropertyType::BATTERY_VOLTAGE];
         if (!property.size())
@@ -1000,7 +1000,7 @@ namespace Lpf2
         updateHubProperty(HubPropertyType::BATTERY_VOLTAGE);
     }
 
-    void HubEmulation::setHubBatteryType(BatteryType batteryType)
+    void HubEmulation::setBatteryType(BatteryType batteryType)
     {
         auto &property = m_hubProperty[(unsigned)HubPropertyType::BATTERY_TYPE];
         if (!property.size())
@@ -1011,7 +1011,7 @@ namespace Lpf2
         updateHubProperty(HubPropertyType::BATTERY_TYPE);
     }
 
-    void HubEmulation::setHubName(std::string hubName)
+    void HubEmulation::setName(std::string hubName)
     {
         if (hubName.length() > 14)
         {
@@ -1024,7 +1024,7 @@ namespace Lpf2
         updateHubProperty(HubPropertyType::ADVERTISING_NAME);
     }
 
-    std::string HubEmulation::getHubName()
+    std::string HubEmulation::getName()
     {
         auto &hubName = m_hubProperty[(unsigned)HubPropertyType::ADVERTISING_NAME];
         std::string str;
@@ -1042,13 +1042,13 @@ namespace Lpf2
         return (BatteryType)prop[0];
     }
 
-    void HubEmulation::setHubFirmwareVersion(Version version)
+    void HubEmulation::setFirmwareVersion(Version version)
     {
         auto v = Utils::packVersion(version);
         m_hubProperty[(unsigned)HubPropertyType::FW_VERSION] = v;
     }
 
-    void HubEmulation::setHubHardwareVersion(Version version)
+    void HubEmulation::setHardwareVersion(Version version)
     {
         auto v = Utils::packVersion(version);
         m_hubProperty[(unsigned)HubPropertyType::HW_VERSION] = v;
@@ -1090,7 +1090,7 @@ namespace Lpf2
         uint8_t powerLevelData[3] = {0x02, 0x0A, 0x00};
         scanResponseData.addData(powerLevelData, sizeof(powerLevelData));
 
-        scanResponseData.setName(getHubName());
+        scanResponseData.setName(getName());
         return scanResponseData;
     }
 
@@ -1107,7 +1107,7 @@ namespace Lpf2
         }
         LPF2_LOG_D("Starting BLE");
 
-        NimBLEDevice::init(getHubName());
+        NimBLEDevice::init(getName());
         NimBLEDevice::setOwnAddrType(BLE_OWN_ADDR_PUBLIC);
         NimBLEDevice::setPower(ESP_PWR_LVL_N0, NimBLETxPowerType::Advertise); // 0dB, Advertisment
         reset();

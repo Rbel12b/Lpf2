@@ -1027,7 +1027,7 @@ namespace Lpf2
      * @brief Set name of the HUB
      * @param [in] name character array which contains the name (max 14 characters are supported)
      */
-    void Hub::setHubName(std::string name)
+    void Hub::setName(std::string name)
     {
         if (name.size() > 14)
         {
@@ -1322,7 +1322,7 @@ namespace Lpf2
         return str;
     }
 
-    std::string Hub::getHubName()
+    std::string Hub::getName()
     {
         auto &hubName = m_hubProperty[(unsigned)HubPropertyType::ADVERTISING_NAME];
         std::string str;

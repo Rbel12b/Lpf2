@@ -40,7 +40,7 @@ void setup()
     Lpf2::DeviceDescRegistry::registerDefault();
     hub.setUseBuiltInDevices(true);
     hub.start();
-    hub.setHubBatteryLevel(80);
+    hub.setBatteryLevel(80);
 
 #ifdef USE_LOCAL_PORT
     io.init(15, 16, 21, 10);

@@ -105,11 +105,11 @@ namespace Lpf2
         std::string getHubPropStr(HubPropertyType propId);
         static std::string getHubPropStr(HubPropertyType propId, std::vector<uint8_t> prop);
 
-        std::string getHubName();
+        std::string getName();
         BatteryType getBatteryType();
         NimBLEAddress getHubAddress();
         HubType getHubType();
-        void setHubName(std::string name);
+        void setName(std::string name);
 
     private:
         std::unordered_map<PortNum, Remote::Port *> m_remotePorts;

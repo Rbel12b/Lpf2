@@ -175,15 +175,15 @@ namespace Lpf2
          * built-in devices, defaults to false. (Call before start())
          */
         void setUseBuiltInDevices(bool use);
-        void setHubBatteryLevel(uint8_t batteryLevel);
-        void setHubBatteryType(BatteryType batteryType);
-        void setHubName(std::string hubName);
-        void setHubFirmwareVersion(Version version);
-        void setHubHardwareVersion(Version version);
-        void setHubButton(bool pressed);
-        void setHubAlert(HubAlertType alert, bool on);
+        void setBatteryLevel(uint8_t batteryLevel);
+        void setBatteryType(BatteryType batteryType);
+        void setName(std::string hubName);
+        void setFirmwareVersion(Version version);
+        void setHardwareVersion(Version version);
+        void setButtonState(ButtonState state);
+        void setAlert(HubAlertType alert, bool on);
 
-        std::string getHubName();
+        std::string getName();
         BatteryType getBatteryType();
 
         /**
