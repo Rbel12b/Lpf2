@@ -293,7 +293,7 @@ namespace Lpf2
         LPF2_LOG_D("Reset prop %i: %s", (int)propId, Hub::getHubPropStr(propId, prop).c_str());
     }
 
-    void HubEmulation::updateHubAlert(HubAlertType alert, bool on)
+    void HubEmulation::setHubAlert(HubAlertType alert, bool on)
     {
         if (alert >= HubAlertType::END)
         {

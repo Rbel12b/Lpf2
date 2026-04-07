@@ -150,6 +150,8 @@ namespace Lpf2
 
         void reset();
 
+        void setHubRssi(int8_t rssi);
+
     public:
         HubEmulation();
         HubEmulation(std::string hubName, HubType hubType);
@@ -170,21 +172,19 @@ namespace Lpf2
 
         /**
          * @brief sets if the library should initialize the default
-         * built-in devices, defaults to false.
+         * built-in devices, defaults to false. (Call before start())
          */
         void setUseBuiltInDevices(bool use);
-
-        void setHubRssi(int8_t rssi);
         void setHubBatteryLevel(uint8_t batteryLevel);
         void setHubBatteryType(BatteryType batteryType);
         void setHubName(std::string hubName);
-
-        std::string getHubName();
-        BatteryType getBatteryType();
-
         void setHubFirmwareVersion(Version version);
         void setHubHardwareVersion(Version version);
         void setHubButton(bool pressed);
+        void setHubAlert(HubAlertType alert, bool on);
+
+        std::string getHubName();
+        BatteryType getBatteryType();
 
         /**
          * @brief Attach a port object, the class will take care of the devices atached/detached.
@@ -192,7 +192,5 @@ namespace Lpf2
          * @param port The port object, it's lifetime must exceed the HubEmulation instance's lifetime.
          */
         void attachPort(PortNum portNum, Port* port);
-
-        void updateHubAlert(HubAlertType alert, bool on);
     };
 }; // namespace Lpf2
