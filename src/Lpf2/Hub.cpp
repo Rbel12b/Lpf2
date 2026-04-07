@@ -20,7 +20,6 @@
 #include "Lpf2/Util/Values.hpp"
 #include "Lpf2/log/log.h"
 #include "Lpf2/DeviceDescLib.hpp"
-#include "Lpf2/Remote/Port_internal.hpp"
 #include <sstream>
 #include <iomanip>
 #include <algorithm>
@@ -49,8 +48,8 @@ namespace Lpf2
 
         void onDisconnect(BLEClient *bleClient, int reason) override
         {
-            _lpf2Hub->_isConnecting = false;
-            _lpf2Hub->_isConnected = false;
+            _lpf2Hub->m_connecting = false;
+            _lpf2Hub->m_connected = false;
             _lpf2Hub->onDisconnect();
             LPF2_LOG_D("Disconnected client, reason: %i", reason);
         }
@@ -83,10 +82,10 @@ namespace Lpf2
             // Found a device, check if the service is contained and optional if address fits requested address
             LPF2_LOG_D("advertised device: %s", advertisedDevice->toString().c_str());
 
-            if (advertisedDevice->haveServiceUUID() && advertisedDevice->getServiceUUID().equals(_lpf2Hub->_bleUuid) && (_lpf2Hub->_requestedDeviceAddress == nullptr || (_lpf2Hub->_requestedDeviceAddress && advertisedDevice->getAddress().equals(*_lpf2Hub->_requestedDeviceAddress))))
+            if (advertisedDevice->haveServiceUUID() && advertisedDevice->getServiceUUID().equals(_lpf2Hub->m_bleHubServiceUuid) && (_lpf2Hub->m_bleRequestedDeviceAddress == nullptr || (_lpf2Hub->m_bleRequestedDeviceAddress && advertisedDevice->getAddress().equals(*_lpf2Hub->m_bleRequestedDeviceAddress))))
             {
                 advertisedDevice->getScan()->stop();
-                _lpf2Hub->_pServerAddress = new BLEAddress(advertisedDevice->getAddress());
+                _lpf2Hub->m_bleServerAddress = new BLEAddress(advertisedDevice->getAddress());
                 _lpf2Hub->setHubNameProp(advertisedDevice->getName());
 
                 if (advertisedDevice->haveManufacturerData())
@@ -125,7 +124,7 @@ namespace Lpf2
                         }
                     }
                 }
-                _lpf2Hub->_isConnecting = true;
+                _lpf2Hub->m_connecting = true;
             }
         }
     };
@@ -135,7 +134,7 @@ namespace Lpf2
      */
     void Hub::writeValue(MessageType type, const std::vector<uint8_t> &data)
     {
-        if (!_isConnected || !_pRemoteCharacteristic)
+        if (!m_connected || !m_bleHubCharacteristic)
             return;
         size_t size = data.size();
         std::vector<uint8_t> fullData;
@@ -143,7 +142,7 @@ namespace Lpf2
         fullData.push_back((uint8_t)type);
         fullData.insert(fullData.end(), data.begin(), data.end());
         LPF2_LOG_D("write value: %s", Utils::bytes_to_hexString(fullData).c_str());
-        _pRemoteCharacteristic->writeValue(fullData, false);
+        m_bleHubCharacteristic->writeValue(fullData, false);
     }
 
     /**
@@ -217,7 +216,7 @@ namespace Lpf2
             LPF2_LOG_E("Invalid HUB property.");
             return;
         }
-        auto &prop = hubProperty[(uint8_t)propId];
+        auto &prop = m_hubProperty[(uint8_t)propId];
         prop = data;
         if (sendUpdate)
             sendHubPropertyUpdate(propId);
@@ -234,7 +233,7 @@ namespace Lpf2
             return;
         if (isPending_warn())
             return;
-        auto &prop = hubProperty[(uint8_t)propId];
+        auto &prop = m_hubProperty[(uint8_t)propId];
         std::vector<uint8_t> payload;
         payload.push_back((uint8_t)propId);
         payload.push_back((uint8_t)HubPropertyOperation::SET_DOWNSTREAM);
@@ -317,11 +316,11 @@ namespace Lpf2
             LPF2_LOG_E("Invalid HUB property.");
             return;
         }
-        auto &prop = hubProperty[(uint8_t)propId];
+        auto &prop = m_hubProperty[(uint8_t)propId];
 
-        if (pendingRequest.msgType == MessageType::HUB_PROPERTIES)
+        if (m_pendingRequest.msgType == MessageType::HUB_PROPERTIES)
         {
-            pendingRequest.valid = false;
+            m_pendingRequest.valid = false;
         }
 
         switch (op)
@@ -351,9 +350,9 @@ namespace Lpf2
         GenericErrorType errorType = (GenericErrorType)message[(uint8_t)MessageByte::OPERATION];
         MessageType msgType = (MessageType)message[(uint8_t)MessageByte::PROPERTY];
 
-        if (pendingRequest.msgType == msgType)
+        if (m_pendingRequest.msgType == msgType)
         {
-            pendingRequest.valid = false;
+            m_pendingRequest.valid = false;
         }
 
         switch (errorType)
@@ -389,7 +388,7 @@ namespace Lpf2
             {
                 return;
             }
-            if (attachedPorts.count(portNum) && attachedPorts[portNum] != DeviceType::UNKNOWNDEVICE)
+            if (m_attachedPortsDevice.count(portNum) && m_attachedPortsDevice[portNum] != DeviceType::UNKNOWNDEVICE)
             {
                 LPF2_LOG_E("Port 0x%02X has another device attached.", (int)portNum);
                 break;
@@ -407,21 +406,21 @@ namespace Lpf2
                        FWRew.Major, FWRew.Minor, FWRew.Bugfix, FWRew.Build,
                        (int)portNum, (int)devType);
 
-            attachedPorts[portNum] = devType;
+            m_attachedPortsDevice[portNum] = devType;
             auto port = _getPort(portNum);
             if (auto desc = DeviceDescRegistry::instance().getDescriptor(devType))
             {
-                port->setDevType(devType);
+                port->m_deviceType = devType;
                 port->setFromDesc(desc);
             }
             break;
         }
         case IOEvent::DETACHED_IO:
         {
-            attachedPorts[portNum] = DeviceType::UNKNOWNDEVICE;
+            m_attachedPortsDevice[portNum] = DeviceType::UNKNOWNDEVICE;
             auto port = _getPort(portNum);
-            port->setDevType(DeviceType::UNKNOWNDEVICE);
-            port->getModes_mod().clear();
+            port->m_deviceType = DeviceType::UNKNOWNDEVICE;
+            port->m_modeData.clear();
             break;
         }
         default:
@@ -442,9 +441,9 @@ namespace Lpf2
         PortNum portNum = (PortNum)message[(uint8_t)MessageByte::PORT_ID];
         uint8_t infoType = message[(uint8_t)MessageByte::OPERATION];
 
-        if (pendingRequest.msgType == MessageType::PORT_INFORMATION_REQUEST)
+        if (m_pendingRequest.msgType == MessageType::PORT_INFORMATION_REQUEST)
         {
-            pendingRequest.valid = false;
+            m_pendingRequest.valid = false;
         }
 
         auto &port = *_getPort(portNum);
@@ -459,20 +458,20 @@ namespace Lpf2
             {
                 return;
             }
-            port.setCaps(message[5]);
+            port.m_capabilities = message[5];
 
-            port.getModes_mod().resize(message[6]);
-            port.setModes(message[6]);
+            port.m_modeData.resize(message[6]);
+            port.m_modeCount = message[6];
 
-            port.setInModes(message[7] | (message[8] << 8));
-            port.setOutModes(message[9] | (message[10] << 8));
+            port.m_inModesMask = (message[7] | (message[8] << 8));
+            port.m_outModesMask = (message[9] | (message[10] << 8));
             break;
         }
         case 0x02:
         {
             std::vector<uint16_t> combos;
             combos.assign(message.begin() + 5, message.end());
-            port.setModeCombos(combos);
+            port.m_modeCombos = combos;
             break;
         }
         default:
@@ -494,17 +493,17 @@ namespace Lpf2
         uint8_t modeNum = message[(uint8_t)MessageByte::OPERATION];
         ModeInfoType infoType = (ModeInfoType)message[(uint16_t)MessageByte::PAYLOAD];
 
-        if (pendingRequest.msgType == MessageType::PORT_MODE_INFORMATION_REQUEST)
+        if (m_pendingRequest.msgType == MessageType::PORT_MODE_INFORMATION_REQUEST)
         {
-            pendingRequest.valid = false;
+            m_pendingRequest.valid = false;
         }
 
         auto &port = *_getPort(portNum);
-        if (port.getModes_mod().size() <= modeNum)
+        if (port.m_modeData.size() <= modeNum)
         {
-            port.getModes_mod().resize(modeNum + 1);
+            port.m_modeData.resize(modeNum + 1);
         }
-        auto &mode = port.getModes_mod()[modeNum];
+        auto &mode = port.m_modeData[modeNum];
 
         LPF2_LOG_D("Received mode port info: portNum: 0x%02X, mode: %i, infoType: %i", (int)portNum, modeNum, (int)infoType);
 
@@ -618,9 +617,9 @@ namespace Lpf2
             return;
         }
 
-        if (pendingRequest.msgType == MessageType::PORT_INPUT_FORMAT_SETUP_SINGLE)
+        if (m_pendingRequest.msgType == MessageType::PORT_INPUT_FORMAT_SETUP_SINGLE)
         {
-            pendingRequest.valid = false;
+            m_pendingRequest.valid = false;
         }
 
         PortInputFormatSingle inputFormat;
@@ -649,7 +648,7 @@ namespace Lpf2
         }
         auto &port = *_getPort(portNum);
         uint8_t mode = m_portInputFormatMap[portNum].mode;
-        auto &modeData = port.getModes_mod();
+        auto &modeData = port.m_modeData;
         if (modeData.size() <= mode)
         {
             return;
@@ -660,7 +659,7 @@ namespace Lpf2
 
     void Hub::requestInfos()
     {
-        if (pendingRequest.valid)
+        if (m_pendingRequest.valid)
             return;
 
         if (!m_rateLimiter.okayToSend())
@@ -767,7 +766,7 @@ namespace Lpf2
             auto &port = *_getPort(m_dataRequestState.portNum);
             if (m_dataRequestState.mode >= port.getModeCount())
             {
-                port.setDevType(attachedPorts[m_dataRequestState.portNum]);
+                port.m_deviceType = m_attachedPortsDevice[m_dataRequestState.portNum];
                 m_dataRequestState.mode = 0;
                 m_dataRequestState.info = 0;
                 m_dataRequestState.finishedRequests = true;
@@ -803,7 +802,7 @@ namespace Lpf2
 
     bool Hub::isPending_warn()
     {
-        if (pendingRequest.valid)
+        if (m_pendingRequest.valid)
         {
             LPF2_LOG_W("Another request is still pending.");
             return true;
@@ -813,28 +812,29 @@ namespace Lpf2
 
     void Hub::pending(MessageType msgType)
     {
-        pendingRequest.sentTime = LPF2_GET_TIME();
-        pendingRequest.msgType = msgType;
-        pendingRequest.valid = true;
+        m_pendingRequest.sentTime = LPF2_GET_TIME();
+        m_pendingRequest.msgType = msgType;
+        m_pendingRequest.valid = true;
     }
 
-    Remote::Port_internal *Hub::_getPort(PortNum portNum)
+    Remote::Port *Hub::_getPort(PortNum portNum)
     {
-        if (!remotePorts.count(portNum))
+        if (!m_remotePorts.count(portNum))
         {
-            remotePorts[portNum] = nullptr;
+            m_remotePorts[portNum] = nullptr;
             LPF2_LOG_D("Adding new NULL port.");
         }
-        Remote::Port_internal *pPort = remotePorts[portNum];
+        Remote::Port *pPort = m_remotePorts[portNum];
         if (pPort == nullptr)
         {
-            pPort = new Remote::Port_internal(this, portNum);
+            pPort = new Remote::Port(this);
             if (!pPort)
             {
                 LPF2_LOG_E("Failed to allocate port.");
             }
             LPF2_LOG_D("Initializing port.");
-            remotePorts[portNum] = pPort;
+            pPort->m_portNum = portNum;
+            m_remotePorts[portNum] = pPort;
         }
         return pPort;
     }
@@ -851,7 +851,7 @@ namespace Lpf2
 
     void Hub::onDisconnect()
     {
-        attachedPorts.clear();
+        m_attachedPortsDevice.clear();
     }
 
     void Hub::setHubNameProp(std::string name)
@@ -869,8 +869,13 @@ namespace Lpf2
 
     Hub::~Hub()
     {
-        std::for_each(remotePorts.begin(), remotePorts.end(), [](std::pair<PortNum, Port *> pair)
+        std::for_each(m_remotePorts.begin(), m_remotePorts.end(), [](std::pair<PortNum, Port *> pair)
                       { delete pair.second; });
+        if (m_bleAdvertiseDeviceCallback)
+        {
+            delete m_bleAdvertiseDeviceCallback;
+            m_bleAdvertiseDeviceCallback = nullptr;
+        }
     };
 
     /**
@@ -879,29 +884,29 @@ namespace Lpf2
     void Hub::init()
     {
         m_dataRequestState.finishedRequests = false;
-        _isConnected = false;
-        _isConnecting = false;
-        _bleUuid = BLEUUID(LPF2_UUID);
-        _charachteristicUuid = BLEUUID(LPF2_CHARACHTERISTIC);
+        m_connected = false;
+        m_connecting = false;
+        m_bleHubServiceUuid = BLEUUID(LPF2_UUID);
+        m_bleHubCharachteristicUuid = BLEUUID(LPF2_CHARACHTERISTIC);
         m_hubType = HubType::UNKNOWNHUB;
 
         BLEDevice::init("");
-        pBLEScan = BLEDevice::getScan();
+        m_bleScan = BLEDevice::getScan();
 
-        _advertiseDeviceCallback = new Lpf2HubAdvertisedDeviceCallbacks(this);
+        m_bleAdvertiseDeviceCallback = new Lpf2HubAdvertisedDeviceCallbacks(this);
 
-        if (_advertiseDeviceCallback == nullptr)
+        if (m_bleAdvertiseDeviceCallback == nullptr)
         {
             LPF2_LOG_E("failed to create advertise device callback");
             return;
         }
 
-        pBLEScan->setScanCallbacks(_advertiseDeviceCallback);
+        m_bleScan->setScanCallbacks(m_bleAdvertiseDeviceCallback);
 
-        pBLEScan->setActiveScan(true);
+        m_bleScan->setActiveScan(true);
         // start method with callback function to enforce the non blocking scan. If no callback function is used,
         // the scan starts in a blocking manner
-        pBLEScan->start(_scanDuration);
+        m_bleScan->start(m_bleScanDuration);
     }
 
     /**
@@ -910,7 +915,7 @@ namespace Lpf2
      */
     void Hub::init(std::string deviceAddress)
     {
-        _requestedDeviceAddress = new BLEAddress(deviceAddress, 0);
+        m_bleRequestedDeviceAddress = new BLEAddress(deviceAddress, 0);
         init();
     }
 
@@ -920,7 +925,7 @@ namespace Lpf2
      */
     void Hub::init(uint32_t scanDuration)
     {
-        _scanDuration = scanDuration;
+        m_bleScanDuration = scanDuration;
         init();
     }
 
@@ -931,8 +936,8 @@ namespace Lpf2
      */
     void Hub::init(std::string deviceAddress, uint32_t scanDuration)
     {
-        _requestedDeviceAddress = new BLEAddress(deviceAddress, 0);
-        _scanDuration = scanDuration;
+        m_bleRequestedDeviceAddress = new BLEAddress(deviceAddress, 0);
+        m_bleScanDuration = scanDuration;
         init();
     }
 
@@ -941,13 +946,13 @@ namespace Lpf2
         if (!isConnected())
             return;
 
-        if (pendingRequest.valid && LPF2_GET_TIME() - pendingRequest.sentTime >= 200)
+        if (m_pendingRequest.valid && LPF2_GET_TIME() - m_pendingRequest.sentTime >= 200)
         {
-            LPF2_LOG_E("Request timed out: msgType: %i", (int)pendingRequest.msgType);
-            pendingRequest.valid = false;
+            LPF2_LOG_E("Request timed out: msgType: %i", (int)m_pendingRequest.msgType);
+            m_pendingRequest.valid = false;
         }
 
-        if (pendingRequest.valid)
+        if (m_pendingRequest.valid)
             return;
 
         if (!m_dataRequestState.finishedRequests)
@@ -955,7 +960,7 @@ namespace Lpf2
             requestInfos();
         }
 
-        std::for_each(attachedPorts.begin(), attachedPorts.end(), [this](std::pair<PortNum, DeviceType> attachedPort)
+        std::for_each(m_attachedPortsDevice.begin(), m_attachedPortsDevice.end(), [this](std::pair<PortNum, DeviceType> attachedPort)
                       {
         _getPort(attachedPort.first);
         if (!m_dataRequestState.finishedRequests)
@@ -964,7 +969,7 @@ namespace Lpf2
         }
 
         if (attachedPort.second != DeviceType::UNKNOWNDEVICE &&
-            !(remotePorts[attachedPort.first]->isDeviceConnected()))
+            !(m_remotePorts[attachedPort.first]->isDeviceConnected()))
         {
             LPF2_LOG_D("Starting requests for: port: 0x%02X, dev: 0x%02X",
                 (int)attachedPort.first, (int)attachedPort.second);
@@ -981,7 +986,7 @@ namespace Lpf2
      */
     NimBLEAddress Hub::getHubAddress()
     {
-        NimBLEAddress pAddress = *_pServerAddress;
+        NimBLEAddress pAddress = *m_bleServerAddress;
         return pAddress;
     }
 
@@ -1015,14 +1020,14 @@ namespace Lpf2
 
     bool Hub::infoReady()
     {
-        return m_dataRequestState.finishedRequests && !pendingRequest.valid;
+        return m_dataRequestState.finishedRequests && !m_pendingRequest.valid;
     }
 
     /**
      * @brief Set name of the HUB
      * @param [in] name character array which contains the name (max 14 characters are supported)
      */
-    void Hub::setHubName(std::string name)
+    void Hub::setName(std::string name)
     {
         if (name.size() > 14)
         {
@@ -1037,7 +1042,7 @@ namespace Lpf2
      */
     bool Hub::connectHub()
     {
-        BLEAddress pAddress = *_pServerAddress;
+        BLEAddress pAddress = *m_bleServerAddress;
         NimBLEClient *pClient = nullptr;
 
         LPF2_LOG_D("number of ble clients: %d", NimBLEDevice::getCreatedClientCount());
@@ -1090,32 +1095,32 @@ namespace Lpf2
         }
 
         LPF2_LOG_D("connected to: %s, RSSI: %d", pClient->getPeerAddress().toString().c_str(), pClient->getRssi());
-        BLERemoteService *pRemoteService = pClient->getService(_bleUuid);
+        BLERemoteService *pRemoteService = pClient->getService(m_bleHubServiceUuid);
         if (pRemoteService == nullptr)
         {
             LPF2_LOG_E("failed to get ble client");
             return false;
         }
 
-        _pRemoteCharacteristic = pRemoteService->getCharacteristic(_charachteristicUuid);
-        if (_pRemoteCharacteristic == nullptr)
+        m_bleHubCharacteristic = pRemoteService->getCharacteristic(m_bleHubCharachteristicUuid);
+        if (m_bleHubCharacteristic == nullptr)
         {
             LPF2_LOG_E("failed to get ble service");
             return false;
         }
 
         // register notifications (callback function) for the characteristic
-        if (_pRemoteCharacteristic->canNotify())
+        if (m_bleHubCharacteristic->canNotify())
         {
-            _pRemoteCharacteristic->subscribe(true, std::bind(&Hub::notifyCallback, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3, std::placeholders::_4), true);
+            m_bleHubCharacteristic->subscribe(true, std::bind(&Hub::notifyCallback, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3, std::placeholders::_4), true);
         }
 
         // add callback instance to get notified if a disconnect event appears
         pClient->setClientCallbacks(new HubClientCallback(this));
 
         // Set states
-        _isConnected = true;
-        _isConnecting = false;
+        m_connected = true;
+        m_connecting = false;
         m_dataRequestState.finishedRequests = false;
         m_dataRequestState.propId = HubPropertyType::ADVERTISING_NAME;
         m_dataRequestState.mode = 0;
@@ -1130,7 +1135,7 @@ namespace Lpf2
      */
     bool Hub::isConnecting()
     {
-        return _isConnecting;
+        return m_connecting;
     }
 
     /**
@@ -1138,7 +1143,7 @@ namespace Lpf2
      */
     bool Hub::isConnected()
     {
-        return _isConnected;
+        return m_connected;
     }
 
     /**
@@ -1147,7 +1152,7 @@ namespace Lpf2
      */
     bool Hub::isScanning()
     {
-        return pBLEScan->isScanning();
+        return m_bleScan->isScanning();
     }
 
     /**
@@ -1178,7 +1183,7 @@ namespace Lpf2
         oss << "Battery voltage: " << getHubPropStr(HubPropertyType::BATTERY_VOLTAGE) << "\n";
         oss << "Button state: " << getHubPropStr(HubPropertyType::BUTTON) << "\n";
         oss << "Devices:" << "\n";
-        std::for_each(remotePorts.begin(), remotePorts.end(), [&oss](std::pair<PortNum, Port *> pair)
+        std::for_each(m_remotePorts.begin(), m_remotePorts.end(), [&oss](std::pair<PortNum, Port *> pair)
                       {
         oss << pair.second->getInfoStr();
         oss << "\n"; });
@@ -1192,7 +1197,7 @@ namespace Lpf2
             LPF2_LOG_E("Invalid HUB property.");
             return "";
         }
-        auto &prop = hubProperty[(uint8_t)propId];
+        auto &prop = m_hubProperty[(uint8_t)propId];
         return getHubPropStr(propId, prop);
     }
 
@@ -1317,9 +1322,9 @@ namespace Lpf2
         return str;
     }
 
-    std::string Hub::getHubName()
+    std::string Hub::getName()
     {
-        auto &hubName = hubProperty[(unsigned)HubPropertyType::ADVERTISING_NAME];
+        auto &hubName = m_hubProperty[(unsigned)HubPropertyType::ADVERTISING_NAME];
         std::string str;
         str.insert(str.end(), hubName.begin(), hubName.end());
         return str;
@@ -1327,7 +1332,7 @@ namespace Lpf2
 
     BatteryType Hub::getBatteryType()
     {
-        auto &prop = hubProperty[(unsigned)HubPropertyType::BATTERY_TYPE];
+        auto &prop = m_hubProperty[(unsigned)HubPropertyType::BATTERY_TYPE];
         if (!prop.size())
         {
             prop.push_back((uint8_t)BatteryType::NORMAL);

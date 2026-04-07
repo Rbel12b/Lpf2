@@ -89,12 +89,12 @@ namespace Lpf2::Local
                 nextModeExt = false;
             }
 
-            if (mode >= modes)
+            if (mode >= m_modeCount)
             {
                 break;
             }
 
-            uint8_t size = modeData[mode].data_sets * getDataSize(modeData[mode].format);
+            uint8_t size = m_modeData[mode].data_sets * getDataSize(m_modeData[mode].format);
 
             uint8_t readLen = size;
             if (msg.length < size)
@@ -102,14 +102,14 @@ namespace Lpf2::Local
                 readLen = msg.length;
             }
 
-            if (modeData[mode].rawData.size() < readLen)
+            if (m_modeData[mode].rawData.size() < readLen)
             {
-                modeData[mode].rawData.resize(readLen);
+                m_modeData[mode].rawData.resize(readLen);
             }
 
             for (int i = 0; i < readLen; i++)
             {
-                modeData[mode].rawData[i] = msg.data[i];
+                m_modeData[mode].rawData[i] = msg.data[i];
             }
             break;
         }
@@ -141,19 +141,19 @@ namespace Lpf2::Local
         {
             if (msg.length == 1)
             {
-                modes = views = msg.data[1] + 1;
+                m_modeCount = m_viewCount = msg.data[1] + 1;
             }
             else if (msg.length == 2)
             {
-                modes = msg.data[0] + 1;
-                views = msg.data[1] + 1;
+                m_modeCount = msg.data[0] + 1;
+                m_viewCount = msg.data[1] + 1;
             }
             else if (msg.length == 4)
             {
-                modes = msg.data[2] + 1;
-                views = msg.data[3] + 1;
+                m_modeCount = msg.data[2] + 1;
+                m_viewCount = msg.data[3] + 1;
             }
-            modeData.resize(modes);
+            m_modeData.resize(m_modeCount);
             break;
         }
         case CMD_SPEED:
@@ -188,19 +188,19 @@ namespace Lpf2::Local
     void Port::parseMessageInfo(const Message &msg)
     {
         uint8_t mode = GET_MODE(msg.cmd) + ((msg.data[0] & INFO_MODE_PLUS_8) ? 8 : 0);
-        if (mode >= modes)
+        if (mode >= m_modeCount)
         {
             return;
         }
-        if (modeData.size() < static_cast<size_t>(modes))
+        if (m_modeData.size() < static_cast<size_t>(m_modeCount))
         {
-            modeData.resize(modes);
+            m_modeData.resize(m_modeCount);
         }
         switch (msg.data[0] & 0xDF)
         {
         case INFO_NAME:
         {
-            if (mode >= modes)
+            if (mode >= m_modeCount)
             {
                 break;
             }
@@ -214,50 +214,50 @@ namespace Lpf2::Local
                 }
                 name += msg.data[i];
             }
-            modeData[mode].name = name;
+            m_modeData[mode].name = name;
             i++;
             if ((i + 6) <= msg.length && msg.data.size() >= static_cast<size_t>(i + 6))
             {
-                std::memcpy(&modeData[mode].flags.bytes, msg.data.data() + i, 6);
+                std::memcpy(&m_modeData[mode].flags.bytes, msg.data.data() + i, 6);
             }
             break;
         }
         case INFO_RAW:
         {
-            if (mode >= modes || msg.length < 9)
+            if (mode >= m_modeCount || msg.length < 9)
             {
                 break;
             }
             if (msg.data.size() >= 9)
             {
-                std::memcpy(&modeData[mode].min, msg.data.data() + 1, 4);
-                std::memcpy(&modeData[mode].max, msg.data.data() + 5, 4);
+                std::memcpy(&m_modeData[mode].min, msg.data.data() + 1, 4);
+                std::memcpy(&m_modeData[mode].max, msg.data.data() + 5, 4);
             }
             break;
         }
         case INFO_PCT:
         {
-            if (mode >= modes || msg.length < 9)
+            if (mode >= m_modeCount || msg.length < 9)
             {
                 break;
             }
-            std::memcpy(&modeData[mode].PCTmin, msg.data.data() + 1, 4);
-            std::memcpy(&modeData[mode].PCTmax, msg.data.data() + 5, 4);
+            std::memcpy(&m_modeData[mode].PCTmin, msg.data.data() + 1, 4);
+            std::memcpy(&m_modeData[mode].PCTmax, msg.data.data() + 5, 4);
             break;
         }
         case INFO_SI:
         {
-            if (mode >= modes || msg.length < 9)
+            if (mode >= m_modeCount || msg.length < 9)
             {
                 break;
             }
-            std::memcpy(&modeData[mode].SImin, msg.data.data() + 1, 4);
-            std::memcpy(&modeData[mode].SImax, msg.data.data() + 5, 4);
+            std::memcpy(&m_modeData[mode].SImin, msg.data.data() + 1, 4);
+            std::memcpy(&m_modeData[mode].SImax, msg.data.data() + 5, 4);
             break;
         }
         case INFO_UNITS:
         {
-            if (mode >= modes)
+            if (mode >= m_modeCount)
             {
                 break;
             }
@@ -271,17 +271,17 @@ namespace Lpf2::Local
                 }
                 unit += msg.data[i];
             }
-            modeData[mode].unit = unit;
+            m_modeData[mode].unit = unit;
             break;
         }
         case INFO_MAPPING:
         {
-            if (mode >= modes || msg.length < 3)
+            if (mode >= m_modeCount || msg.length < 3)
             {
                 break;
             }
-            modeData[mode].in.val = msg.data[1];
-            modeData[mode].out.val = msg.data[2];
+            m_modeData[mode].in.val = msg.data[1];
+            m_modeData[mode].out.val = msg.data[2];
             break;
         }
         case INFO_MODE_COMBOS:
@@ -293,26 +293,26 @@ namespace Lpf2::Local
             }
             for (int i = 0; i < num; i++)
             {
-                std::memcpy(&modeCombos[i], msg.data.data() + 1 + (i * 2), 2);
-                if (comboNum == 0 && modeCombos[num] == 0)
+                std::memcpy(&m_modeCombos[i], msg.data.data() + 1 + (i * 2), 2);
+                if (m_comboNum == 0 && m_modeCombos[num] == 0)
                 {
-                    comboNum = i;
+                    m_comboNum = i;
                 }
             }
             break;
         }
         case INFO_FORMAT:
         {
-            if (mode >= modes || msg.length < 5)
+            if (mode >= m_modeCount || msg.length < 5)
             {
                 break;
             }
-            modeData[mode].data_sets = msg.data[1];
-            modeData[mode].format = msg.data[2];
-            modeData[mode].figures = msg.data[3];
-            modeData[mode].decimals = msg.data[4];
+            m_modeData[mode].data_sets = msg.data[1];
+            m_modeData[mode].format = msg.data[2];
+            m_modeData[mode].figures = msg.data[3];
+            m_modeData[mode].decimals = msg.data[4];
 
-            if (mode == modes - 1)
+            if (mode == m_modeCount - 1)
             {
                 m_deviceDataReceived = true;
             }

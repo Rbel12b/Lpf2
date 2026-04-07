@@ -40,54 +40,42 @@ namespace Lpf2
         void onConnect(NimBLEServer *pServer, NimBLEConnInfo &connInfo) override
         {
             LPF2_LOG_D("Device connected");
-            _lpf2HubEmulation->isConnected = true;
-            _lpf2HubEmulation->connHandle = connInfo.getConnHandle();
+            _lpf2HubEmulation->m_connected = true;
+            _lpf2HubEmulation->m_bleConnHandle = connInfo.getConnHandle();
             pServer->updateConnParams(connInfo.getConnHandle(), 24, 48, 0, 60);
         };
 
         void onDisconnect(NimBLEServer *pServer, NimBLEConnInfo &connInfo, int reason) override
         {
             LPF2_LOG_D("Device disconnected, reason: %i", reason);
-            _lpf2HubEmulation->isConnected = false;
-            _lpf2HubEmulation->isSubscribed = false;
-            _lpf2HubEmulation->isPortInitialized = false;
-            _lpf2HubEmulation->connHandle = 0xFFFF;
+            _lpf2HubEmulation->m_connected = false;
+            _lpf2HubEmulation->m_subscribed = false;
+            _lpf2HubEmulation->m_bleConnHandle = 0xFFFF;
         }
     };
 
-    class Lpf2HubCharacteristicCallbacks : public NimBLECharacteristicCallbacks
+    void HubEmulation::Lpf2HubCharacteristicCallbacks::onSubscribe(NimBLECharacteristic *pCharacteristic, NimBLEConnInfo &connInfo, uint16_t subValue)
     {
-        HubEmulation *_lpf2HubEmulation;
+        LPF2_LOG_D("Client subscription status: %s (%d)",
+                subValue == 0 ? "Un-Subscribed" : subValue == 1 ? "Notifications"
+                                                : subValue == 2   ? "Indications"
+                                                : subValue == 3   ? "Notifications and Indications"
+                                                                : "unknown subscription status",
+                subValue);
 
-    public:
-        Lpf2HubCharacteristicCallbacks(HubEmulation *lpf2HubEmulation) : NimBLECharacteristicCallbacks()
-        {
-            _lpf2HubEmulation = lpf2HubEmulation;
-        }
+        _lpf2HubEmulation->m_subscribed = subValue != 0;
+    }
 
-        void onSubscribe(NimBLECharacteristic *pCharacteristic, NimBLEConnInfo &connInfo, uint16_t subValue) override
-        {
-            LPF2_LOG_D("Client subscription status: %s (%d)",
-                       subValue == 0 ? "Un-Subscribed" : subValue == 1 ? "Notifications"
-                                                     : subValue == 2   ? "Indications"
-                                                     : subValue == 3   ? "Notifications and Indications"
-                                                                       : "unknown subscription status",
-                       subValue);
+    void HubEmulation::Lpf2HubCharacteristicCallbacks::onWrite(NimBLECharacteristic *pCharacteristic, NimBLEConnInfo &connInfo)
+    {
+        auto* value = new NimBLEAttValue(std::move(pCharacteristic->getValue()));
+        xQueueSend(_lpf2HubEmulation->m_msgQueue, &value, 1);
+    }
 
-            _lpf2HubEmulation->isSubscribed = subValue != 0;
-        }
-
-        void onWrite(NimBLECharacteristic *pCharacteristic, NimBLEConnInfo &connInfo) override
-        {
-            auto* value = new NimBLEAttValue(std::move(pCharacteristic->getValue()));
-            xQueueSend(_lpf2HubEmulation->m_msgQueue, &value, 1);
-        }
-
-        void onRead(NimBLECharacteristic *pCharacteristic, NimBLEConnInfo &connInfo) override
-        {
-            LPF2_LOG_D("read request");
-        }
-    };
+    void HubEmulation::Lpf2HubCharacteristicCallbacks::onRead(NimBLECharacteristic *pCharacteristic, NimBLEConnInfo &connInfo)
+    {
+        LPF2_LOG_D("read request");
+    }
 
     void HubEmulation::processMessages(const std::vector<uint8_t>& message)
     {
@@ -101,7 +89,7 @@ namespace Lpf2
             handleHubPropertyMessage(message);
             break;
         case MessageType::HUB_ACTIONS:
-            LPF2_LOG_W("HUB_ACTIONS not implemented yet");
+            handleHubActionsMessage(message);
             break;
         case MessageType::HUB_ALERTS:
             handleHubAlertsMessage(message);
@@ -149,7 +137,7 @@ namespace Lpf2
 
     void HubEmulation::updateHubProperty(HubPropertyType propId)
     {
-        if (!updateHubPropertyEnabled[(uint8_t)propId])
+        if (!m_updateHubPropertyEnabled[(uint8_t)propId])
             return;
         sendHubPropertyUpdate(propId);
     }
@@ -164,7 +152,7 @@ namespace Lpf2
             payload.push_back((uint8_t)GenericErrorType::CMD_NOT_RECOGNIZED);
             writeResponse(MessageType::GENERIC_ERROR_MESSAGES, payload);
         }
-        auto &prop = hubProperty[(uint8_t)propId];
+        auto &prop = m_hubProperty[(uint8_t)propId];
         LPF2_LOG_D("Sent prop update: %s", Hub::getHubPropStr(propId, prop).c_str());
         std::vector<uint8_t> payload;
         payload.push_back((uint8_t)propId);
@@ -180,7 +168,7 @@ namespace Lpf2
             LPF2_LOG_E("Invalid HUB property requested.");
             return;
         }
-        auto &prop = hubProperty[(uint8_t)propId];
+        auto &prop = m_hubProperty[(uint8_t)propId];
         // These values were extracted from a real LEGO Technic Hub (except MAC, and rssi)
         switch (propId)
         {
@@ -305,15 +293,15 @@ namespace Lpf2
         LPF2_LOG_D("Reset prop %i: %s", (int)propId, Hub::getHubPropStr(propId, prop).c_str());
     }
 
-    void HubEmulation::updateHubAlert(HubAlertType alert, bool on)
+    void HubEmulation::setAlert(HubAlertType alert, bool on)
     {
         if (alert >= HubAlertType::END)
         {
             LPF2_LOG_E("Invalid Hub alert type: %i", (int)alert);
             return;
         }
-        hubAlert[(uint8_t)alert] = on;
-        if (hubAlertEnabled[(uint8_t)alert])
+        m_hubAlert[(uint8_t)alert] = on;
+        if (m_hubAlertEnabled[(uint8_t)alert])
         {
             sendHubAlertUpdate(alert);
         }
@@ -324,7 +312,7 @@ namespace Lpf2
         std::vector<uint8_t> payload;
         payload.push_back((uint8_t)alert);
         payload.push_back((uint8_t)HubAlertOperation::UPDATE_UPSTREAM);
-        payload.push_back(hubAlert[(uint8_t)alert] ? 255 : 0);
+        payload.push_back(m_hubAlert[(uint8_t)alert] ? 255 : 0);
         writeResponse(MessageType::HUB_ALERTS, payload);
     }
 
@@ -332,8 +320,8 @@ namespace Lpf2
     {
         for (uint8_t i = 0; i < (uint8_t)HubAlertType::END; i++)
         {
-            hubAlertEnabled[i] = false;
-            hubAlert[i] = false;
+            m_hubAlertEnabled[i] = false;
+            m_hubAlert[i] = false;
         }
     }
 
@@ -356,13 +344,13 @@ namespace Lpf2
         case HubAlertOperation::ENABLE_UPDATES_DOWNSTREAM:
         {
             LPF2_LOG_D("Enable Hub alert: %i", (int)alertType);
-            hubAlertEnabled[(uint8_t)alertType] = true;
+            m_hubAlertEnabled[(uint8_t)alertType] = true;
             break;
         }
         case HubAlertOperation::DISABLE_UPDATES_DOWNSTREAM:
         {
             LPF2_LOG_D("Disable Hub alert: %i", (int)alertType);
-            hubAlertEnabled[(uint8_t)alertType] = false;
+            m_hubAlertEnabled[(uint8_t)alertType] = false;
             break;
         }
         case HubAlertOperation::REQUEST_UPDATE_DOWNSTREAM:
@@ -380,15 +368,41 @@ namespace Lpf2
         return;
     }
 
+    void HubEmulation::handleHubActionsMessage(std::vector<uint8_t> message)
+    {
+        if (message.size() < 4)
+        {
+            LPF2_LOG_E("Unexpected message length: %i", message.size());
+            return;
+        }
+        HubActionType action = (HubActionType)message[(uint8_t)MessageByte::PROPERTY];
+        switch (action)
+        {
+        case HubActionType::SWITCH_OFF_HUB:
+        case HubActionType::DISCONNECT:
+        case HubActionType::FAST_POWER_DOWN:
+        {
+            m_bleServer->disconnect(m_bleConnHandle);
+            break;
+        }
+        default:
+            goto unimplemented;
+        }
+        return;
+    unimplemented:
+        LPF2_LOG_E("Unimplemented action: %i", action);
+        return;
+    }
+
     void HubEmulation::handlePortInformationRequestMessage(std::vector<uint8_t> message)
     {
         PortNum portNum = (PortNum)message[(uint8_t)MessageByte::PORT_ID];
-        if (attachedPorts.find(portNum) == attachedPorts.end())
+        if (m_attachedPorts.find(portNum) == m_attachedPorts.end())
         {
             LPF2_LOG_W("Port information request for unattached port %d", portNum);
             return;
         }
-        Port *port = attachedPorts[portNum];
+        Port *port = m_attachedPorts[portNum];
         // DeviceType deviceType = port->getDeviceType();
         uint8_t informationType = message[(uint8_t)MessageByte::OPERATION];
 
@@ -432,12 +446,12 @@ namespace Lpf2
     void HubEmulation::handlePortModeInformationRequestMessage(std::vector<uint8_t> message)
     {
         PortNum portNum = (PortNum)message[(uint8_t)MessageByte::PORT_ID];
-        if (attachedPorts.find(portNum) == attachedPorts.end())
+        if (m_attachedPorts.find(portNum) == m_attachedPorts.end())
         {
             LPF2_LOG_W("Port information request for unattached port %d", portNum);
             return;
         }
-        Port *port = attachedPorts[portNum];
+        Port *port = m_attachedPorts[portNum];
         // DeviceType deviceType = port->getDeviceType();
         uint8_t modeNum = message[(uint8_t)MessageByte::OPERATION];
         ModeInfoType modeInfoType = (ModeInfoType)message[(uint8_t)MessageByte::SUB_COMMAND];
@@ -527,7 +541,7 @@ namespace Lpf2
     void HubEmulation::handlePortInputFormatSetupSingleMessage(std::vector<uint8_t> message)
     {
         PortNum portNum = (PortNum)message[(uint8_t)MessageByte::PORT_ID];
-        if (attachedPorts.find(portNum) == attachedPorts.end())
+        if (m_attachedPorts.find(portNum) == m_attachedPorts.end())
         {
             LPF2_LOG_W("Port input format setup (single) for unattached port %d", portNum);
             return;
@@ -557,12 +571,12 @@ namespace Lpf2
             return;
         }
         PortNum portNum = (PortNum)message[(uint8_t)MessageByte::PORT_ID];
-        if (attachedPorts.find(portNum) == attachedPorts.end())
+        if (m_attachedPorts.find(portNum) == m_attachedPorts.end())
         {
             LPF2_LOG_W("Port output command for unattached port %d", portNum);
             return;
         }
-        Port *port = attachedPorts[portNum];
+        Port *port = m_attachedPorts[portNum];
         // uint8_t startupAndCompletion = message[(uint8_t)MessageByte::OPERATION];
         PortOutputSubCommand subcommand = (PortOutputSubCommand)message[(uint8_t)MessageByte::SUB_COMMAND];
         std::vector<uint8_t> payload(message.begin() + 6, message.end());
@@ -621,11 +635,11 @@ namespace Lpf2
     void HubEmulation::checkPort(PortNum portNum, Port *port)
     {
         port->ensureRawDataSize();
-        if (connectedDevices[portNum] != port->isDeviceConnected())
+        if (m_connectedDevices[portNum] != port->isDeviceConnected())
         {
-            connectedDevices[portNum] = port->isDeviceConnected();
+            m_connectedDevices[portNum] = port->isDeviceConnected();
 
-            if (connectedDevices[portNum])
+            if (m_connectedDevices[portNum])
             {
                 LPF2_LOG_I("Device connected to port %d", portNum);
                 std::vector<uint8_t> payload;
@@ -676,10 +690,10 @@ namespace Lpf2
         std::vector<uint8_t> message;
         message.push_back(setup.portNum);
 
-        if (!port || port->modeData.size() <= setup.mode)
+        if (!port || port->m_modeData.size() <= setup.mode)
             return;
         
-        auto &raw = port->modeData[setup.mode].rawData;
+        auto &raw = port->m_modeData[setup.mode].rawData;
         message.insert(message.end(), raw.begin(), raw.end());
         writeResponse(MessageType::PORT_VALUE_SINGLE, message);
     }
@@ -691,7 +705,7 @@ namespace Lpf2
     {                                        \
         auto port = new Virtual::Port();     \
         attachPort((PortNum)portNum, port);  \
-        ownedPorts[(PortNum)portNum] = port; \
+        m_ownedPorts[(PortNum)portNum] = port; \
     } while (0)
 
         switch (m_hubType)
@@ -721,10 +735,10 @@ namespace Lpf2
 #define INIT_DEVICE(portNum, desc)                      \
     do                                                  \
     {                                                   \
-        auto &port = *(ownedPorts[(PortNum)portNum]);   \
+        auto &port = *(m_ownedPorts[(PortNum)portNum]);   \
         auto device = new Virtual::GenericDevice(desc); \
         port.attachDevice(device);                      \
-        ownedDevices.push_back(device);                 \
+        m_ownedDevices.push_back(device);                 \
     } while (0)
 
         switch (m_hubType)
@@ -768,15 +782,15 @@ namespace Lpf2
 
     void HubEmulation::destroyBuiltIn()
     {
-        for (auto &port : ownedPorts)
+        for (auto &port : m_ownedPorts)
         {
             if (port.second)
             {
                 delete port.second;
             }
         }
-        ownedPorts.clear();
-        for (auto &device : ownedDevices)
+        m_ownedPorts.clear();
+        for (auto &device : m_ownedDevices)
         {
             if (device)
             {
@@ -784,7 +798,7 @@ namespace Lpf2
                 device = nullptr;
             }
         }
-        ownedDevices.clear();
+        m_ownedDevices.clear();
     }
 
     void HubEmulation::handleHubPropertyMessage(std::vector<uint8_t> message)
@@ -819,19 +833,19 @@ namespace Lpf2
             }
             std::vector<uint8_t> val;
             val.insert(val.end(), message.begin() + 5, message.end());
-            hubProperty[(uint8_t)propId] = val;
+            m_hubProperty[(uint8_t)propId] = val;
             break;
         }
         case HubPropertyOperation::DISABLE_UPDATES_DOWNSTREAM:
         {
             LPF2_LOG_D("Disable Hub prop: %i", (int)propId);
-            updateHubPropertyEnabled[(uint8_t)propId] = false;
+            m_updateHubPropertyEnabled[(uint8_t)propId] = false;
             break;
         }
         case HubPropertyOperation::ENABLE_UPDATES_DOWNSTREAM:
         {
             LPF2_LOG_D("Enable Hub prop: %i", (int)propId);
-            updateHubPropertyEnabled[(uint8_t)propId] = true;
+            m_updateHubPropertyEnabled[(uint8_t)propId] = true;
             break;
         }
         case HubPropertyOperation::RESET_DOWNSTREAM:
@@ -853,13 +867,19 @@ namespace Lpf2
 
     HubEmulation::HubEmulation(std::string hubName, HubType hubType)
     {
-        setHubName(hubName);
+        setName(hubName);
         m_hubType = hubType;
     }
 
     HubEmulation::~HubEmulation()
     {
+        stop();
         destroyBuiltIn();
+        if (m_bleCharCallbacks)
+        {
+            delete m_bleCharCallbacks;
+            m_bleCharCallbacks = nullptr;
+        }
     }
 
     void HubEmulation::reset()
@@ -868,14 +888,14 @@ namespace Lpf2
         for (uint8_t i = 0; i < (uint8_t)HubPropertyType::END; i++)
         {
             resetHubProperty((HubPropertyType)i);
-            updateHubPropertyEnabled[i] = false;
+            m_updateHubPropertyEnabled[i] = false;
         }
         resetHubAlerts();
     }
 
     void HubEmulation::attachPort(PortNum portNum, Port *port)
     {
-        if (attachedPorts.find(portNum) != attachedPorts.end())
+        if (m_attachedPorts.find(portNum) != m_attachedPorts.end())
         {
             LPF2_LOG_W("Port %d is already attached, overwriting!", portNum);
         }
@@ -884,13 +904,13 @@ namespace Lpf2
             LPF2_LOG_E("Cannot attach null port to port %d", portNum);
             return;
         }
-        connectedDevices[portNum] = false;
-        attachedPorts[portNum] = port;
+        m_connectedDevices[portNum] = false;
+        m_attachedPorts[portNum] = port;
     }
 
     void HubEmulation::writeResponse(MessageType messageType, std::vector<uint8_t> payload)
     {
-        if (!isConnected || !pCharacteristic)
+        if (!m_connected || !m_bleChar)
             return;
         vTaskDelay(10); // Do not overload client
         std::vector<uint8_t> message;
@@ -901,49 +921,51 @@ namespace Lpf2
 
         LPF2_LOG_D("write message (%d): %s", message.size(), Utils::bytes_to_hexString(message).c_str());
 
-        pCharacteristic->setValue(message);
-        pCharacteristic->notify();
+        m_bleChar->setValue(message);
+        m_bleChar->notify();
     }
 
     void HubEmulation::writeValue(std::vector<uint8_t> message)
     {
-        if (!isConnected || !pCharacteristic)
+        if (!m_connected || !m_bleChar)
             return;
 
         LPF2_LOG_D("write message (%d): %s", message.size(), Utils::bytes_to_hexString(message).c_str());
 
-        pCharacteristic->setValue(message);
-        pCharacteristic->notify();
+        m_bleChar->setValue(message);
+        m_bleChar->notify();
     }
 
-    void HubEmulation::setHubButton(bool pressed)
+    void HubEmulation::setButtonState(ButtonState state)
     {
-        auto &property = hubProperty[(unsigned)HubPropertyType::BUTTON];
+        auto &property = m_hubProperty[(unsigned)HubPropertyType::BUTTON];
         if (!property.size())
         {
             property.resize(1);
         }
-        property[0] = uint8_t(pressed ? ButtonState::PRESSED : ButtonState::RELEASED);
+        property[0] = (uint8_t)state;
         updateHubProperty(HubPropertyType::BUTTON);
     }
 
     void Lpf2::HubEmulation::msgTaskLoop()
     {
         NimBLEAttValue* value;
-        while(true)
+        while(!m_msgTaskShouldQuit)
         {
-            if (xQueueReceive(m_msgQueue, &value, portMAX_DELAY))
+            if (xQueueReceive(m_msgQueue, &value, 5))
             {
                 std::vector<uint8_t> message(value->data(), value->data() + value->length());
                 processMessages(message);
                 delete value;
             }
+            update();
         }
+        writeResponse(MessageType::HUB_ACTIONS, {(uint8_t)HubActionType::HUB_WILL_SWITCH_OFF});
     }
 
     void HubEmulation::update()
     {
-        if (!isSubscribed)
+        if (!m_subscribed)
             return;
 
         size_t now = LPF2_GET_TIME();
@@ -956,7 +978,7 @@ namespace Lpf2
             }
         }
 
-        std::for_each(attachedPorts.begin(), attachedPorts.end(),
+        std::for_each(m_attachedPorts.begin(), m_attachedPorts.end(),
                       [this](auto &pair)
                       {
                           this->checkPort(pair.first, pair.second);
@@ -966,7 +988,7 @@ namespace Lpf2
         {
             m_lastRssiUpdate = now;
             int8_t rssi;
-            int rc = ble_gap_conn_rssi(connHandle, &rssi);
+            int rc = ble_gap_conn_rssi(m_bleConnHandle, &rssi);
 
             if (rc == 0 && m_lastRssi != rssi)
             {
@@ -984,7 +1006,7 @@ namespace Lpf2
 
     void HubEmulation::setHubRssi(int8_t rssi)
     {
-        auto &property = hubProperty[(unsigned)HubPropertyType::RSSI];
+        auto &property = m_hubProperty[(unsigned)HubPropertyType::RSSI];
         if (!property.size())
         {
             property.resize(1);
@@ -993,9 +1015,9 @@ namespace Lpf2
         updateHubProperty(HubPropertyType::RSSI);
     }
 
-    void HubEmulation::setHubBatteryLevel(uint8_t batteryLevel)
+    void HubEmulation::setBatteryLevel(uint8_t batteryLevel)
     {
-        auto &property = hubProperty[(unsigned)HubPropertyType::BATTERY_VOLTAGE];
+        auto &property = m_hubProperty[(unsigned)HubPropertyType::BATTERY_VOLTAGE];
         if (!property.size())
         {
             property.resize(1);
@@ -1004,9 +1026,9 @@ namespace Lpf2
         updateHubProperty(HubPropertyType::BATTERY_VOLTAGE);
     }
 
-    void HubEmulation::setHubBatteryType(BatteryType batteryType)
+    void HubEmulation::setBatteryType(BatteryType batteryType)
     {
-        auto &property = hubProperty[(unsigned)HubPropertyType::BATTERY_TYPE];
+        auto &property = m_hubProperty[(unsigned)HubPropertyType::BATTERY_TYPE];
         if (!property.size())
         {
             property.resize(1);
@@ -1015,22 +1037,23 @@ namespace Lpf2
         updateHubProperty(HubPropertyType::BATTERY_TYPE);
     }
 
-    void HubEmulation::setHubName(std::string hubName)
+    void HubEmulation::setName(std::string hubName)
     {
         if (hubName.length() > 14)
         {
             hubName = hubName.substr(0, 14);
         }
 
-        auto &property = hubProperty[(unsigned)HubPropertyType::ADVERTISING_NAME];
-        property.resize(hubName.size());
+        auto &property = m_hubProperty[(unsigned)HubPropertyType::ADVERTISING_NAME];
+        property.clear();
+        property.reserve(hubName.size());
         property.insert(property.end(), hubName.begin(), hubName.end());
         updateHubProperty(HubPropertyType::ADVERTISING_NAME);
     }
 
-    std::string HubEmulation::getHubName()
+    std::string HubEmulation::getName()
     {
-        auto &hubName = hubProperty[(unsigned)HubPropertyType::ADVERTISING_NAME];
+        auto &hubName = m_hubProperty[(unsigned)HubPropertyType::ADVERTISING_NAME];
         std::string str;
         str.insert(str.end(), hubName.begin(), hubName.end());
         return str;
@@ -1038,7 +1061,7 @@ namespace Lpf2
 
     BatteryType HubEmulation::getBatteryType()
     {
-        auto &prop = hubProperty[(unsigned)HubPropertyType::BATTERY_TYPE];
+        auto &prop = m_hubProperty[(unsigned)HubPropertyType::BATTERY_TYPE];
         if (!prop.size())
         {
             prop.push_back((uint8_t)BatteryType::NORMAL);
@@ -1046,63 +1069,21 @@ namespace Lpf2
         return (BatteryType)prop[0];
     }
 
-    void HubEmulation::setHubFirmwareVersion(Version version)
+    void HubEmulation::setFirmwareVersion(Version version)
     {
         auto v = Utils::packVersion(version);
-        hubProperty[(unsigned)HubPropertyType::FW_VERSION] = v;
+        m_hubProperty[(unsigned)HubPropertyType::FW_VERSION] = v;
     }
 
-    void HubEmulation::setHubHardwareVersion(Version version)
+    void HubEmulation::setHardwareVersion(Version version)
     {
         auto v = Utils::packVersion(version);
-        hubProperty[(unsigned)HubPropertyType::HW_VERSION] = v;
+        m_hubProperty[(unsigned)HubPropertyType::HW_VERSION] = v;
     }
 
-    void HubEmulation::start()
+
+    NimBLEAdvertisementData HubEmulation::getAdvertisementData()
     {
-        if (m_msgQueue == nullptr)
-        {
-            m_msgQueue = xQueueCreate(16, sizeof(NimBLEAttValue*)); // 16 items should be enough
-        }
-        destroyBuiltIn();
-        if (m_useBuiltInDevices)
-        {
-            initBuiltInPorts();
-        }
-        LPF2_LOG_D("Starting BLE");
-
-        NimBLEDevice::init(getHubName());
-        NimBLEDevice::setOwnAddrType(BLE_OWN_ADDR_PUBLIC);
-        NimBLEDevice::setPower(ESP_PWR_LVL_N0, NimBLETxPowerType::Advertise); // 0dB, Advertisment
-        reset();
-
-        LPF2_LOG_D("Create server");
-        _pServer = NimBLEDevice::createServer();
-        _pServer->setCallbacks(new Lpf2HubServerCallbacks(this));
-
-        LPF2_LOG_D("Create service");
-        _pService = _pServer->createService(LPF2_UUID);
-
-        // Create a BLE Characteristic
-        pCharacteristic = _pService->createCharacteristic(
-            NimBLEUUID(LPF2_CHARACHTERISTIC),
-            NIMBLE_PROPERTY::READ |
-                NIMBLE_PROPERTY::WRITE |
-                NIMBLE_PROPERTY::NOTIFY |
-                NIMBLE_PROPERTY::WRITE_NR);
-        // Create a BLE Descriptor and set the callback
-        pCharacteristic->setCallbacks(new Lpf2HubCharacteristicCallbacks(this));
-
-        LPF2_LOG_D("Service start");
-
-        _pService->start();
-        _pAdvertising = NimBLEDevice::getAdvertising();
-
-        _pAdvertising->addServiceUUID(LPF2_UUID);
-        _pAdvertising->enableScanResponse(true);
-        _pAdvertising->setMinInterval(32); // 0.625ms units -> 20ms
-        _pAdvertising->setMaxInterval(64); // 0.625ms units -> 40ms
-
         std::vector<uint8_t> manufacturerData;
 
         if (m_hubType == HubType::POWERED_UP_HUB)
@@ -1121,9 +1102,11 @@ namespace Lpf2
         advertisementData.setFlags(BLE_HS_ADV_F_DISC_GEN);
         advertisementData.setCompleteServices(NimBLEUUID(LPF2_UUID));
         advertisementData.setManufacturerData(manufacturerData);
+        return advertisementData;
+    }
 
-        // scan response data is needed because the uuid128 and manufacturer data takes almost all space in the advertisement data
-        // the name is therefore stored in the scan response data
+    NimBLEAdvertisementData HubEmulation::getScanResponseData()
+    {
         NimBLEAdvertisementData scanResponseData = NimBLEAdvertisementData();
 
         // set the slave connection interval range to 20-40ms
@@ -1134,19 +1117,112 @@ namespace Lpf2
         uint8_t powerLevelData[3] = {0x02, 0x0A, 0x00};
         scanResponseData.addData(powerLevelData, sizeof(powerLevelData));
 
-        scanResponseData.setName(getHubName());
+        scanResponseData.setName(getName());
+        return scanResponseData;
+    }
+
+    void HubEmulation::start()
+    {
+        if (m_msgQueue == nullptr)
+        {
+            m_msgQueue = xQueueCreate(16, sizeof(NimBLEAttValue*)); // 16 items should be enough
+        }
+        destroyBuiltIn();
+        if (m_useBuiltInDevices)
+        {
+            initBuiltInPorts();
+        }
+        LPF2_LOG_D("Starting BLE");
+
+        NimBLEDevice::init(getName());
+        NimBLEDevice::setOwnAddrType(BLE_OWN_ADDR_PUBLIC);
+        NimBLEDevice::setPower(ESP_PWR_LVL_N0, NimBLETxPowerType::Advertise); // 0dB, Advertisment
+        reset();
+
+        if (!m_bleServer)
+        {
+            LPF2_LOG_D("Creating server");
+            m_bleServer = NimBLEDevice::createServer();
+            m_bleServer->setCallbacks(new Lpf2HubServerCallbacks(this), true);
+        }
+
+        if (!m_bleService)
+        {
+            LPF2_LOG_D("Create service");
+            m_bleService = m_bleServer->createService(LPF2_UUID);
+        }
+
+        // Create a BLE Characteristic
+
+        if (!m_bleChar)
+        {
+            m_bleChar = m_bleService->createCharacteristic(
+                NimBLEUUID(LPF2_CHARACHTERISTIC),
+                NIMBLE_PROPERTY::READ |
+                    NIMBLE_PROPERTY::WRITE |
+                    NIMBLE_PROPERTY::NOTIFY |
+                    NIMBLE_PROPERTY::WRITE_NR);
+            // Create a BLE Descriptor and set the callback
+            if (!m_bleCharCallbacks)
+            {
+                m_bleCharCallbacks = new Lpf2HubCharacteristicCallbacks(this);
+            }
+            m_bleChar->setCallbacks(m_bleCharCallbacks);
+        }
+
+        LPF2_LOG_D("Service start");
+
+        m_bleAdvertising = NimBLEDevice::getAdvertising();
+
+        m_bleAdvertising->enableScanResponse(true);
+        m_bleAdvertising->setMinInterval(32); // 0.625ms units -> 20ms
+        m_bleAdvertising->setMaxInterval(64); // 0.625ms units -> 40ms
+
+        auto advertisementData = getAdvertisementData();
+        auto scanResponseData = getScanResponseData();
 
         LPF2_LOG_D("advertisment data payload(%d): %s", advertisementData.getPayload().size(), Utils::bytes_to_hexString(advertisementData.getPayload()).c_str());
         LPF2_LOG_D("scan response data payload(%d): %s", scanResponseData.getPayload().size(), Utils::bytes_to_hexString(scanResponseData.getPayload()).c_str());
 
-        _pAdvertising->setAdvertisementData(advertisementData);
-        _pAdvertising->setScanResponseData(scanResponseData);
+        m_bleAdvertising->setAdvertisementData(advertisementData);
+        m_bleAdvertising->setScanResponseData(scanResponseData);
 
         LPF2_LOG_D("Start advertising");
         NimBLEDevice::startAdvertising();
+        m_advertising = true;
         LPF2_LOG_D("Characteristic defined! Now you can connect with your PoweredUp App!");
         m_firstUpdate = true;
 
-        xTaskCreate(msgTask, "msgTask", 4096, (void*)this, HUB_EMULATION_MSG_RECEIVE_TASK_PRIORITY, nullptr);
+        xTaskCreate(msgTask, "msgTask", 8192, (void*)this, HUB_EMULATION_MSG_RECEIVE_TASK_PRIORITY, &m_msgTaskHandle);
+    }
+
+    void HubEmulation::stop()
+    {
+        if (m_msgTaskHandle)
+        {
+            m_msgTaskShouldQuit = true;
+            while (eTaskGetState(m_msgTaskHandle) != eDeleted) {
+                vTaskDelay(1);
+            }
+            m_msgTaskHandle = nullptr;
+        }
+        if (m_connected)
+        {
+            m_bleServer->disconnect(m_bleConnHandle);
+            m_connected = false;
+        }
+        if (m_advertising)
+        {
+            NimBLEDevice::stopAdvertising();
+            m_advertising = false;
+        }
+
+        NimBLEDevice::deinit(true);
+
+        // Reset pointers so start() rebuilds everything
+        m_bleServer = nullptr;
+        m_bleService = nullptr;
+        m_bleChar = nullptr;
+        m_bleAdvertising = nullptr;
     }
 };

@@ -50,8 +50,8 @@ namespace Lpf2::DeviceDescriptors
     const DeviceDescriptor TECHNIC_MEDIUM_HUB_GEST_SENSOR =
     {
         .type = DeviceType::TECHNIC_MEDIUM_HUB_GEST_SENSOR,
-        .inModes = 0x0001,
-        .outModes = 0x0000,
+        .inModesMask = 0x0001,
+        .outModesMask = 0x0000,
         .caps = 0x02,
         .combos = { 0x0000 },
         .modes =
@@ -75,8 +75,8 @@ namespace Lpf2::DeviceDescriptors
     const DeviceDescriptor TECHNIC_MEDIUM_HUB_TILT_SENSOR =
     {
         .type = DeviceType::TECHNIC_MEDIUM_HUB_TILT_SENSOR,
-        .inModes = 0x0003,
-        .outModes = 0x0004,
+        .inModesMask = 0x0003,
+        .outModesMask = 0x0004,
         .caps = 0x03,
         .combos = { 0x0000 },
         .modes =
@@ -124,8 +124,8 @@ namespace Lpf2::DeviceDescriptors
     const DeviceDescriptor TECHNIC_MEDIUM_HUB_GYRO_SENSOR =
     {
         .type = DeviceType::TECHNIC_MEDIUM_HUB_GYRO_SENSOR,
-        .inModes = 0x0001,
-        .outModes = 0x0000,
+        .inModesMask = 0x0001,
+        .outModesMask = 0x0000,
         .caps = 0x02,
         .combos = { 0x0000 },
         .modes =
@@ -149,8 +149,8 @@ namespace Lpf2::DeviceDescriptors
     const DeviceDescriptor TECHNIC_MEDIUM_HUB_ACCELEROMETER =
     {
         .type = DeviceType::TECHNIC_MEDIUM_HUB_ACCELEROMETER,
-        .inModes = 0x0003,
-        .outModes = 0x0000,
+        .inModesMask = 0x0003,
+        .outModesMask = 0x0000,
         .caps = 0x02,
         .combos = { 0x0000 },
         .modes =
@@ -186,8 +186,8 @@ namespace Lpf2::DeviceDescriptors
     const DeviceDescriptor HUB_LED =
     {
         .type = DeviceType::HUB_LED,
-        .inModes = 0x0000,
-        .outModes = 0x0003,
+        .inModesMask = 0x0000,
+        .outModesMask = 0x0003,
         .caps = 0x01,
         .combos = { 0x0000 },
         .modes =
@@ -223,8 +223,8 @@ namespace Lpf2::DeviceDescriptors
     const DeviceDescriptor TRAIN_MOTOR =
     {
         .type = DeviceType::TRAIN_MOTOR,
-        .inModes = 0x0000,
-        .outModes = 0x0001,
+        .inModesMask = 0x0000,
+        .outModesMask = 0x0001,
         .caps = 0x01,
         .combos = { 0x0000 },
         .modes =
@@ -248,8 +248,8 @@ namespace Lpf2::DeviceDescriptors
     const DeviceDescriptor CURRENT_SENSOR =
     {
         .type = DeviceType::CURRENT_SENSOR,
-        .inModes = 0x0003,
-        .outModes = 0x0000,
+        .inModesMask = 0x0003,
+        .outModesMask = 0x0000,
         .caps = 0x02,
         .combos = { 0x0000 },
         .modes =
@@ -285,8 +285,8 @@ namespace Lpf2::DeviceDescriptors
     const DeviceDescriptor VOLTAGE_SENSOR =
     {
         .type = DeviceType::VOLTAGE_SENSOR,
-        .inModes = 0x0003,
-        .outModes = 0x0000,
+        .inModesMask = 0x0003,
+        .outModesMask = 0x0000,
         .caps = 0x02,
         .combos = { 0x0000 },
         .modes =
@@ -322,8 +322,8 @@ namespace Lpf2::DeviceDescriptors
     const DeviceDescriptor TECHNIC_MEDIUM_HUB_TEMPERATURE_SENSOR =
     {
         .type = DeviceType::TECHNIC_MEDIUM_HUB_TEMPERATURE_SENSOR,
-        .inModes = 0x0001,
-        .outModes = 0x0000,
+        .inModesMask = 0x0001,
+        .outModesMask = 0x0000,
         .caps = 0x02,
         .combos = { 0x0000 },
         .modes =
@@ -346,8 +346,8 @@ namespace Lpf2::DeviceDescriptors
     const DeviceDescriptor TECHNIC_LARGE_ANGULAR_MOTOR_GREY =
     {
         .type = DeviceType::TECHNIC_LARGE_ANGULAR_MOTOR_GREY,
-        .inModes = 0x0000,
-        .outModes = 0x0000,
+        .inModesMask = 0x0000,
+        .outModesMask = 0x0000,
         .caps = 0x00,
         .combos = { 0x0000 },
         .modes =
@@ -431,8 +431,8 @@ namespace Lpf2::DeviceDescriptors
     const DeviceDescriptor TECHNIC_DISTANCE_SENSOR =
     {
         .type = DeviceType::TECHNIC_DISTANCE_SENSOR,
-        .inModes = 0x0000,
-        .outModes = 0x0000,
+        .inModesMask = 0x0000,
+        .outModesMask = 0x0000,
         .caps = 0x00,
         .combos = { 0x0000 },
         .modes =
@@ -552,8 +552,8 @@ namespace Lpf2::DeviceDescriptors
     const DeviceDescriptor TECHNIC_MEDIUM_ANGULAR_MOTOR_GREY =
     {
         .type = DeviceType::TECHNIC_MEDIUM_ANGULAR_MOTOR_GREY,
-        .inModes = 0x0000,
-        .outModes = 0x0000,
+        .inModesMask = 0x0000,
+        .outModesMask = 0x0000,
         .caps = 0x00,
         .combos = { 0x0000 },
         .modes =
@@ -637,8 +637,8 @@ namespace Lpf2::DeviceDescriptors
     const DeviceDescriptor TECHNIC_COLOR_SENSOR =
     {
         .type = DeviceType::TECHNIC_COLOR_SENSOR,
-        .inModes = 0x0000,
-        .outModes = 0x0000,
+        .inModesMask = 0x0000,
+        .outModesMask = 0x0000,
         .caps = 0x00,
         .combos = { 0x0000 },
         .modes =
@@ -770,8 +770,8 @@ namespace Lpf2::DeviceDescriptors
     const DeviceDescriptor TECHNIC_LARGE_LINEAR_MOTOR =
     {
         .type = DeviceType::TECHNIC_LARGE_LINEAR_MOTOR,
-        .inModes = 0x001E,
-        .outModes = 0x001F,
+        .inModesMask = 0x001E,
+        .outModesMask = 0x001F,
         .caps = 0x0F,
         .combos = { 0x0000 },
         .modes =

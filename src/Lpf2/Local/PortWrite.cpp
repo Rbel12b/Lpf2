@@ -21,9 +21,9 @@ namespace Lpf2::Local
 {
     int Port::setMode(uint8_t mode)
     {
-        if (mode >= modes)
+        if (mode >= m_modeCount)
         {
-            LPF2_LOG_W("Tried to set invalid mode %i (max %i)", mode, modes - 1);
+            LPF2_LOG_W("Tried to set invalid mode %i (max %i)", mode, m_modeCount - 1);
             return 1;
         }
 
@@ -40,18 +40,18 @@ namespace Lpf2::Local
             m_serial->flush();
         }
 
-        if (modeData[mode].flags.pin1())
+        if (m_modeData[mode].flags.pin1())
         {
             LPF2_LOG_D("Setting pin1 high, pin2 low");
             m_pwm->out(255, 0);
         }
-        else if (modeData[mode].flags.pin2())
+        else if (m_modeData[mode].flags.pin2())
         {
             LPF2_LOG_D("Setting pin2 high, pin1 low");
             m_pwm->out(0, 255);
         }
 
-        LPF2_LOG_D("Set mode to %i (%s)", mode, modeData[mode].name.c_str());
+        LPF2_LOG_D("Set mode to %i (%s)", mode, m_modeData[mode].name.c_str());
         return 0;
     }
 
@@ -178,7 +178,7 @@ namespace Lpf2::Local
             return 0;
         }
 
-        if (modeNum >= modeData.size())
+        if (modeNum >= m_modeData.size())
         {
             return 1;
         }
@@ -234,7 +234,7 @@ namespace Lpf2::Local
 
     void Port::setPower(uint8_t pin1, uint8_t pin2)
     {
-        if ((m_dumb || (modeData.size() > m_mode && modeData[m_mode].flags.power12())) && m_pwm)
+        if ((m_dumb || (m_modeData.size() > m_mode && m_modeData[m_mode].flags.power12())) && m_pwm)
         {
             m_pwm->out(pin1, pin2);
         }

@@ -145,12 +145,12 @@ namespace Lpf2::Virtual
 
         uint16_t getInputModes() const override
         {
-            return m_desc.inModes;
+            return m_desc.inModesMask;
         }
 
         uint16_t getOutputModes() const override
         {
-            return m_desc.outModes;
+            return m_desc.outModesMask;
         }
 
         uint8_t getCapabilities() const override

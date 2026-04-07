@@ -48,18 +48,18 @@ namespace Lpf2
             m_port.update();
             if (!m_port.isDeviceConnected())
             {
-                device_.reset(nullptr);
+                m_device.reset(nullptr);
                 return;
             }
 
-            if (!device_ && m_port.isDeviceConnected())
+            if (!m_device && m_port.isDeviceConnected())
             {
                 attachViaFactory();
             }
 
-            if (device_)
+            if (m_device)
             {
-                device_->poll();
+                m_device->poll();
             }
         }
 
@@ -67,7 +67,7 @@ namespace Lpf2
         {
             if (getDeviceType() == DeviceType::UNKNOWNDEVICE)
                 return nullptr;
-            return device_.get();
+            return m_device.get();
         }
 
         DeviceType getDeviceType() const
@@ -91,8 +91,8 @@ namespace Lpf2
 
                 if (factory->matches(m_port))
                 {
-                    device_.reset(factory->create(m_port));
-                    device_->init();
+                    m_device.reset(factory->create(m_port));
+                    m_device->init();
                     break;
                 }
             }
@@ -103,6 +103,6 @@ namespace Lpf2
 #endif
 
         Port &m_port;
-        std::unique_ptr<Device> device_;
+        std::unique_ptr<Device> m_device;
     };
 }; // namespace Lpf2

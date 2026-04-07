@@ -183,6 +183,9 @@ namespace Lpf2
         ACTIVATE_BUSY_INDICATION = 0x05,
         RESET_BUSY_INDICATION = 0x05,
         FAST_POWER_DOWN = 0x2F, // Not recommended!
+        HUB_WILL_SWITCH_OFF = 0x30,
+        HUB_WILL_DISCONNECT = 0x31,
+        HUB_WILL_REBOOT_TO_BOOT_MODE = 0x32,
     };
 
     enum class HubAlertType

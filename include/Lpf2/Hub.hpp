@@ -28,23 +28,20 @@
 
 namespace Lpf2
 {
-    namespace Remote
-    {
-        class Port_internal;
-    };
     class Hub
     {
         friend class HubClientCallback;
-        std::unordered_map<PortNum, Remote::Port_internal *> remotePorts;
-        std::unordered_map<PortNum, DeviceType> attachedPorts; // Ports with attached devices
-
-        std::vector<uint8_t> hubProperty[(unsigned int)HubPropertyType::END];
+        friend class Lpf2HubAdvertisedDeviceCallbacks;
+        friend class Remote::Port;
+    private:
         void updateHubProperty(HubPropertyType propId, std::vector<uint8_t> data, bool sendUpdate);
         void sendHubPropertyUpdate(HubPropertyType propId);
         void enableHubProperty(HubPropertyType propId);
         void disableHubProperty(HubPropertyType propId);
         void resetHubProperty(HubPropertyType propId);
         void requestHubPropertyUpdate(HubPropertyType propId);
+
+        void setHubNameProp(std::string name);
 
         void handleHubPropertyMessage(const std::vector<uint8_t> &message);
         void handleGenericErrorMessage(const std::vector<uint8_t> &message);
@@ -63,7 +60,7 @@ namespace Lpf2
 
         void pending(MessageType msgType);
 
-        Remote::Port_internal *_getPort(PortNum portNum);
+        Remote::Port *_getPort(PortNum portNum);
 
         /**
          * @brief check the lenght of a message, and prints an error to the log
@@ -72,12 +69,13 @@ namespace Lpf2
         bool checkLenght(const std::vector<uint8_t> &message, size_t lenght);
 
         void onDisconnect();
+        void writeValue(MessageType type, const std::vector<uint8_t> &data);
+        void notifyCallback(NimBLERemoteCharacteristic *pBLERemoteCharacteristic, uint8_t *pData, size_t length, bool isNotify);
 
     public:
         Hub();
         ~Hub();
 
-        // initializer methods
         void init();
         void init(uint32_t scanDuration);
         void init(std::string deviceAddress);
@@ -85,14 +83,11 @@ namespace Lpf2
 
         void update();
 
-        // hub related methods
         bool connectHub();
         bool isConnected();
         bool isConnecting();
         bool isScanning();
-        NimBLEAddress getHubAddress();
-        HubType getHubType();
-        void setHubName(std::string name);
+
         void shutDownHub();
 
         Port *getPort(PortNum portNum);
@@ -104,25 +99,23 @@ namespace Lpf2
         bool infoReady();
 
         /**
-         * @brief Internal, do not use!
-         */
-        void setHubNameProp(std::string name);
-        /**
          * @brief returns all available information sent by the hub (Hub properties, port modes ...)
          */
         std::string getAllInfoStr();
         std::string getHubPropStr(HubPropertyType propId);
         static std::string getHubPropStr(HubPropertyType propId, std::vector<uint8_t> prop);
 
-        /* HUB props*/
-
-        std::string getHubName();
+        std::string getName();
         BatteryType getBatteryType();
+        NimBLEAddress getHubAddress();
+        HubType getHubType();
+        void setName(std::string name);
 
-        void writeValue(MessageType type, const std::vector<uint8_t> &data);
+    private:
+        std::unordered_map<PortNum, Remote::Port *> m_remotePorts;
+        std::unordered_map<PortNum, DeviceType> m_attachedPortsDevice; // Ports with attached devices
 
-        // BLE specific stuff
-        void notifyCallback(NimBLERemoteCharacteristic *pBLERemoteCharacteristic, uint8_t *pData, size_t length, bool isNotify);
+        std::vector<uint8_t> m_hubProperty[(unsigned int)HubPropertyType::END];
 
         enum class DataRequestingState
         {
@@ -138,17 +131,21 @@ namespace Lpf2
             bool valid = false;
             size_t sentTime = 0;
             MessageType msgType;
-        } pendingRequest;
+        } m_pendingRequest;
 
-        BLEUUID _bleUuid;
-        BLEUUID _charachteristicUuid;
-        BLEAddress *_pServerAddress;
-        BLEAddress *_requestedDeviceAddress = nullptr;
-        BLERemoteCharacteristic *_pRemoteCharacteristic;
-        BLEScan *pBLEScan;
+        BLEUUID m_bleHubServiceUuid;
+        BLEUUID m_bleHubCharachteristicUuid;
+        BLEAddress *m_bleServerAddress;
+        BLEAddress *m_bleRequestedDeviceAddress = nullptr;
+        BLERemoteCharacteristic *m_bleHubCharacteristic;
+        BLEScan *m_bleScan;
+        NimBLEScanCallbacks *m_bleAdvertiseDeviceCallback = nullptr;
+    
+        uint32_t m_bleScanDuration = 10;
+        bool m_connecting = false;
+        bool m_connected = false;
+
         HubType m_hubType;
-        bool _isConnecting = false;
-        bool _isConnected = false;
 
         struct PortInputFormatSingle
         {
@@ -158,10 +155,8 @@ namespace Lpf2
             bool notify;
         };
 
-    private:
         std::unordered_map<PortNum, PortInputFormatSingle> m_portInputFormatMap;
 
-    private:
         struct
         {
             union
@@ -176,11 +171,5 @@ namespace Lpf2
         } m_dataRequestState;
 
         Utils::RateLimiter m_rateLimiter;
-
-        // Notification callback
-        NimBLEScanCallbacks *_advertiseDeviceCallback = nullptr;
-
-        // BLE settings
-        uint32_t _scanDuration = 10;
     };
 }; // namespace Lpf2

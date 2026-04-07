@@ -160,16 +160,16 @@ namespace Lpf2
 
     float Port::getValue(uint8_t modeNum, const std::vector<uint8_t> &raw, uint8_t dataSet) const
     {
-        if (modeNum >= modeData.size())
+        if (modeNum >= m_modeData.size())
             return 0.0f;
-        return getValue(modeData[modeNum], raw, dataSet);
+        return getValue(m_modeData[modeNum], raw, dataSet);
     }
 
     float Port::getValue(uint8_t modeNum, uint8_t dataSet) const
     {
-        if (modeNum >= modeData.size())
+        if (modeNum >= m_modeData.size())
             return 0.0f;
-        return getValue(modeData[modeNum], dataSet);
+        return getValue(m_modeData[modeNum], dataSet);
     }
 
     std::string Port::formatValue(float value, const Mode &modeData)
@@ -284,7 +284,7 @@ namespace Lpf2
         if (m_rawDataSizeEnsured)
             return;
         m_rawDataSizeEnsured = true;
-        for (auto &mode : modeData)
+        for (auto &mode : m_modeData)
         {
             const size_t expectedSize = getDataSize(mode.format) * mode.data_sets;
             if (mode.rawData.size() < expectedSize)

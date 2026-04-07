@@ -30,6 +30,7 @@ namespace Lpf2::Remote
 {
     class Port : public Lpf2::Port
     {
+        friend class Lpf2::Hub;
     public:
         Port(Hub *remote) : m_remote(remote) {};
 
@@ -49,10 +50,12 @@ namespace Lpf2::Remote
         void gotoAbsPosition(int32_t absPos, uint8_t speed, uint8_t maxPower, BrakingStyle endState, uint8_t useProfile = 0) override;
         void presetEncoder(int32_t pos) override;
 
+        PortNum getPortNum() const { return m_portNum; }
+
     protected:
         Hub *m_remote;
-
         DeviceType m_lastDevType = DeviceType::UNKNOWNDEVICE;
+        PortNum m_portNum = 0;
 
         static inline const uint8_t startupAndCompletion = 0x10;
     };
