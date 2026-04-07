@@ -53,22 +53,22 @@ namespace Lpf2
 
         void registerDesc(DeviceType type, const DeviceDescriptor *desc)
         {
-            if (count_ >= MAX_DESCRIPTORS)
+            if (m_descriptorCount >= MAX_DESCRIPTORS)
             {
                 assert(false && "Exceeded maximum number of Lpf2 device descriptors");
                 return;
             }
 
-            _descriptors[count_++] = Lpf2DeviceDescRegistryEntry{desc, type};
+            m_descriptors[m_descriptorCount++] = Lpf2DeviceDescRegistryEntry{desc, type};
         }
 
         const DeviceDescriptor *getDescriptor(DeviceType type)
         {
-            for (size_t i = 0; i < count_; i++)
+            for (size_t i = 0; i < m_descriptorCount; i++)
             {
-                if (_descriptors[i]._type == type)
+                if (m_descriptors[i]._type == type)
                 {
-                    return _descriptors[i]._desc;
+                    return m_descriptors[i]._desc;
                 }
             }
             return nullptr;
@@ -76,7 +76,7 @@ namespace Lpf2
 
         size_t count() const
         {
-            return count_;
+            return m_descriptorCount;
         }
 
     private:
@@ -86,7 +86,7 @@ namespace Lpf2
         {
             const DeviceDescriptor *_desc;
             DeviceType _type;
-        } _descriptors[MAX_DESCRIPTORS];
-        size_t count_ = 0;
+        } m_descriptors[MAX_DESCRIPTORS];
+        size_t m_descriptorCount = 0;
     };
 }; // namespace Lpf2

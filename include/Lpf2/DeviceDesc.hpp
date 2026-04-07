@@ -23,10 +23,10 @@ namespace Lpf2
 {
     struct DeviceDescriptor
     {
-        DeviceType type;
-        uint16_t inModes;
-        uint16_t outModes;
-        uint8_t caps;
+        DeviceType type = DeviceType::UNKNOWNDEVICE;
+        uint16_t inModesMask = 0;
+        uint16_t outModesMask = 0;
+        uint8_t caps = 0;
         std::vector<uint16_t> combos;
         std::vector<Mode> modes;
     };

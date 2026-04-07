@@ -39,46 +39,47 @@ namespace Lpf2
     private:
         QueueHandle_t m_msgQueue = nullptr;
 
-        // Notification callbacks if values are written to the characteristic
-        BLEUUID _bleUuid;
-        BLEUUID _charachteristicUuid;
-        BLEAddress *_pServerAddress;
-        BLEServer *_pServer;
-        BLEService *_pService;
-        BLEAddress *_hubAddress = nullptr;
-        BLEAdvertising *_pAdvertising;
+        BLEServer *m_bleServer;
+        BLEService *m_bleService;
+        BLEAdvertising *m_bleAdvertising;
+        BLECharacteristic *m_bleChar;
+        bool m_connected = false;
+        bool m_subscribed = false;
+        bool m_advertising = false;
+        uint16_t m_bleConnHandle;
+
+        TaskHandle_t m_msgTaskHandle = nullptr;
+        bool m_msgTaskShouldQuit = false;
 
         void writeResponse(MessageType messageType, std::vector<uint8_t> payload);
         void writeValue(std::vector<uint8_t> message);
 
-        uint16_t connHandle;
-
         HubType m_hubType = HubType::UNKNOWNHUB;
 
-        std::unordered_map<PortNum, Port*> attachedPorts;
+        std::unordered_map<PortNum, Port*> m_attachedPorts;
         /**
          * @brief ports that are owned by this class, they will be destructed in the destructor.
          */
-        std::unordered_map<PortNum, Virtual::Port*> ownedPorts;
-        std::vector<Virtual::GenericDevice*> ownedDevices;
+        std::unordered_map<PortNum, Virtual::Port*> m_ownedPorts;
+        std::vector<Virtual::GenericDevice*> m_ownedDevices;
 
         /**
          * @brief a map that contains if a port has a device attached,
          * used to determine when to send IO attached/detached messages
          */
-        std::unordered_map<PortNum, bool> connectedDevices;
+        std::unordered_map<PortNum, bool> m_connectedDevices;
 
         bool m_useBuiltInDevices = false;
 
-        bool updateHubPropertyEnabled[(unsigned int)HubPropertyType::END] = {false};
-        std::vector<uint8_t> hubProperty[(unsigned int)HubPropertyType::END];
+        bool m_updateHubPropertyEnabled[(unsigned int)HubPropertyType::END] = {false};
+        std::vector<uint8_t> m_hubProperty[(unsigned int)HubPropertyType::END];
         void updateHubProperty(HubPropertyType propId);
         void sendHubPropertyUpdate(HubPropertyType propId);
         void resetHubProperty(HubPropertyType propId);
         void handleHubPropertyMessage(std::vector<uint8_t> message);
 
-        bool hubAlertEnabled[(unsigned int)HubAlertType::END] = {false};
-        bool hubAlert[(unsigned int)HubAlertType::END] = {false};
+        bool m_hubAlertEnabled[(unsigned int)HubAlertType::END] = {false};
+        bool m_hubAlert[(unsigned int)HubAlertType::END] = {false};
 
         bool m_firstUpdate = true;
 
@@ -97,10 +98,6 @@ namespace Lpf2
         // map<PortNum, map<ModeNum, Setup>>
         std::unordered_map<PortNum, std::unordered_map<uint8_t, PortInputSetupSingle>> m_portSetupSingle;
 
-    public:
-        void updateHubAlert(HubAlertType alert, bool on);
-
-    private:
         void sendHubAlertUpdate(HubAlertType alert);
         void resetHubAlerts();
         void handleHubAlertsMessage(std::vector<uint8_t> message);
@@ -122,15 +119,17 @@ namespace Lpf2
 
         void processMessages(const std::vector<uint8_t>& message);
 
-        static void msgTask(void *pvParams)
+        static inline void msgTask(void *pvParams)
         {
             HubEmulation *hubEmulation = static_cast<HubEmulation*>(pvParams);
             hubEmulation->msgTaskLoop();
         }
 
         void msgTaskLoop();
-        
+
         void update();
+
+        void reset();
 
     public:
         HubEmulation();
@@ -138,18 +137,21 @@ namespace Lpf2
         ~HubEmulation();
 
         /**
-         * @brief reset Hub properties, does not detach ports!
-         */
-        void reset();
-
-        /**
-         * @brief Starts BLE advertising, resets hub props
+         * @brief Starts BLE advertising, resets hub props,
+         * start message handling task
          */
         void start();
 
         /**
+         * @brief End hub emulation:
+         * Disconnects / stops BLE advertising,
+         * Deletes message handling task
+         */
+        void end();
+
+        /**
          * @brief sets if the library should initialize the default
-         * built-in devices, defaults to true.
+         * built-in devices, defaults to false.
          */
         void setUseBuiltInDevices(bool use);
 
@@ -172,9 +174,6 @@ namespace Lpf2
          */
         void attachPort(PortNum portNum, Port* port);
 
-        bool isConnected = false;
-        bool isSubscribed = false;
-        bool isPortInitialized = false;
-        BLECharacteristic *pCharacteristic;
+        void updateHubAlert(HubAlertType alert, bool on);
     };
 }; // namespace Lpf2

@@ -25,4 +25,4 @@
 
 #define LPF2_GET_TIME() (((size_t)esp_timer_get_time() / 1000))
 
-#define HUB_EMULATION_MSG_RECEIVE_TASK_PRIORITY 20
+#define HUB_EMULATION_MSG_RECEIVE_TASK_PRIORITY 6

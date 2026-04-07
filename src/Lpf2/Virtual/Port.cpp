@@ -114,21 +114,21 @@ namespace Lpf2::Virtual
         m_device.reset(device);
 
         m_deviceType = m_device->getDeviceType();
-        modeData = m_device->getModes();
-        modeCombos = m_device->getModeCombos();
-        caps = m_device->getCapabilities();
-        inModes = m_device->getInputModes();
-        outModes = m_device->getOutputModes();
+        m_modeData = m_device->getModes();
+        m_modeCombos = m_device->getModeCombos();
+        m_caps = m_device->getCapabilities();
+        m_inModesMask = m_device->getInputModes();
+        m_outModesMask = m_device->getOutputModes();
     }
 
     void Port::detachDevice()
     {
         m_deviceType = DeviceType::UNKNOWNDEVICE;
         m_device.release();
-        modeData.clear();
-        modeCombos.clear();
-        caps = 0;
-        inModes = 0;
-        outModes = 0;
+        m_modeData.clear();
+        m_modeCombos.clear();
+        m_caps = 0;
+        m_inModesMask = 0;
+        m_outModesMask = 0;
     }
 }; // namespace Lpf2::Virtual

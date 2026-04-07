@@ -37,7 +37,7 @@ namespace Lpf2::Remote
     {
         if (!m_remote || !isDeviceConnected())
             return 1;
-        std::vector<uint8_t> payload = {portNum, startupAndCompletion, 0x51, modeNum};
+        std::vector<uint8_t> payload = {m_portNum, startupAndCompletion, 0x51, modeNum};
         payload.insert(payload.end(), data.begin(), data.end());
         m_remote->writeValue(MessageType::PORT_OUTPUT_COMMAND, payload);
         return 0;
@@ -55,7 +55,7 @@ namespace Lpf2::Remote
         if (!m_remote || !isDeviceConnected())
             return 1;
         uint32_t delta = 1;
-        return m_remote->setPortMode(portNum, mode, delta);
+        return m_remote->setPortMode(m_portNum, mode, delta);
     }
 
     int Port::setModeCombo(uint8_t idx)
@@ -72,7 +72,7 @@ namespace Lpf2::Remote
     {
         if (!m_remote || !isDeviceConnected())
             return;
-        std::vector<uint8_t> payload = {portNum, startupAndCompletion, 0x05};
+        std::vector<uint8_t> payload = {m_portNum, startupAndCompletion, 0x05};
         payload.push_back(accTime & 0xFF);
         payload.push_back((accTime >> 8) & 0xFF);
         payload.push_back((uint8_t)accProfile);
@@ -83,7 +83,7 @@ namespace Lpf2::Remote
     {
         if (!m_remote || !isDeviceConnected())
             return;
-        std::vector<uint8_t> payload = {portNum, startupAndCompletion, 0x06};
+        std::vector<uint8_t> payload = {m_portNum, startupAndCompletion, 0x06};
         payload.push_back(decTime & 0xFF);
         payload.push_back((decTime >> 8) & 0xFF);
         payload.push_back((uint8_t)decProfile);
@@ -94,7 +94,7 @@ namespace Lpf2::Remote
     {
         if (!m_remote || !isDeviceConnected())
             return;
-        std::vector<uint8_t> payload = {portNum, startupAndCompletion, 0x07};
+        std::vector<uint8_t> payload = {m_portNum, startupAndCompletion, 0x07};
         payload.push_back(speedToRaw(speed));
         payload.push_back(maxPower);
         payload.push_back(useProfile);
@@ -105,7 +105,7 @@ namespace Lpf2::Remote
     {
         if (!m_remote || !isDeviceConnected())
             return;
-        std::vector<uint8_t> payload = {portNum, startupAndCompletion, 0x05};
+        std::vector<uint8_t> payload = {m_portNum, startupAndCompletion, 0x05};
         payload.push_back(time & 0xFF);
         payload.push_back((time >> 8) & 0xFF);
         payload.push_back(speedToRaw(speed));
@@ -118,7 +118,7 @@ namespace Lpf2::Remote
     {
         if (!m_remote || !isDeviceConnected())
             return;
-        std::vector<uint8_t> payload = {portNum, startupAndCompletion, 0x05};
+        std::vector<uint8_t> payload = {m_portNum, startupAndCompletion, 0x05};
         payload.push_back(degrees & 0xFF);
         payload.push_back((degrees >> 8) & 0xFF);
         payload.push_back((degrees >> 16) & 0xFF);
@@ -133,7 +133,7 @@ namespace Lpf2::Remote
     {
         if (!m_remote || !isDeviceConnected())
             return;
-        std::vector<uint8_t> payload = {portNum, startupAndCompletion, 0x05};
+        std::vector<uint8_t> payload = {m_portNum, startupAndCompletion, 0x05};
         payload.push_back(absPos & 0xFF);
         payload.push_back((absPos >> 8) & 0xFF);
         payload.push_back((absPos >> 16) & 0xFF);

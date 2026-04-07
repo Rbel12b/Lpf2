@@ -26,7 +26,7 @@ namespace Lpf2
     class Port
     {
         friend class HubEmulation;
-
+        friend class Hub;
     public:
         virtual ~Port() = default;
         virtual void update() = 0;
@@ -144,40 +144,38 @@ namespace Lpf2
         static std::string getValueStr(const Mode &modeData);
         std::string getValueStr(uint8_t modeNum) const
         {
-            if (modeNum >= modeData.size())
+            if (modeNum >= m_modeData.size())
             {
                 return "<mode not found>";
             }
-            return getValueStr(modeData[modeNum]);
+            return getValueStr(m_modeData[modeNum]);
         }
 
         DeviceType getDeviceType() const { return m_deviceType; }
-        uint8_t getModeCount() const { return modeData.size(); }
-        uint8_t getViewCount() const { return views; }
-        const std::vector<Mode> &getModes() const { return modeData; }
-        uint8_t getModeComboCount() const { return modeCombos.size(); }
-        std::vector<uint16_t> getModeCombos() const { return modeCombos; }
+        uint8_t getModeCount() const { return m_modeData.size(); }
+        uint8_t getViewCount() const { return m_viewCount; }
+        const std::vector<Mode> &getModes() const { return m_modeData; }
+        uint8_t getModeComboCount() const { return m_modeCombos.size(); }
+        std::vector<uint16_t> getModeCombos() const { return m_modeCombos; }
 
         uint16_t getModeCombo(uint8_t combo) const
         {
-            if (combo >= modeCombos.size() || combo >= 16)
+            if (combo >= m_modeCombos.size() || combo >= 16)
                 return 0;
-            return modeCombos[combo];
+            return m_modeCombos[combo];
         }
 
         /**
          * @returns mode bitmask
          */
-        uint16_t getInputModes() const { return inModes; }
+        uint16_t getInputModes() const { return m_inModesMask; }
         /**
          * @returns mode bitmask
          */
-        uint16_t getOutputModes() const { return outModes; }
-        uint8_t getCapabilities() const { return caps; }
+        uint16_t getOutputModes() const { return m_outModesMask; }
+        uint8_t getCapabilities() const { return m_capabilities; }
 
         std::string getInfoStr();
-
-        PortNum getPortNum() const { return portNum; }
 
         /**
          * @brief Set the port data from a device descriptor,
@@ -189,13 +187,13 @@ namespace Lpf2
             if (!desc || desc->type != m_deviceType)
                 return;
             m_rawDataSizeEnsured = false;
-            modeData = desc->modes;
-            modes = modeData.size();
-            views = 0; // TODO: add to desc
-            modeCombos = desc->combos;
-            caps = desc->caps;
-            inModes = desc->inModes;
-            outModes = desc->outModes;
+            m_modeData = desc->modes;
+            m_modeCount = m_modeData.size();
+            m_viewCount = 0; // TODO: add to desc
+            m_modeCombos = desc->combos;
+            m_capabilities = desc->caps;
+            m_inModesMask = desc->inModesMask;
+            m_outModesMask = desc->outModesMask;
         }
 
         /**
@@ -263,7 +261,6 @@ namespace Lpf2
         bool m_rawDataSizeEnsured = false;
         void ensureRawDataSize();
 
-
         /**
          * @brief Set the port data from a device descriptor if available
          */
@@ -271,15 +268,12 @@ namespace Lpf2
 
     protected:
         DeviceType m_deviceType = DeviceType::UNKNOWNDEVICE;
-        uint8_t modes, views;
-        std::vector<uint16_t> modeCombos;
-        uint8_t caps;
-        /* bitmask */
-        uint16_t inModes, outModes;
-        uint8_t comboNum = 0;
+        uint8_t m_modeCount = 0, m_viewCount = 0;
+        std::vector<uint16_t> m_modeCombos;
+        uint8_t m_capabilities = 0;
+        uint16_t m_inModesMask = 0, m_outModesMask = 0;
+        uint8_t m_comboNum = 0;
 
-        std::vector<Mode> modeData;
-
-        PortNum portNum;
+        std::vector<Mode> m_modeData;
     };
 }; // namespace Lpf2

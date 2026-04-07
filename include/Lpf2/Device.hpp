@@ -72,30 +72,30 @@ namespace Lpf2
 
         void registerFactory(const DeviceFactory *factory)
         {
-            if (count_ >= MAX_FACTORIES)
+            if (m_factoryCount >= MAX_FACTORIES)
             {
                 assert(false && "Exceeded maximum number of Lpf2 device factories");
                 return;
             }
 
-            factories_[count_++] = factory;
+            m_factories[m_factoryCount++] = factory;
         }
 
         const DeviceFactory *const *factories() const
         {
-            return factories_;
+            return m_factories;
         }
 
         size_t count() const
         {
-            return count_;
+            return m_factoryCount;
         }
 
     private:
         static constexpr size_t MAX_FACTORIES = 32;
 
-        const DeviceFactory *factories_[MAX_FACTORIES];
-        size_t count_ = 0;
+        const DeviceFactory *m_factories[MAX_FACTORIES];
+        size_t m_factoryCount = 0;
     };
 
     class Lpf2CapabilityRegistry
