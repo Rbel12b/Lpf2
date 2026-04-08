@@ -207,6 +207,15 @@ namespace Lpf2
         return result;
     }
 
+    std::string Port::getValueStr(uint8_t modeNum) const
+    {
+        if (modeNum >= m_modeData.size())
+        {
+            return "<mode not found>";
+        }
+        return getValueStr(m_modeData[modeNum]);
+    }
+
     float Port::parseData8(const uint8_t *ptr)
     {
         int8_t val = static_cast<int8_t>(*ptr);

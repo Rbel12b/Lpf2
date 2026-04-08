@@ -25,8 +25,6 @@ namespace Lpf2
 {
     class Port
     {
-        friend class HubEmulation;
-        friend class Hub;
     public:
         virtual ~Port() = default;
         virtual void update() = 0;
@@ -142,14 +140,7 @@ namespace Lpf2
         float getValue(uint8_t modeNum, uint8_t dataSet) const;
         static std::string formatValue(float value, const Mode &modeData);
         static std::string getValueStr(const Mode &modeData);
-        std::string getValueStr(uint8_t modeNum) const
-        {
-            if (modeNum >= m_modeData.size())
-            {
-                return "<mode not found>";
-            }
-            return getValueStr(m_modeData[modeNum]);
-        }
+        std::string getValueStr(uint8_t modeNum) const;
 
         DeviceType getDeviceType() const { return m_deviceType; }
         uint8_t getModeCount() const { return m_modeData.size(); }
@@ -241,6 +232,11 @@ namespace Lpf2
             return speed;
         }
 
+        /**
+         * @brief populates mode data with zeroes (according to format)
+         */
+        void ensureRawDataSize();
+
     protected:
         static uint8_t getDataSize(uint8_t format);
         static ModeNum getDefaultMode(DeviceType id);
@@ -259,7 +255,6 @@ namespace Lpf2
         static float parseDataF(const uint8_t *ptr);
 
         bool m_rawDataSizeEnsured = false;
-        void ensureRawDataSize();
 
         /**
          * @brief Set the port data from a device descriptor if available

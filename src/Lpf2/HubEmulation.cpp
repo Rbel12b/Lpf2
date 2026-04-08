@@ -690,10 +690,10 @@ namespace Lpf2
         std::vector<uint8_t> message;
         message.push_back(setup.portNum);
 
-        if (!port || port->m_modeData.size() <= setup.mode)
+        if (!port || port->getModeCount() <= setup.mode)
             return;
         
-        auto &raw = port->m_modeData[setup.mode].rawData;
+        auto &raw = port->getModes()[setup.mode].rawData;
         message.insert(message.end(), raw.begin(), raw.end());
         writeResponse(MessageType::PORT_VALUE_SINGLE, message);
     }
