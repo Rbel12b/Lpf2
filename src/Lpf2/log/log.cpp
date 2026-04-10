@@ -53,6 +53,9 @@ void lpf2_set_runtime_log_level(uint16_t level)
 }
 
 QueueHandle_t logMutex = xSemaphoreCreateMutex();
+
+#ifndef LPF2_USE_ARDUINO_SERIAL
+
 static usb_serial_jtag_driver_config_t usb_jtag_cfg;
 
 esp_err_t lpf2_log_init(void)
@@ -93,3 +96,27 @@ extern "C" int lpf2_log_printf(const char *fmt, ...)
     xSemaphoreGive(logMutex);
     return len;
 }
+
+#else
+
+#include "Arduino.h"
+
+esp_err_t lpf2_log_init(void)
+{
+    return ESP_OK;
+}
+
+extern "C" int lpf2_log_printf(const char *fmt, ...)
+{
+    xSemaphoreTake(logMutex, portMAX_DELAY);
+    va_list args;
+    va_start(args, fmt);
+    char buffer[512];
+    int len = vsnprintf(buffer, sizeof(buffer), fmt, args);
+    va_end(args);
+    Serial.write(buffer, len);
+    xSemaphoreGive(logMutex);
+    return len;
+}
+
+#endif
