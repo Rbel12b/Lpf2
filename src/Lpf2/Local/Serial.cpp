@@ -71,12 +71,12 @@ namespace Lpf2::Local
 
             if (buffer.size() < message.length + 2)
             {
-                // if (m_lastReceivedTime - LPF2_GET_TIME() >= 500)
-                // {
-                //     // Probably corrupted message
-                //     buffer.erase(buffer.begin());
-                //     log_w("Discarding 1 byte, because message may be corrupted");
-                // }
+                if (m_lastReceivedTime - LPF2_GET_TIME() >= 100)
+                {
+                    // Probably corrupted message
+                    buffer.erase(buffer.begin());
+                    LPF2_LOG_W("Discarding 1 byte, because message may be corrupted");
+                }
                 break;
             }
 
@@ -167,7 +167,7 @@ namespace Lpf2::Local
         checksum ^= b;
     }
 
-    void Writer::write(Message msg)
+    void Writer::write(Message &msg)
     {
         checksum = 0xFF;
         uint8_t size = 0;
@@ -176,7 +176,7 @@ namespace Lpf2::Local
         {
             dataLen--;
         }
-        while (dataLen < (1 << size))
+        while ((1 << size) < dataLen)
         {
             size++;
         }
@@ -198,10 +198,17 @@ namespace Lpf2::Local
             {
                 b = msg.data[i];
             }
+            else 
+            {
+                msg.data.push_back(0);
+            }
             computeChecksum(b);
             data.push_back(b);
         }
         data.push_back(checksum);
+        msg.checksum = checksum;
+        msg.length = (1 << size) + extraByte;
         m_serial->write(data.data(), data.size());
+        m_serial->flush();
     }
 }; // namespace Lpf2::Local

@@ -115,6 +115,7 @@ extern "C" int lpf2_log_printf(const char *fmt, ...)
     int len = vsnprintf(buffer, sizeof(buffer), fmt, args);
     va_end(args);
     Serial.write(buffer, len);
+    Serial.flush();
     xSemaphoreGive(logMutex);
     return len;
 }

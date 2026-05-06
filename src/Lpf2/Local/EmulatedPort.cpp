@@ -50,7 +50,9 @@ namespace Lpf2::Local
         {
         case LPF2_STATUS::SENDING_INFO:
         {
+            LPF2_LOG_V("Sending info: state: %i, %i, %i", (int)m_infoState, (int)m_infoNum, (int)m_infoSubNum);
             Message msg;
+            bool okayToWrite = true;
             switch (m_infoState)
             {
             case InfoState::CMD:
@@ -65,10 +67,10 @@ namespace Lpf2::Local
 
                 case 1:
                     msg.cmd = CMD_MODES;
-                    msg.data.push_back(m_device->getModeCount() & 0x07);
-                    msg.data.push_back(m_device->getModeCount() & 0x07); // views
-                    msg.data.push_back(m_device->getModeCount());
-                    msg.data.push_back(m_device->getModeCount()); // views
+                    msg.data.push_back((m_device->getModeCount() - 1) & 0x07);
+                    msg.data.push_back((m_device->getModeCount() - 1) & 0x07); // views
+                    msg.data.push_back((m_device->getModeCount() - 1));
+                    msg.data.push_back((m_device->getModeCount() - 1)); // views
                     break;
 
                 case 2:
@@ -79,15 +81,19 @@ namespace Lpf2::Local
                     break;
 
                 case 3:
+                {
                     msg.cmd = CMD_VERSION;
-                    msg.data.resize(4);
-                    m_baud = 115200;
-                    std::memcpy(msg.data.data(), &m_baud, 4);
+                    auto fw = Utils::packVersion(m_device->getFwVersion());
+                    msg.data.insert(msg.data.end(), fw.begin(), fw.end());
+                    auto hw = Utils::packVersion(m_device->getHwVersion());
+                    msg.data.insert(msg.data.end(), hw.begin(), hw.end());
                     break;
+                }
 
                 default:
+                    okayToWrite = false;
                     m_infoState = InfoState::MODE;
-                    m_infoNum = 0;
+                    m_infoNum = 0xFF; // overflows to 0
                     m_infoSubNum = 0;
                     if (m_device->getModeCount() == 0)
                     {
@@ -163,6 +169,7 @@ namespace Lpf2::Local
                 {
                     if (m_infoNum != 0)
                     {
+                        okayToWrite = false;
                         break;
                     }
                     msg.data[0] |= INFO_MODE_COMBOS;
@@ -185,8 +192,9 @@ namespace Lpf2::Local
                     break;
 
                 default:
+                    okayToWrite = false;
                     m_infoNum++;
-                    m_infoSubNum = 0;
+                    m_infoSubNum = 0xFF;
                     if (m_device->getModeCount() <= m_infoNum)
                     {
                         sendACK();
@@ -200,10 +208,15 @@ namespace Lpf2::Local
             }
             
             default:
+                okayToWrite = false;
                 break;
             }
-            break;
+            if (!okayToWrite)
+            {
+                break;
+            }
             m_writer.write(msg);
+            break;
         }
 
         case LPF2_STATUS::SENDING_DATA:
@@ -212,12 +225,15 @@ namespace Lpf2::Local
                 sendUpdate();
             }
         case LPF2_STATUS::WAITING_FOR_ACK:
-            if (m_start - LPF2_GET_TIME() > 500)
+            if ((LPF2_GET_TIME() - m_start) > 1000)
             {
                 m_status = LPF2_STATUS::SENDING_INFO;
+                m_start = LPF2_GET_TIME();
                 m_infoNum = 0;
                 m_infoSubNum = 0;
                 m_infoState = InfoState::CMD;
+                m_baud = 2400;
+                changeBaud(m_baud);
             }
         
         default:
@@ -225,17 +241,21 @@ namespace Lpf2::Local
         }
     }
 
+    bool EmulatedPort::isHostConnected()
+    {
+        return m_status == LPF2_STATUS::SENDING_DATA;
+    }
+
     void EmulatedPort::parseMessage(const Message &msg)
     {
-        if (msg.header == BYTE_ACK && m_status == LPF2_STATUS::WAITING_FOR_ACK)
+        m_start = LPF2_GET_TIME();
+        if (msg.header == BYTE_ACK && (m_status == LPF2_STATUS::WAITING_FOR_ACK || m_status == LPF2_STATUS::SENDING_INFO))
         {
             changeBaud(m_baud);
-            m_status == LPF2_STATUS::SENDING_DATA;
-            m_start = LPF2_GET_TIME();
+            m_status = LPF2_STATUS::SENDING_DATA;
         }
-        if (msg.header == BYTE_NACK && m_status == LPF2_STATUS::SENDING_DATA)
+        else if (msg.header == BYTE_NACK && m_status == LPF2_STATUS::SENDING_DATA)
         {
-            m_start = LPF2_GET_TIME();
             sendUpdate();
         }
         else if (msg.msg == MESSAGE_CMD && msg.cmd == CMD_SPEED)
@@ -250,7 +270,6 @@ namespace Lpf2::Local
             changeBaud(m_baud);
             m_serial->flush();
             m_status == LPF2_STATUS::SENDING_DATA;
-            m_start = LPF2_GET_TIME();
         }
         else if (msg.msg == MESSAGE_CMD && msg.cmd == CMD_SELECT)
         {
@@ -259,6 +278,11 @@ namespace Lpf2::Local
                 return;
             }
             m_mode = msg.data[0];
+        }
+        else
+        {
+            LPF2_LOG_W("Unknown message: ↓, status: %i", (int)m_status);
+            m_parser.printMessage(msg);
         }
     }
 

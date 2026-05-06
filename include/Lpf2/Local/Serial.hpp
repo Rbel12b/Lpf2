@@ -73,7 +73,7 @@ namespace Lpf2::Local
             m_serial = serial;
         }
 
-        void write(Message msg);
+        void write(Message &msg);
     };
     
 }; // namespace Lpf2::Local

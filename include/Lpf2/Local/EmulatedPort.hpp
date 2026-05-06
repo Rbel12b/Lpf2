@@ -42,6 +42,8 @@ namespace Lpf2::Local
 
         void update();
 
+        bool isHostConnected();
+
         enum class LPF2_STATUS
         {
             SENDING_INFO,
