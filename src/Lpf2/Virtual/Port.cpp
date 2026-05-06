@@ -119,6 +119,8 @@ namespace Lpf2::Virtual
         m_capabilities = m_device->getCapabilities();
         m_inModesMask = m_device->getInputModes();
         m_outModesMask = m_device->getOutputModes();
+        m_fwVersion = m_device->getFwVersion();
+        m_hwVersion = m_device->getHwVersion();
     }
 
     void Port::detachDevice()

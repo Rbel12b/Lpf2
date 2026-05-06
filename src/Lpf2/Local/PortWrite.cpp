@@ -140,11 +140,11 @@ namespace Lpf2::Local
         m_start = LPF2_GET_TIME();
     }
 
-    void Port::changeBaud(uint32_t baud)
+    void Port::changeBaud(uint32_t m_baud)
     {
         Utils::MutexLock lock(m_serialMutex);
         m_serial->flush();
-        m_serial->setBaudrate(baud);
+        m_serial->setBaudrate(m_baud);
     }
 
     void Port::sendACK(bool NACK)

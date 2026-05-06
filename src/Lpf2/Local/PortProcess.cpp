@@ -190,9 +190,9 @@ namespace Lpf2::Local
         if (now - m_startRec > 1000 && m_status == LPF2_STATUS::STATUS_SPEED_CHANGE)
         {
             // device does not support speed change
-            baud = 2400;
-            changeBaud(baud);
-            LPF2_LOG_W("Speed change not supported, continuing at %i baud", baud);
+            m_baud = 2400;
+            changeBaud(m_baud);
+            LPF2_LOG_W("Speed change not supported, continuing at %i baud", m_baud);
             m_status = LPF2_STATUS::STATUS_SYNC_WAIT;
             m_new_status = LPF2_STATUS::STATUS_INFO;
             m_startRec = now;
@@ -207,17 +207,17 @@ namespace Lpf2::Local
         switch (m_status)
         {
         case LPF2_STATUS::STATUS_SPEED_CHANGE:
-            baud = 115200;
-            requestSpeedChange(baud);
+            m_baud = 115200;
+            requestSpeedChange(m_baud);
             break;
         case LPF2_STATUS::STATUS_SPEED:
             if (!m_deviceDataReceived && m_new_status != LPF2_STATUS::STATUS_SPEED)
             {
                 break; // we don't know the device yet.
             }
-            changeBaud(baud);
+            changeBaud(m_baud);
             sendACK(true);
-            LPF2_LOG_D("Succesfully changed speed to %i baud", baud);
+            LPF2_LOG_D("Succesfully changed speed to %i baud", m_baud);
             if (m_new_status == LPF2_STATUS::STATUS_SPEED)
             {
                 m_status = LPF2_STATUS::STATUS_SYNC_WAIT;
@@ -255,9 +255,9 @@ namespace Lpf2::Local
                 // if (m_status == LPF2_STATUS::STATUS_ACK_WAIT && m_new_status == LPF2_STATUS::STATUS_SPEED)
                 // {
                 //     // device does not support speed change
-                //     baud = 2400;
+                //     m_baud = 2400;
                 //     changeBaud(2400);
-                //     LPF2_LOG_W("Speed change not supported, continuing at %i baud", baud);
+                //     LPF2_LOG_W("Speed change not supported, continuing at %i m_baud", m_baud);
                 //     m_status = LPF2_STATUS::STATUS_SYNC_WAIT;
                 //     m_new_status = LPF2_STATUS::STATUS_INFO;
                 // }
@@ -274,7 +274,7 @@ namespace Lpf2::Local
             break;
 
         case LPF2_STATUS::STATUS_DATA_RECEIVED:
-            LPF2_LOG_D("Succesfully changed speed to %i baud", baud);
+            LPF2_LOG_D("Succesfully changed speed to %i baud", m_baud);
             LPF2_LOG_D("Setting default mode: %i", getDefaultMode(m_deviceType));
             setMode(getDefaultMode(m_deviceType));
             sendACK(true);
@@ -288,7 +288,7 @@ namespace Lpf2::Local
             sendACK(false);
             LPF2_LOG_D("Sent ACK after info, changing speed.");
             m_status = LPF2_STATUS::STATUS_DATA_START;
-            changeBaud(baud);
+            changeBaud(m_baud);
             sendACK(true);
             m_start = now;
             break;
@@ -307,7 +307,7 @@ namespace Lpf2::Local
             Utils::MutexLock lock(m_serialMutex);
             m_serial->uartPinsOff();
         }
-        baud = 115200;
+        m_baud = 115200;
         m_deviceType = DeviceType::UNKNOWNDEVICE;
         m_deviceDataReceived = false;
         m_modeCount = m_viewCount = 0;
@@ -333,8 +333,8 @@ namespace Lpf2::Local
             Utils::MutexLock lock(m_serialMutex);
             m_serial->uartPinsOn();
         }
-        baud = 115200;
-        changeBaud(baud);
+        m_baud = 115200;
+        changeBaud(m_baud);
         m_deviceType = DeviceType::UNKNOWNDEVICE;
         m_modeCount = m_viewCount = 0;
         m_comboNum = 0;

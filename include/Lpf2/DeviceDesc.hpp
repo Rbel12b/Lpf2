@@ -29,5 +29,7 @@ namespace Lpf2
         uint8_t caps = 0;
         std::vector<uint16_t> combos;
         std::vector<Mode> modes;
+        Version fwVersion = {};
+        Version hwVersion = {};
     };
 }; // namespace Lpf2

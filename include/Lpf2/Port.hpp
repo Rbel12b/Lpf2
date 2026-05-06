@@ -166,6 +166,9 @@ namespace Lpf2
         uint16_t getOutputModes() const { return m_outModesMask; }
         uint8_t getCapabilities() const { return m_capabilities; }
 
+        Version getFwVersion() const { return m_fwVersion; }
+        Version getHwVersion() const { return m_hwVersion; }
+
         std::string getInfoStr();
 
         /**
@@ -185,6 +188,8 @@ namespace Lpf2
             m_capabilities = desc->caps;
             m_inModesMask = desc->inModesMask;
             m_outModesMask = desc->outModesMask;
+            m_fwVersion = desc->fwVersion;
+            m_hwVersion = desc->hwVersion;
         }
 
         /**
@@ -268,6 +273,7 @@ namespace Lpf2
         uint8_t m_capabilities = 0;
         uint16_t m_inModesMask = 0, m_outModesMask = 0;
         uint8_t m_comboNum = 0;
+        Version m_fwVersion = {}, m_hwVersion = {};
 
         std::vector<Mode> m_modeData;
     };

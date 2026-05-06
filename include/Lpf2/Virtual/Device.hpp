@@ -33,6 +33,8 @@ namespace Lpf2::Virtual
         virtual const std::vector<Mode> &getModes() const = 0;
         virtual std::vector<uint16_t> getModeCombos() const = 0;
         virtual uint8_t getModeCount() const = 0;
+        virtual Version getFwVersion() const = 0;
+        virtual Version getHwVersion() const = 0;
         /**
          * @returns mode bitmask
          */
@@ -161,6 +163,16 @@ namespace Lpf2::Virtual
         std::vector<uint16_t> getModeCombos() const override
         {
             return m_desc.combos;
+        }
+
+        Version getFwVersion() const override
+        {
+            return m_desc.fwVersion;
+        }
+
+        Version getHwVersion() const override
+        {
+            return m_desc.hwVersion;
         }
 
         void setUserData(void* data)

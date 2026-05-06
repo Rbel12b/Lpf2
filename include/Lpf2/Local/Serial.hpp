@@ -55,7 +55,25 @@ namespace Lpf2::Local
     private:
         Uart *m_serial = nullptr;
         std::vector<uint8_t> buffer;
-        uint8_t checksum;
+        uint8_t checksum = 0;
         uint32_t m_lastReceivedTime = 0;
     };
+
+    class Writer
+    {
+    private:
+        Uart *m_serial = nullptr;
+        uint8_t checksum = 0;
+        void computeChecksum(uint8_t b);
+    public:
+        Writer() {};
+
+        void init(Uart *serial)
+        {
+            m_serial = serial;
+        }
+
+        void write(Message msg);
+    };
+    
 }; // namespace Lpf2::Local

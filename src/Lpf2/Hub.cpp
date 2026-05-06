@@ -408,6 +408,8 @@ namespace Lpf2
 
             m_attachedPortsDevice[portNum] = devType;
             auto port = _getPort(portNum);
+            port->m_fwVersion = FWRew;
+            port->m_hwVersion = HWRew;
             if (auto desc = DeviceDescRegistry::instance().getDescriptor(devType))
             {
                 port->m_deviceType = devType;

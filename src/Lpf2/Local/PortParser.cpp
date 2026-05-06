@@ -162,11 +162,16 @@ namespace Lpf2::Local
             {
                 break;
             }
-            baud = msg.data[0] | ((uint64_t)msg.data[1] << 8) | ((uint64_t)msg.data[2] << 16) | ((uint64_t)msg.data[3] << 24);
+            m_baud = msg.data[0] | ((uint64_t)msg.data[1] << 8) | ((uint64_t)msg.data[2] << 16) | ((uint64_t)msg.data[3] << 24);
             break;
         }
         case CMD_VERSION:
         {
+            m_fwVersion = Utils::unPackVersion(msg.data);
+
+            auto hwVersionData = msg.data;
+            hwVersionData.erase(hwVersionData.begin(), hwVersionData.begin() + 4);
+            m_hwVersion = Utils::unPackVersion(hwVersionData);
             break;
         }
         case CMD_EXT_MODE:

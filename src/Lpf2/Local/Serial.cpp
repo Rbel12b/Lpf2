@@ -161,4 +161,47 @@ namespace Lpf2::Local
         str += buf;
         LPF2_LOG_I("%s", str.c_str());
     }
+
+    void Writer::computeChecksum(uint8_t b)
+    {
+        checksum ^= b;
+    }
+
+    void Writer::write(Message msg)
+    {
+        checksum = 0xFF;
+        uint8_t size = 0;
+        uint8_t dataLen = msg.data.size();
+        if (msg.msg == MESSAGE_INFO)
+        {
+            dataLen--;
+        }
+        while (dataLen < (1 << size))
+        {
+            size++;
+        }
+        if (size > 7)
+        {
+            size = 7;
+        }
+        msg.header = (msg.msg & 0xC0) | ((size & 0x07) << 3) | (msg.cmd & 0x07);
+
+        std::vector<uint8_t> data;
+        data.reserve((1 << size) + (msg.msg == MESSAGE_INFO ? 3 : 2));
+        data.push_back(msg.header);
+        computeChecksum(msg.header);
+        uint8_t extraByte = msg.msg == MESSAGE_INFO ? 1 : 0;
+        for (size_t i = 0; i < ((1 << size) + extraByte); i++)
+        {
+            uint8_t b = 0;
+            if (i < msg.data.size())
+            {
+                b = msg.data[i];
+            }
+            computeChecksum(b);
+            data.push_back(b);
+        }
+        data.push_back(checksum);
+        m_serial->write(data.data(), data.size());
+    }
 }; // namespace Lpf2::Local
