@@ -108,15 +108,38 @@ esp_err_t lpf2_log_init(void)
 
 extern "C" int lpf2_log_printf(const char *fmt, ...)
 {
-    xSemaphoreTake(logMutex, portMAX_DELAY);
-    va_list args;
+    static char *buffer = nullptr;
+    static size_t bufSize = 0;
+
+    va_list args, args_copy;
     va_start(args, fmt);
-    char buffer[512];
-    int len = vsnprintf(buffer, sizeof(buffer), fmt, args);
+    va_copy(args_copy, args);
+    int len = vsnprintf(nullptr, 0, fmt, args);
     va_end(args);
+
+    if (len < 0) {
+        va_end(args_copy);
+        return -1;
+    }
+
+    if ((size_t)(len + 1) > bufSize) {
+        char *newBuf = (char *)realloc(buffer, len + 1);
+        if (!newBuf) {
+            va_end(args_copy);
+            return -1;
+        }
+        buffer = newBuf;
+        bufSize = len + 1;
+    }
+
+    vsnprintf(buffer, bufSize, fmt, args_copy);
+    va_end(args_copy);
+
+    xSemaphoreTake(logMutex, portMAX_DELAY);
     Serial.write(buffer, len);
     Serial.flush();
     xSemaphoreGive(logMutex);
+
     return len;
 }
 

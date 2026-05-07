@@ -43,6 +43,9 @@ namespace Lpf2::Local
 
         for (const auto &msg : messages)
         {
+            LPF2_DEBUG_EXPR_V(
+                m_parser.printMessage(msg);
+            );
             parseMessage(msg);
         }
 
@@ -174,7 +177,6 @@ namespace Lpf2::Local
                     }
                     msg.data[0] |= INFO_MODE_COMBOS;
                     auto combos = m_device->getModeCombos();
-                    msg.data.resize(combos.size() * 2);
                     for (auto combo : combos)
                     {
                         msg.data.push_back(combo);
@@ -234,6 +236,8 @@ namespace Lpf2::Local
                 m_infoState = InfoState::CMD;
                 m_baud = 2400;
                 changeBaud(m_baud);
+                m_serial->discardRxFiFo();
+                m_parser.clearBuf();
             }
         
         default:
@@ -269,7 +273,7 @@ namespace Lpf2::Local
             m_serial->flush();
             changeBaud(m_baud);
             m_serial->flush();
-            m_status == LPF2_STATUS::SENDING_DATA;
+            m_status = LPF2_STATUS::SENDING_DATA;
         }
         else if (msg.msg == MESSAGE_CMD && msg.cmd == CMD_SELECT)
         {
@@ -297,7 +301,7 @@ namespace Lpf2::Local
             m_writer.write(msg);
         }
         Mode mode;
-        if (m_device->getModes().size() < m_mode)
+        if (m_device->getModes().size() > m_mode)
         {
             mode = m_device->getModes()[m_mode];
         }

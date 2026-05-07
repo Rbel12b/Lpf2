@@ -27,15 +27,10 @@ namespace Lpf2::Local
     {
         std::vector<Message> messages;
         int available = m_serial->available();
-        if (available <= 0)
-        {
-            return messages;
-        }
-        else
+        if (available > 0)
         {
             buffer.resize(buffer.size() + available);
             m_serial->read(buffer.data() + buffer.size() - available, available);
-            m_lastReceivedTime = LPF2_GET_TIME();
         }
 
         while (buffer.size())
@@ -71,11 +66,12 @@ namespace Lpf2::Local
 
             if (buffer.size() < message.length + 2)
             {
-                if (m_lastReceivedTime - LPF2_GET_TIME() >= 100)
+                if (LPF2_GET_TIME() - m_lastReceivedTime >= 250)
                 {
                     // Probably corrupted message
                     buffer.erase(buffer.begin());
                     LPF2_LOG_W("Discarding 1 byte, because message may be corrupted");
+                    continue;
                 }
                 break;
             }
@@ -107,6 +103,7 @@ namespace Lpf2::Local
             messages.push_back(message);
 
             buffer.erase(buffer.begin(), buffer.begin() + message.length + 2);
+            m_lastReceivedTime = LPF2_GET_TIME();
         }
         return messages;
     }
@@ -160,6 +157,11 @@ namespace Lpf2::Local
         sprintf(buf, ", C: 0x%02X", msg.checksum);
         str += buf;
         LPF2_LOG_I("%s", str.c_str());
+    }
+
+    void Parser::clearBuf()
+    {
+        buffer.clear();
     }
 
     void Writer::computeChecksum(uint8_t b)

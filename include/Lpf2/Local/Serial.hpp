@@ -47,6 +47,8 @@ namespace Lpf2::Local
         std::vector<Message> update();
         static void printMessage(const Message &msg);
 
+        void clearBuf();
+
     private:
         void resetChecksum();
         void computeChecksum(uint8_t b);

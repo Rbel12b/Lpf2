@@ -83,6 +83,11 @@ namespace Lpf2::Local
         virtual void flush() = 0;
 
         /**
+         * @brief Clear the Rx FiFo ringbuffer (or equivalent)
+         */
+        virtual void discardRxFiFo() = 0;
+
+        /**
          * @brief Write a single byte to the UART port (convenience overload).
          * @param byte The byte to transmit.
          * @return The number of bytes written (1 on success, 0 on failure).
