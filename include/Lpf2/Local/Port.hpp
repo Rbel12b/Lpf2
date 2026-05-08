@@ -1,6 +1,6 @@
 /**
  *  Copyright (C) 2026 - Rbel12b
- * 
+ *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU Affero General Public License as
  *  published by the Free Software Foundation, either version 3 of the
@@ -86,6 +86,8 @@ namespace Lpf2::Local
         void gotoAbsPosition(int32_t absPos, uint8_t speed, uint8_t maxPower, BrakingStyle endState, uint8_t useProfile = 0) override;
         void presetEncoder(int32_t pos) override;
 
+        void updateMotorPID();
+
     private:
 #if defined(LPF2_USE_FREERTOS)
         static void taskEntryPoint(void *pvParameters);
@@ -149,5 +151,14 @@ namespace Lpf2::Local
         int m_lastDetectedType = -1;
 
         bool m_deviceDataReceived = false;
+
+    private:
+        uint16_t getAbsPos() const
+        {
+            return (uint16_t)(getValue((uint8_t)ModeNum::MOTOR__CALIB, 0) / 1024.0f * 3600.0f);
+        }
+
+        int64_t m_currentRelPos = 0;
+        uint16_t m_lastAbsPos = 0;
     };
 }; // namespace Lpf2::Local

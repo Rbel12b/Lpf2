@@ -19,6 +19,7 @@
 
 #include "Lpf2/config.hpp"
 #include "Lpf2/LWPConst.hpp"
+#include "Lpf2/Device.hpp"
 #include "Lpf2/DeviceDesc.hpp"
 
 namespace Lpf2
@@ -276,5 +277,80 @@ namespace Lpf2
         Version m_fwVersion = {}, m_hwVersion = {};
 
         std::vector<Mode> m_modeData;
+    };
+
+    class PortDevice : public Lpf2::Device
+    {
+    public:
+        PortDevice(Port &port) : m_port(port) {}
+
+        DeviceType getDeviceType() const override
+        {
+            return m_port.getDeviceType();
+        }
+
+        const std::vector<Mode> &getModes() const override
+        {
+            return m_port.getModes();
+        }
+
+        std::vector<uint16_t> getModeCombos() const override
+        {
+            return m_port.getModeCombos();
+        }
+
+        uint8_t getModeCount() const override
+        {
+            return m_port.getModeCount();
+        }
+
+        Version getFwVersion() const override
+        {
+            return m_port.getFwVersion();
+        }
+
+        Version getHwVersion() const override
+        {
+            return m_port.getHwVersion();
+        }
+
+        /**
+         * @returns mode bitmask
+         */
+        uint16_t getInputModes() const override
+        {
+            return m_port.getInputModes();
+        }
+
+        /**
+         * @returns mode bitmask
+         */
+        uint16_t getOutputModes() const override
+        {
+            return m_port.getOutputModes();
+        }
+
+        uint8_t getCapabilities() const override
+        {
+            return m_port.getCapabilities();
+        }
+
+        int writeData(uint8_t modeNum, const std::vector<uint8_t> &data) override
+        {
+            return m_port.writeData(modeNum, data);
+        }
+
+        int setMode(uint8_t mode) override
+        {
+            return m_port.setMode(mode);
+        }
+
+        int setModeCombo(uint8_t idx) override
+        {
+            return m_port.setModeCombo(idx);
+        }
+
+    protected:
+        Port &m_port;
     };
 }; // namespace Lpf2

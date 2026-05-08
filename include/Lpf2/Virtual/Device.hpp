@@ -21,33 +21,15 @@
 #include "Lpf2/LWPConst.hpp"
 #include "Lpf2/Util/Values.hpp"
 #include "Lpf2/Device.hpp"
+#include "Lpf2/DeviceFactory.hpp"
 #include <functional>
 
 namespace Lpf2::Virtual
 {
-    class Device
+    class Device : public Lpf2::Device
     {
     public:
-        virtual ~Device() = default;
-        virtual DeviceType getDeviceType() const = 0;
-        virtual const std::vector<Mode> &getModes() const = 0;
-        virtual std::vector<uint16_t> getModeCombos() const = 0;
-        virtual uint8_t getModeCount() const = 0;
-        virtual Version getFwVersion() const = 0;
-        virtual Version getHwVersion() const = 0;
-        /**
-         * @returns mode bitmask
-         */
-        virtual uint16_t getInputModes() const = 0;
-        /**
-         * @returns mode bitmask
-         */
-        virtual uint16_t getOutputModes() const = 0;
-        virtual uint8_t getCapabilities() const = 0;
-        virtual int writeData(uint8_t modeNum, const std::vector<uint8_t> &data) = 0;
         virtual void setPower(uint8_t pin1, uint8_t pin2) = 0;
-        virtual int setMode(uint8_t mode) = 0;
-        virtual int setModeCombo(uint8_t idx) = 0;
 
         /**
          * @brief set motor power
@@ -123,12 +105,29 @@ namespace Lpf2::Virtual
          */
         virtual void presetEncoder(int32_t pos) = 0;
     };
-
-    class GenericDevice : public Device
+    
+    class GenericDevice : public Virtual::Device
     {
     public:
         explicit GenericDevice(const DeviceDescriptor &desc)
             : m_desc(desc) {}
+
+        bool init() override { return true;}
+        void poll() override {}
+        const char *name() const override { return "Lpf2::Virtual::GenericDevice"; }
+
+        inline static const DeviceCapabilityId CAP =
+            Lpf2CapabilityRegistry::registerCapability("virtual_device_generic");
+
+        bool hasCapability(DeviceCapabilityId id) const override
+        {
+            return id == CAP;
+        }
+
+        void *getCapability(DeviceCapabilityId id) override
+        {
+            return (id == CAP ? this : nullptr);
+        }
 
         DeviceType getDeviceType() const override
         {
@@ -286,4 +285,5 @@ namespace Lpf2::Virtual
         void *m_userData = nullptr;
         WriteDataCallback m_writeDataCallback = nullptr;
     };
+    GenericDevice dev;
 }; // namespace Lpf2

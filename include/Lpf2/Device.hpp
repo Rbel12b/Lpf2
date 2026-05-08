@@ -19,8 +19,6 @@
 
 #include "Lpf2/config.hpp"
 #include "Lpf2/Port.hpp"
-#include <map>
-#include <string>
 
 using DeviceCapabilityId = uint32_t;
 
@@ -29,7 +27,7 @@ namespace Lpf2
     class Device
     {
     public:
-        explicit Device(Port &port) : m_port(port) {}
+        Device() {};
         virtual ~Device() = default;
 
         virtual bool init() = 0;
@@ -39,76 +37,26 @@ namespace Lpf2
         virtual bool hasCapability(DeviceCapabilityId id) const = 0;
         virtual void *getCapability(DeviceCapabilityId id) = 0;
 
-        const static DeviceCapabilityId CAP;
+        virtual DeviceType getDeviceType() const = 0;
+        virtual const std::vector<Mode> &getModes() const = 0;
+        virtual std::vector<uint16_t> getModeCombos() const = 0;
+        virtual uint8_t getModeCount() const = 0;
+        virtual Version getFwVersion() const = 0;
+        virtual Version getHwVersion() const = 0;
 
-    protected:
-        Port &m_port;
-    };
+        /**
+         * @returns mode bitmask
+         */
+        virtual uint16_t getInputModes() const = 0;
 
-    class DeviceFactory
-    {
-    public:
-        virtual ~DeviceFactory() = default;
+        /**
+         * @returns mode bitmask
+         */
+        virtual uint16_t getOutputModes() const = 0;
 
-        // Return true if this factory recognizes the connected device
-        virtual bool matches(Port &port) const = 0;
-
-        // Create the device (DeviceManager takes ownership)
-        virtual Device *create(Port &port) const = 0;
-
-        virtual const char *name() const = 0;
-    };
-
-    class DeviceRegistry
-    {
-    public:
-        static DeviceRegistry &instance()
-        {
-            static DeviceRegistry inst;
-            return inst;
-        }
-
-        static void registerDefault();
-
-        void registerFactory(const DeviceFactory *factory)
-        {
-            if (m_factoryCount >= MAX_FACTORIES)
-            {
-                assert(false && "Exceeded maximum number of Lpf2 device factories");
-                return;
-            }
-
-            m_factories[m_factoryCount++] = factory;
-        }
-
-        const DeviceFactory *const *factories() const
-        {
-            return m_factories;
-        }
-
-        size_t count() const
-        {
-            return m_factoryCount;
-        }
-
-    private:
-        static constexpr size_t MAX_FACTORIES = 32;
-
-        const DeviceFactory *m_factories[MAX_FACTORIES];
-        size_t m_factoryCount = 0;
-    };
-
-    class Lpf2CapabilityRegistry
-    {
-    public:
-        static constexpr uint32_t fnv1a(const char *s, uint32_t h = 2166136261u)
-        {
-            return *s ? fnv1a(s + 1, (h ^ uint32_t(*s)) * 16777619u) : h;
-        }
-
-        static constexpr DeviceCapabilityId registerCapability(const char *const name)
-        {
-            return fnv1a(name);
-        }
+        virtual uint8_t getCapabilities() const = 0;
+        virtual int writeData(uint8_t modeNum, const std::vector<uint8_t> &data) = 0;
+        virtual int setMode(uint8_t mode) = 0;
+        virtual int setModeCombo(uint8_t idx) = 0;
     };
 }; // namespace Lpf2

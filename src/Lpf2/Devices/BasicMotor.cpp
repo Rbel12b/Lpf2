@@ -29,9 +29,9 @@ namespace Lpf2::Devices
         reg.registerFactory(&factory);
     }
 
-    void BasicMotor::startPower(int speed)
+    void BasicMotor::startPower(int8_t pw)
     {
-        m_port.startPower(speed);
+        m_port.startPower(pw);
     }
 
     bool BasicMotor::hasCapability(DeviceCapabilityId id) const
@@ -46,7 +46,7 @@ namespace Lpf2::Devices
         return nullptr;
     }
 
-    bool BasicMotorFactory::matches(Port &port) const
+    bool BasicMotorFactory::matches(const Port &port) const
     {
         switch (port.getDeviceType())
         {

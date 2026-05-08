@@ -19,14 +19,14 @@
 #include "Lpf2/Devices/BasicMotor.hpp"
 namespace Lpf2::Devices
 {
-    namespace
+    namespace EncoderFactory
     {
-        EncoderMotorFactory factory;
+        EncoderMotorFactory factory = {};
     }
 
     void EncoderMotor::registerFactory(DeviceRegistry &reg)
     {
-        reg.registerFactory(&factory);
+        reg.registerFactory(&EncoderFactory::factory);
     }
 
     bool EncoderMotor::hasCapability(DeviceCapabilityId id) const
@@ -43,7 +43,7 @@ namespace Lpf2::Devices
         return nullptr;
     }
 
-    bool EncoderMotorFactory::matches(Port &port) const
+    bool EncoderMotorFactory::matches(const Port &port) const
     {
         switch (port.getDeviceType())
         {
@@ -61,267 +61,43 @@ namespace Lpf2::Devices
         return false;
     }
 
-    void EncoderMotor::resetPid()
+    void EncoderMotor::startPower(int8_t pw)
     {
-        m_pidIntegral = 0.0f;
-        m_pidLastError = 0.0f;
+        m_port.startPower(pw);
     }
 
-    int EncoderMotor::pidStep(float error)
+    void EncoderMotor::setAccTime(uint16_t accTime, AccelerationProfile accProfile)
     {
-        // Integral
-        m_pidIntegral += error;
-        if (m_pidIntegral > m_pidIntegralLimit)
-            m_pidIntegral = m_pidIntegralLimit;
-        else if (m_pidIntegral < -m_pidIntegralLimit)
-            m_pidIntegral = -m_pidIntegralLimit;
-
-        // Derivative (difference only)
-        float derivative = error - m_pidLastError;
-        m_pidLastError = error;
-
-        // PID output
-        float output =
-            m_kp * error +
-            m_ki * m_pidIntegral +
-            m_kd * derivative;
-
-        // Clamp to max speed
-        if (output > m_moveSpeed)
-            output = static_cast<float>(m_moveSpeed);
-        else if (output < -static_cast<float>(m_moveSpeed))
-            output = -static_cast<float>(m_moveSpeed);
-
-        return static_cast<int>(output);
+        m_port.setAccTime(accTime, accProfile);
     }
 
-    void EncoderMotor::poll()
+    void EncoderMotor::setDecTime(uint16_t decTime, AccelerationProfile decProfile)
     {
-        // Encoder tracking
-        uint16_t absPos = getAbsPos();
-        int16_t delta = static_cast<int16_t>(absPos) -
-                        static_cast<int16_t>(m_lastAbsPos);
-
-        if (delta > 1800)
-            delta -= 3600;
-        else if (delta < -1800)
-            delta += 3600;
-
-        m_currentRelPos += delta;
-        m_lastAbsPos = absPos;
-
-        LPF2_LOG_V("AbsPos: %u, RelPos: %lld, Delta: %d",
-                   absPos, m_currentRelPos, delta);
-
-        switch (m_mode)
-        {
-        case Mode::SPEED:
-            // Manual control
-            break;
-
-        case Mode::MOVE_DEGREES:
-        {
-            if (m_deg == 0)
-            {
-                _setSpeed(0);
-                break;
-            }
-
-            m_deg -= delta;
-            float error = static_cast<float>(m_deg);
-
-            if ((error > 0 && m_deg <= 0) ||
-                (error < 0 && m_deg >= 0))
-            {
-                m_deg = 0;
-                m_holdRelPos = m_currentRelPos;
-                resetPid();
-                m_mode = Mode::HOLD;
-                _setSpeed(0);
-            }
-            else
-            {
-                _setSpeed(pidStep(error));
-            }
-            break;
-        }
-
-        case Mode::MOVE_TO_ABS:
-        {
-            int16_t diff =
-                static_cast<int16_t>(m_absPos) -
-                static_cast<int16_t>(absPos);
-
-            if (diff > 1800)
-                diff -= 3600;
-            else if (diff < -1800)
-                diff += 3600;
-
-            float error = static_cast<float>(diff);
-
-            if (std::abs(error) <= 5.0f)
-            {
-                m_holdAbsPos = m_absPos;
-                m_holdRelPos = 0;
-                m_holdRel = false;
-                resetPid();
-                m_mode = Mode::HOLD;
-                _setSpeed(0);
-            }
-            else
-            {
-                _setSpeed(pidStep(error));
-            }
-            break;
-        }
-
-        case Mode::MOVE_TO_REL:
-        {
-            float error =
-                static_cast<float>(
-                    static_cast<int64_t>(m_relPos) -
-                    static_cast<int64_t>(m_currentRelPos));
-
-            if (std::abs(error) <= 5.0f)
-            {
-                m_holdRelPos = m_relPos;
-                m_holdAbsPos = 0;
-                m_holdRel = true;
-                resetPid();
-                m_mode = Mode::HOLD;
-                _setSpeed(0);
-            }
-            else
-            {
-                _setSpeed(pidStep(error));
-            }
-            break;
-        }
-
-        case Mode::HOLD:
-        {
-            // Prefer relative hold if available
-            float error;
-
-            if (m_holdRel)
-            {
-                error =
-                    static_cast<float>(
-                        static_cast<int64_t>(m_holdRelPos) -
-                        static_cast<int64_t>(m_currentRelPos));
-            }
-            else
-            {
-                int16_t diff =
-                    static_cast<int16_t>(m_holdAbsPos) -
-                    static_cast<int16_t>(absPos);
-
-                if (diff > 1800)
-                    diff -= 3600;
-                else if (diff < -1800)
-                    diff += 3600;
-
-                error = static_cast<float>(diff);
-            }
-
-            if (std::abs(error) < 5.0f) // 0.1°
-            {
-                _setSpeed(0);
-                m_pidIntegral = 0.0f;
-                break;
-            }
-
-            _setSpeed(pidStep(error));
-            break;
-        }
-        }
+        m_port.setDecTime(decTime, decProfile);
     }
 
-    uint16_t EncoderMotor::getAbsPos() const
+    void EncoderMotor::startSpeed(int8_t speed, uint8_t maxPower, uint8_t useProfile)
     {
-        return (uint16_t)(m_port.getValue(CALIB_MODE, 0) / 1024.0f * 3600.0f);
+        m_port.startSpeed(speed, maxPower, useProfile);
     }
 
-    int64_t EncoderMotor::getRelPos() const
+    void EncoderMotor::startSpeedForTime(uint16_t time, int8_t speed, uint8_t maxPower, BrakingStyle endState, uint8_t useProfile)
     {
-        return m_currentRelPos;
+        m_port.startSpeedForTime(time, speed, maxPower, endState, useProfile);
     }
 
-    void EncoderMotor::setRelPos(int64_t pos)
+    void EncoderMotor::startSpeedForDegrees(uint32_t degrees, int8_t speed, uint8_t maxPower, BrakingStyle endState, uint8_t useProfile)
     {
-        m_currentRelPos = pos;
+        m_port.startSpeedForDegrees(degrees, speed, maxPower, endState, useProfile);
     }
 
-    void EncoderMotor::setSpeed(int speed)
+    void EncoderMotor::gotoAbsPosition(int32_t absPos, uint8_t speed, uint8_t maxPower, BrakingStyle endState, uint8_t useProfile)
     {
-        m_mode = Mode::SPEED;
-        _setSpeed(speed);
+        m_port.gotoAbsPosition(absPos, speed, maxPower, endState, useProfile);
     }
 
-    void EncoderMotor::startPower(int power)
+    void EncoderMotor::presetEncoder(int32_t pos)
     {
-        m_port.startPower(power);
-    }
-
-    void EncoderMotor::_setSpeed(int speed)
-    {
-        m_port.startSpeed(speed, 100);
-    }
-
-    void EncoderMotor::moveToAbsPos(uint16_t pos, uint8_t speed)
-    {
-        m_moveSpeed = speed;
-        m_absPos = pos * 10;
-        resetPid();
-        m_mode = Mode::MOVE_TO_ABS;
-    }
-
-    void EncoderMotor::setAbsTarget(uint16_t pos)
-    {
-        m_absPos = pos * 10;
-        m_mode = Mode::MOVE_TO_ABS;
-    }
-
-    void EncoderMotor::moveToRelPos(int64_t pos, uint8_t speed)
-    {
-        m_moveSpeed = speed;
-        m_relPos = pos * 10;
-        resetPid();
-        m_mode = Mode::MOVE_TO_REL;
-    }
-
-    void EncoderMotor::setRelTarget(int64_t pos)
-    {
-        m_relPos = pos * 10;
-        m_mode = Mode::MOVE_TO_REL;
-    }
-
-    void EncoderMotor::moveDegrees(int64_t degrees, uint8_t speed)
-    {
-        m_moveSpeed = speed;
-        m_deg = degrees * 10;
-        resetPid();
-        m_mode = Mode::MOVE_DEGREES;
-    }
-
-    void EncoderMotor::setHoldTargetAbs(uint16_t pos)
-    {
-        m_holdAbsPos = pos;
-        m_holdRel = false;
-        m_mode = Mode::HOLD;
-    }
-
-    void EncoderMotor::setHoldTargetRel(int64_t pos)
-    {
-        m_holdRelPos = pos;
-        m_holdRel = true;
-        m_mode = Mode::HOLD;
-    }
-
-    bool EncoderMotor::isMovingToPos()
-    {
-        if (m_mode == Mode::HOLD || m_mode == Mode::SPEED)
-            return false;
-        return true;
+        m_port.presetEncoder(pos);
     }
 }; // namespace Lpf2::Devices

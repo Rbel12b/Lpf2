@@ -124,6 +124,11 @@ namespace Lpf2::Local
             return;
         }
 
+        if (isDeviceConnected())
+        {
+            updateMotorPID();
+        }
+
         auto messages = m_parser.update();
 
         for (const auto &msg : messages)

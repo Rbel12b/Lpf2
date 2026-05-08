@@ -18,7 +18,7 @@
 #pragma once
 
 #include "Lpf2/config.hpp"
-#include "Lpf2/Device.hpp"
+#include "Lpf2/DeviceFactory.hpp"
 
 namespace Lpf2::Devices
 {
@@ -26,16 +26,17 @@ namespace Lpf2::Devices
     {
     public:
         virtual ~TechnicColorSensorControl() = default;
+
         /**
          * @brief Get the color idx from the sensor.
          */
         virtual ColorIDX getColorIdx() = 0;
     };
 
-    class TechnicColorSensor : public Device, public TechnicColorSensorControl
+    class TechnicColorSensor : public PortDevice, public TechnicColorSensorControl
     {
     public:
-        TechnicColorSensor(Port &port) : Device(port) {}
+        TechnicColorSensor(Port &port) : PortDevice(port) {}
 
         bool init() override
         {
@@ -51,8 +52,6 @@ namespace Lpf2::Devices
             return "Technic Color Sensor";
         }
 
-        ColorIDX getColorIdx() override;
-
         bool hasCapability(DeviceCapabilityId id) const override;
         void *getCapability(DeviceCapabilityId id) override;
 
@@ -60,14 +59,16 @@ namespace Lpf2::Devices
             Lpf2CapabilityRegistry::registerCapability("technic_color_sensor");
 
         static void registerFactory(DeviceRegistry &reg);
+
+        ColorIDX getColorIdx() override;
     };
 
     class TechnicColorSensorFactory : public DeviceFactory
     {
     public:
-        bool matches(Port &port) const override;
+        bool matches(const Port &port) const override;
 
-        Device *create(Port &port) const override
+        PortDevice *create(Port &port) const override
         {
             return new TechnicColorSensor(port);
         }

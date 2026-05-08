@@ -61,57 +61,6 @@ namespace Lpf2::Local
         return 0;
     }
 
-    void Port::startPower(int8_t pw)
-    {
-        bool forward = pw >= 0;
-        pw = std::abs(pw);
-        if (pw > 100)
-            pw = 100;
-
-        uint8_t pwr2 = pw * 0xFF / 100;
-        uint8_t pwr1 = 0;
-        if (!forward)
-            std::swap(pwr1, pwr2);
-
-        LPF2_LOG_D("startPower: %i -> %i, %i", (int8_t)pw, pwr1, pwr2);
-        setPower(pwr1, pwr2);
-    }
-
-    void Port::setAccTime(uint16_t accTime, AccelerationProfile accProfile)
-    {
-        // TODO: implement this
-    }
-
-    void Port::setDecTime(uint16_t decTime, AccelerationProfile decProfile)
-    {
-        // TODO: implement this
-    }
-
-    void Port::startSpeed(int8_t speed, uint8_t maxPower, uint8_t useProfile)
-    {
-        // TODO: implement this
-    }
-
-    void Port::startSpeedForTime(uint16_t time, int8_t speed, uint8_t maxPower, BrakingStyle endState, uint8_t useProfile)
-    {
-        // TODO: implement this
-    }
-
-    void Port::startSpeedForDegrees(uint32_t degrees, int8_t speed, uint8_t maxPower, BrakingStyle endState, uint8_t useProfile)
-    {
-        // TODO: implement this
-    }
-
-    void Port::gotoAbsPosition(int32_t absPos, uint8_t speed, uint8_t maxPower, BrakingStyle endState, uint8_t useProfile)
-    {
-        // TODO: implement this
-    }
-
-    void Port::presetEncoder(int32_t pos)
-    {
-        // TODO: implement this
-    }
-
     void Port::requestSpeedChange(uint32_t speed)
     {
         uint8_t header = MESSAGE_CMD | CMD_SPEED | (2 << 3);

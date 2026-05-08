@@ -29,11 +29,6 @@ namespace Lpf2::Devices
         reg.registerFactory(&factory);
     }
 
-    ColorIDX TechnicColorSensor::getColorIdx()
-    {
-        return ColorIDX((int)m_port.getValue(0, 0));
-    }
-
     bool TechnicColorSensor::hasCapability(DeviceCapabilityId id) const
     {
         return id == CAP;
@@ -46,7 +41,7 @@ namespace Lpf2::Devices
         return nullptr;
     }
 
-    bool TechnicColorSensorFactory::matches(Port &port) const
+    bool TechnicColorSensorFactory::matches(const Port &port) const
     {
         switch (port.getDeviceType())
         {
@@ -56,5 +51,10 @@ namespace Lpf2::Devices
             break;
         }
         return false;
+    }
+
+    ColorIDX TechnicColorSensor::getColorIdx()
+    {
+        return ColorIDX((int)m_port.getValue(0, 0));
     }
 }; // namespace Lpf2::Devices

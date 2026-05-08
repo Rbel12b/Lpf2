@@ -23,6 +23,7 @@
 
 namespace Lpf2::Devices
 {
+
     // TODO: reimplement: move motor control to PortLocal
     class EncoderMotorControl
     {
@@ -30,89 +31,88 @@ namespace Lpf2::Devices
         virtual ~EncoderMotorControl() = default;
 
         /**
-         * @brief Get the absolute position of the motor.
-         * @return Position in 1/10 of degrees (0-360 degrees = 0-3600)
+         * @brief set motor power
+         * @param pw motor power: LPF2_POWER_FLOAT -> floating, LPF2_POWER_BRAKE -> brake,
+         * -100 - 0 -> CCW, 0 - 100 -> CW
          */
-        virtual uint16_t getAbsPos() const = 0;
+        virtual void startPower(int8_t pw) = 0;
 
         /**
-         * @brief Get the relative position of the motor.
-         * @return Position in degrees from the zero point (can be negative).
+         * @brief set acceleration time/profile for a motor
+         * @param accTime acceleration time in ms
+         * @param accProfile acceleration profile to use, ???, use 1
          */
-        virtual int64_t getRelPos() const = 0;
+        virtual void setAccTime(uint16_t accTime, AccelerationProfile accProfile = 1) = 0;
 
         /**
-         * @brief Set the relative position of the motor (set the zero point).
-         * @param pos Position in degrees from the zero point.
+         * @brief set deceleration time/profile for a motor
+         * @param decTime acceleration time in ms
+         * @param decProfile deceleration profile to use, ???, use 1
          */
-        virtual void setRelPos(int64_t pos) = 0;
+        virtual void setDecTime(uint16_t decTime, AccelerationProfile decProfile = 1) = 0;
 
         /**
-         * @brief Set the speed of the motor.
-         * @param speed Speed in percentage (-100 to 100).
+         * @brief start motor with speed
+         * @param speed LPF2_POWER_FLOAT -> hold, LPF2_POWER_BRAKE -> brake,
+         * -100 - 0 -> CCW, 0 - 100 -> CW
+         * @param maxPower max motor power, absolute value, 0-100%
+         * @param useProfile
+            0x0000000? -> Acc.- profile
+            0x000000?0 -> Decc.- profile
          */
-        virtual void setSpeed(int speed) = 0;
+        virtual void startSpeed(int8_t speed, uint8_t maxPower, uint8_t useProfile = 0) = 0;
 
         /**
-         * @brief Move the motor to an absolute position.
-         * @param pos Position in degrees.
-         * @param speed Speed in percentage (1 to 100).
+         * @brief start motor with speed for [time] ms
+         * @param time time in ms
+         * @param speed speed: -100 - 0 -> CCW, 0 - 100 -> CW
+         * @param maxPower max motor power
+         * @param endState what happens after command is finished
+         * @param useProfile
+            0x0000000? -> Acc.- profile
+            0x000000?0 -> Decc.- profile
          */
-        virtual void moveToAbsPos(uint16_t pos, uint8_t speed) = 0;
+        virtual void startSpeedForTime(uint16_t time, int8_t speed, uint8_t maxPower, BrakingStyle endState, uint8_t useProfile = 0) = 0;
 
         /**
-         * @brief Set the absolute target position of the motor. Does not start movement. Use after moveToAbsPos.
-         * @param pos Position in degrees.
+         * @brief start motor with speed for [degrees]°
+         * @param degrees degrees to move (positive value, use speed for CCW movement)
+         * @param speed speed: -100 - 0 -> CCW, 0 - 100 -> CW
+         * @param maxPower max motor power
+         * @param endState what happens after command is finished
+         * @param useProfile
+            0x0000000? -> Acc.- profile
+            0x000000?0 -> Decc.- profile
          */
-        virtual void setAbsTarget(uint16_t pos) = 0;
+        virtual void startSpeedForDegrees(uint32_t degrees, int8_t speed, uint8_t maxPower, BrakingStyle endState, uint8_t useProfile = 0) = 0;
 
         /**
-         * @brief Move the motor to a relative position.
-         * @param pos Position in degrees from the zero point.
-         * @param speed Speed in percentage (1 to 100).
+         * @brief got to absolute position (motor)
+         * @param absPos absolute position
+         * @param speed speed: 0 - 100
+         * @param maxPower max motor power
+         * @param endState what happens after command is finished
+         * @param useProfile
+            0x0000000? -> Acc.- profile
+            0x000000?0 -> Decc.- profile
          */
-        virtual void moveToRelPos(int64_t pos, uint8_t speed) = 0;
+        virtual void gotoAbsPosition(int32_t absPos, uint8_t speed, uint8_t maxPower, BrakingStyle endState, uint8_t useProfile = 0) = 0;
 
         /**
-         * @brief Set the relative target position of the motor. Does not start movement. Use after moveToRelPos.
-         * @param pos Position in degrees from the zero point.
+         * @brief preset encoder, also stops motors
+         * @param pos position to set the encoder to
          */
-        virtual void setRelTarget(int64_t pos) = 0;
-
-        /**
-         * @brief Set the hold target to an absolute position. Motor will try to hold this position.
-         * @param pos Position in degrees.
-         */
-        virtual void setHoldTargetAbs(uint16_t pos) = 0;
-
-        /**
-         * @brief Set the hold target to a relative position. Motor will try to hold this position.
-         * @param pos Position in degrees.
-         */
-        virtual void setHoldTargetRel(int64_t pos) = 0;
-
-        /**
-         * @brief Move the motor by a number of degrees.
-         * @param degrees Degrees to move (can be negative).
-         * @param speed Speed in percentage (1 to 100).
-         */
-        virtual void moveDegrees(int64_t degrees, uint8_t speed) = 0;
-
-        /**
-         * @brief Check if the motor is currently moving to a position.
-         * @return true if the motor is moving to a position, false otherwise.
-         */
-        virtual bool isMovingToPos() = 0;
+        virtual void presetEncoder(int32_t pos) = 0;
     };
 
-    class EncoderMotor : public Device, public EncoderMotorControl, public BasicMotorControl
+    class EncoderMotor : public PortDevice, public EncoderMotorControl, public BasicMotorControl
     {
     public:
-        EncoderMotor(Port &port) : Device(port) {}
+        EncoderMotor(Port &port) : PortDevice(port) {}
 
         bool init() override
         {
-            setSpeed(0);
+            startPower(0);
             return true;
         }
 
@@ -123,77 +123,95 @@ namespace Lpf2::Devices
             return "Motor with Encoder";
         }
 
-        uint16_t getAbsPos() const override;
-        int64_t getRelPos() const override;
-        void setRelPos(int64_t pos) override;
-        void setSpeed(int speed) override;
-        void startPower(int power) override;
-        void moveToAbsPos(uint16_t pos, uint8_t speed) override;
-        void setAbsTarget(uint16_t pos) override;
-        void moveToRelPos(int64_t pos, uint8_t speed) override;
-        void setRelTarget(int64_t pos) override;
-        void moveDegrees(int64_t degrees, uint8_t speed) override;
-        void setHoldTargetAbs(uint16_t pos) override;
-        void setHoldTargetRel(int64_t pos) override;
-        bool isMovingToPos() override;
-
         bool hasCapability(DeviceCapabilityId id) const override;
         void *getCapability(DeviceCapabilityId id) override;
 
         inline static const DeviceCapabilityId CAP =
             Lpf2CapabilityRegistry::registerCapability("encoder_motor");
-        inline static const uint8_t CALIB_MODE = 4;
 
         static void registerFactory(DeviceRegistry &reg);
 
-    private:
-        void resetPid();
-        int pidStep(float error);
-        void _setSpeed(int speed);
+        /**
+         * @brief set motor power
+         * @param pw motor power: LPF2_POWER_FLOAT -> floating, LPF2_POWER_BRAKE -> brake,
+         * -100 - 0 -> CCW, 0 - 100 -> CW
+         */
+        void startPower(int8_t pw) override;
 
-        enum class Mode
-        {
-            SPEED,
-            MOVE_DEGREES,
-            MOVE_TO_ABS,
-            MOVE_TO_REL,
-            HOLD
-        };
-        Mode m_mode;
-        union
-        {
-            int32_t m_absPos = 0;
-            uint64_t m_relPos;
-            int32_t m_deg;
-        };
-        uint8_t m_moveSpeed = 0;
-        int64_t m_currentRelPos = 0;
-        uint16_t m_lastAbsPos = 0;
+        /**
+         * @brief set acceleration time/profile for a motor
+         * @param accTime acceleration time in ms
+         * @param accProfile acceleration profile to use, ???, use 1
+         */
+        void setAccTime(uint16_t accTime, AccelerationProfile accProfile = 1) override;
 
-        // PID state
-        float m_pidIntegral = 0.0f;
-        float m_pidLastError = 0.0f;
+        /**
+         * @brief set deceleration time/profile for a motor
+         * @param decTime acceleration time in ms
+         * @param decProfile deceleration profile to use, ???, use 1
+         */
+        void setDecTime(uint16_t decTime, AccelerationProfile decProfile = 1) override;
 
-        // PID gains
-        float m_kp = 0.13f;
-        float m_ki = 0.0f;
-        float m_kd = 0.006f;
+        /**
+         * @brief start motor with speed
+         * @param speed LPF2_POWER_FLOAT -> hold, LPF2_POWER_BRAKE -> brake,
+         * -100 - 0 -> CCW, 0 - 100 -> CW
+         * @param maxPower max motor power, absolute value, 0-100%
+         * @param useProfile
+            0x0000000? -> Acc.- profile
+            0x000000?0 -> Decc.- profile
+         */
+        void startSpeed(int8_t speed, uint8_t maxPower, uint8_t useProfile = 0) override;
 
-        // Anti-windup
-        float m_pidIntegralLimit = 2000.0f;
+        /**
+         * @brief start motor with speed for [time] ms
+         * @param time time in ms
+         * @param speed speed: -100 - 0 -> CCW, 0 - 100 -> CW
+         * @param maxPower max motor power
+         * @param endState what happens after command is finished
+         * @param useProfile
+            0x0000000? -> Acc.- profile
+            0x000000?0 -> Decc.- profile
+         */
+        void startSpeedForTime(uint16_t time, int8_t speed, uint8_t maxPower, BrakingStyle endState, uint8_t useProfile = 0) override;
 
-        // Hold targets
-        uint16_t m_holdAbsPos = 0;
-        int64_t m_holdRelPos = 0;
-        bool m_holdRel = false;
+        /**
+         * @brief start motor with speed for [degrees]°
+         * @param degrees degrees to move (positive value, use speed for CCW movement)
+         * @param speed speed: -100 - 0 -> CCW, 0 - 100 -> CW
+         * @param maxPower max motor power
+         * @param endState what happens after command is finished
+         * @param useProfile
+            0x0000000? -> Acc.- profile
+            0x000000?0 -> Decc.- profile
+         */
+        void startSpeedForDegrees(uint32_t degrees, int8_t speed, uint8_t maxPower, BrakingStyle endState, uint8_t useProfile = 0) override;
+
+        /**
+         * @brief got to absolute position (motor)
+         * @param absPos absolute position
+         * @param speed speed: 0 - 100
+         * @param maxPower max motor power
+         * @param endState what happens after command is finished
+         * @param useProfile
+            0x0000000? -> Acc.- profile
+            0x000000?0 -> Decc.- profile
+         */
+        void gotoAbsPosition(int32_t absPos, uint8_t speed, uint8_t maxPower, BrakingStyle endState, uint8_t useProfile = 0) override;
+
+        /**
+         * @brief preset encoder, also stops motors
+         * @param pos position to set the encoder to
+         */
+        void presetEncoder(int32_t pos) override;
     };
 
     class EncoderMotorFactory : public DeviceFactory
     {
     public:
-        bool matches(Port &port) const override;
+        bool matches(const Port &port) const override;
 
-        Device *create(Port &port) const override
+        PortDevice *create(Port &port) const override
         {
             return new EncoderMotor(port);
         }
@@ -203,4 +221,9 @@ namespace Lpf2::Devices
             return "Technic Color Sensor Factory";
         }
     };
+
+    namespace EncoderFactory
+    {
+        EncoderMotorFactory factory;
+    }
 }; // namespace Lpf2::Devices

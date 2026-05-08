@@ -18,7 +18,7 @@
 #pragma once
 
 #include "Lpf2/config.hpp"
-#include "Lpf2/Device.hpp"
+#include "Lpf2/DeviceFactory.hpp"
 
 namespace Lpf2::Devices
 {
@@ -26,13 +26,13 @@ namespace Lpf2::Devices
     {
     public:
         virtual ~BasicMotorControl() = default;
-        virtual void startPower(int speed) = 0;
+        virtual void startPower(int8_t pw) = 0;
     };
 
-    class BasicMotor : public Device, public BasicMotorControl
+    class BasicMotor : public PortDevice, public BasicMotorControl
     {
     public:
-        BasicMotor(Port &port) : Device(port) {}
+        BasicMotor(Port &port) : PortDevice(port) {}
 
         bool init() override
         {
@@ -49,8 +49,6 @@ namespace Lpf2::Devices
             return "DC Motor (dumb)";
         }
 
-        void startPower(int speed) override;
-
         bool hasCapability(DeviceCapabilityId id) const override;
         void *getCapability(DeviceCapabilityId id) override;
 
@@ -58,14 +56,16 @@ namespace Lpf2::Devices
             Lpf2CapabilityRegistry::registerCapability("basic_motor");
 
         static void registerFactory(DeviceRegistry &reg);
+
+        void startPower(int8_t pw) override;
     };
 
     class BasicMotorFactory : public DeviceFactory
     {
     public:
-        bool matches(Port &port) const override;
+        bool matches(const Port &port) const override;
 
-        Device *create(Port &port) const override
+        PortDevice *create(Port &port) const override
         {
             return new BasicMotor(port);
         }

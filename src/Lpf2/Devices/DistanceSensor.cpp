@@ -29,6 +29,30 @@ namespace Lpf2::Devices
         reg.registerFactory(&factory);
     }
 
+    bool TechnicDistanceSensor::hasCapability(DeviceCapabilityId id) const
+    {
+        return id == CAP;
+    }
+
+    void *TechnicDistanceSensor::getCapability(DeviceCapabilityId id)
+    {
+        if (id == CAP)
+            return static_cast<TechnicDistanceSensorControl *>(this);
+        return nullptr;
+    }
+
+    bool TechnicDistanceSensorFactory::matches(const Port &port) const
+    {
+        switch (port.getDeviceType())
+        {
+        case DeviceType::TECHNIC_DISTANCE_SENSOR:
+            return true;
+        default:
+            break;
+        }
+        return false;
+    }
+
     void TechnicDistanceSensor::setLight(uint8_t l1, uint8_t l2, uint8_t l3, uint8_t l4)
     {
         std::vector<uint8_t> data;
@@ -52,29 +76,5 @@ namespace Lpf2::Devices
     float TechnicDistanceSensor::getDistance()
     {
         return m_port.getValue(0, 0);
-    }
-
-    bool TechnicDistanceSensor::hasCapability(DeviceCapabilityId id) const
-    {
-        return id == CAP;
-    }
-
-    void *TechnicDistanceSensor::getCapability(DeviceCapabilityId id)
-    {
-        if (id == CAP)
-            return static_cast<TechnicDistanceSensorControl *>(this);
-        return nullptr;
-    }
-
-    bool TechnicDistanceSensorFactory::matches(Port &port) const
-    {
-        switch (port.getDeviceType())
-        {
-        case DeviceType::TECHNIC_DISTANCE_SENSOR:
-            return true;
-        default:
-            break;
-        }
-        return false;
     }
 }; // namespace Lpf2::Devices

@@ -30,18 +30,7 @@ namespace Lpf2
         explicit DeviceManager(Port &port)
             : m_port(port) {}
 
-        void init()
-        {
-#if defined(LPF2_USE_FREERTOS)
-            xTaskCreate(
-                &DeviceManager::taskEntryPoint, // Static entry point
-                "DeviceManager",                // Task name
-                4096,
-                this, // Pass this pointer
-                5,
-                nullptr);
-#endif
-        }
+        void init() {}
 
         void update()
         {
@@ -97,10 +86,6 @@ namespace Lpf2
                 }
             }
         }
-#if defined(LPF2_USE_FREERTOS)
-        static void taskEntryPoint(void *pvParameters);
-        void loopTask();
-#endif
 
         Port &m_port;
         std::unique_ptr<Device> m_device;

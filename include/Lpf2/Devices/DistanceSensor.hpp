@@ -18,7 +18,7 @@
 #pragma once
 
 #include "Lpf2/config.hpp"
-#include "Lpf2/Device.hpp"
+#include "Lpf2/DeviceFactory.hpp"
 
 namespace Lpf2::Devices
 {
@@ -30,16 +30,17 @@ namespace Lpf2::Devices
          * @brief Set the light on the sensor, all values should be in the range 0-100.
          */
         virtual void setLight(uint8_t l1, uint8_t l2, uint8_t l3, uint8_t l4) = 0;
+
         /**
          * @brief Get the distance measured by the sensor in centimeters.
          */
         virtual float getDistance() = 0;
     };
 
-    class TechnicDistanceSensor : public Device, public TechnicDistanceSensorControl
+    class TechnicDistanceSensor : public PortDevice, public TechnicDistanceSensorControl
     {
     public:
-        TechnicDistanceSensor(Port &port) : Device(port) {}
+        TechnicDistanceSensor(Port &port) : PortDevice(port) {}
 
         bool init() override
         {
@@ -56,9 +57,6 @@ namespace Lpf2::Devices
             return "Technic Distance Sensor";
         }
 
-        void setLight(uint8_t l1, uint8_t l2, uint8_t l3, uint8_t l4);
-        float getDistance();
-
         inline static const int LIGHT_MODE = 5;
 
         bool hasCapability(DeviceCapabilityId id) const override;
@@ -68,14 +66,17 @@ namespace Lpf2::Devices
             Lpf2CapabilityRegistry::registerCapability("technic_distance_sensor");
 
         static void registerFactory(DeviceRegistry &reg);
+
+        void setLight(uint8_t l1, uint8_t l2, uint8_t l3, uint8_t l4);
+        float getDistance();
     };
 
     class TechnicDistanceSensorFactory : public DeviceFactory
     {
     public:
-        bool matches(Port &port) const override;
+        bool matches(const Port &port) const override;
 
-        Device *create(Port &port) const override
+        PortDevice *create(Port &port) const override
         {
             return new TechnicDistanceSensor(port);
         }

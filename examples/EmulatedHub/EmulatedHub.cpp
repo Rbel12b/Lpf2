@@ -18,7 +18,7 @@
 #include <Arduino.h>
 #include "Lpf2/HubEmulation.hpp"
 #include "Lpf2/DeviceDescLib.hpp"
-#include "Lpf2/Device.hpp"
+#include "Lpf2/DeviceFactory.hpp"
 
 #include "driver/mcpwm.h"
 
