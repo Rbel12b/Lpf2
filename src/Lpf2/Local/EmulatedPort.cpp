@@ -226,6 +226,7 @@ namespace Lpf2::Local
             {
                 sendUpdate();
             }
+            [[fallthrough]];
         case LPF2_STATUS::WAITING_FOR_ACK:
             if ((LPF2_GET_TIME() - m_start) > 1000)
             {

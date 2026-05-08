@@ -17,6 +17,7 @@
 
 #include "Lpf2/Local/Serial.hpp"
 #include "Lpf2/Local/SerialDef.hpp"
+#include "Lpf2/Util/Values.hpp"
 
 #include <string>
 #include <cstdio>
@@ -32,6 +33,10 @@ namespace Lpf2::Local
             buffer.resize(buffer.size() + available);
             m_serial->read(buffer.data() + buffer.size() - available, available);
         }
+        // else
+        // {
+        //     LPF2_LOG_D("No bytes received (%i).", available);
+        // }
 
         while (buffer.size())
         {
@@ -47,6 +52,7 @@ namespace Lpf2::Local
 
             if (message.msg == MESSAGE_SYS)
             {
+                m_lastReceivedTime = LPF2_GET_TIME();
                 message.system = true;
                 messages.push_back(message);
                 buffer.erase(buffer.begin());
@@ -66,7 +72,7 @@ namespace Lpf2::Local
 
             if (buffer.size() < message.length + 2)
             {
-                if (LPF2_GET_TIME() - m_lastReceivedTime >= 250)
+                if (LPF2_GET_TIME() - m_lastReceivedTime >= 1000)
                 {
                     // Probably corrupted message
                     buffer.erase(buffer.begin());
@@ -75,6 +81,7 @@ namespace Lpf2::Local
                 }
                 break;
             }
+            m_lastReceivedTime = LPF2_GET_TIME();
 
             message.data.clear();
             message.data.reserve(message.length);
@@ -103,7 +110,6 @@ namespace Lpf2::Local
             messages.push_back(message);
 
             buffer.erase(buffer.begin(), buffer.begin() + message.length + 2);
-            m_lastReceivedTime = LPF2_GET_TIME();
         }
         return messages;
     }

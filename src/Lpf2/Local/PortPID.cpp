@@ -151,7 +151,7 @@ namespace Lpf2::Local
         if (!forward)
             std::swap(pwr1, pwr2);
 
-        LPF2_LOG_D("startPower: %i -> %i, %i", (int8_t)pw, pwr1, pwr2);
+        LPF2_LOG_V("startPower: %i -> %i, %i", (int8_t)pw, pwr1, pwr2);
         setPower(pwr1, pwr2);
     }
 

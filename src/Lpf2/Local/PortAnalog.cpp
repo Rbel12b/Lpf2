@@ -150,7 +150,11 @@ namespace Lpf2::Local
             LPF2_LOG_V("Analog: No device detected");
             m_detectionCounter = 0;
             m_deviceType = DeviceType::UNKNOWNDEVICE;
-            m_lastDetectedType = -1;
+            if (m_lastDetectedType != -1)
+            {
+                resetDevice();
+                m_lastDetectedType = -1;
+            }
         }
     }
 }; // namespace Lpf2::Local

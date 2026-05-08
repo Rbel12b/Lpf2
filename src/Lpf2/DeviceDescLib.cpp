@@ -653,7 +653,7 @@ namespace Lpf2::DeviceDescriptors
                 1, DATA8, 2, 0,
                 {},
                 0x00,
-                Mode::Flags{{ 0x84, 0x04, 0x00, 0x00, 0x00, 0x40 }}
+                Mode::Flags{{ 0x44, 0x04, 0x00, 0x00, 0x00, 0x40 }}
             },
             {
                 "REFLT",
@@ -665,7 +665,7 @@ namespace Lpf2::DeviceDescriptors
                 1, DATA8, 3, 0,
                 {},
                 0x00,
-                Mode::Flags{{ 0x84, 0x04, 0x00, 0x00, 0x00, 0x40 }}
+                Mode::Flags{{ 0x44, 0x04, 0x00, 0x00, 0x00, 0x40 }}
             },
             {
                 "AMBI",
@@ -701,7 +701,7 @@ namespace Lpf2::DeviceDescriptors
                 2, DATA16, 4, 0,
                 {},
                 0x00,
-                Mode::Flags{{ 0x84, 0x04, 0x00, 0x00, 0x00, 0x40 }}
+                Mode::Flags{{ 0x44, 0x04, 0x00, 0x00, 0x00, 0x40 }}
             },
             {
                 "RGB I",
@@ -713,7 +713,7 @@ namespace Lpf2::DeviceDescriptors
                 4, DATA16, 4, 0,
                 {},
                 0x00,
-                Mode::Flags{{ 0x84, 0x04, 0x00, 0x00, 0x00, 0x40 }}
+                Mode::Flags{{ 0x44, 0x04, 0x00, 0x00, 0x00, 0x40 }}
             },
             {
                 "HSV",
@@ -749,7 +749,7 @@ namespace Lpf2::DeviceDescriptors
                 4, DATA16, 4, 0,
                 {},
                 0x00,
-                Mode::Flags{{ 0x84, 0x04, 0x00, 0x00, 0x00, 0x40 }}
+                Mode::Flags{{ 0x44, 0x04, 0x00, 0x00, 0x00, 0x40 }}
             },
             {
                 "CALIB",
@@ -761,7 +761,7 @@ namespace Lpf2::DeviceDescriptors
                 7, DATA16, 5, 0,
                 {},
                 0x00,
-                Mode::Flags{{ 0x84, 0x04, 0x00, 0x00, 0x40, 0x40 }}
+                Mode::Flags{{ 0x44, 0x04, 0x00, 0x00, 0x40, 0x40 }}
             },
         }
     };

@@ -172,9 +172,9 @@ namespace Lpf2::Local
         uint64_t m_pidEndTime = 0;
 
         // PID gains
-        float m_kp = 0.13f;
-        float m_ki = 0.0f;
-        float m_kd = 0.006f;
+        float m_kp = 0.04f;
+        float m_ki = 0.0001f;
+        float m_kd = 0.063f;
 
         float m_pidIntegral = 0.0f;
         float m_pidPrevError = 0.0f;
