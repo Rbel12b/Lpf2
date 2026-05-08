@@ -283,8 +283,20 @@ namespace Lpf2::Local
                 return;
             }
             m_mode = msg.data[0];
+            LPF2_LOG_D("Selected mode: %i, msg: %s", m_mode, Utils::bytes_to_hexString(msg.data).c_str());
         }
-        else
+        else if (msg.msg == MESSAGE_CMD && msg.cmd == CMD_EXT_MODE)
+        {
+            if (msg.data.size() >= 1)
+                m_nextModeExt = msg.data[0];
+        }
+        else if (msg.msg == MESSAGE_DATA)
+        {
+            uint8_t mode = msg.cmd + m_nextModeExt;
+            m_nextModeExt = 0;
+            m_device->writeData(mode, msg.data);
+        }
+        else if (msg.msg != MESSAGE_SYS)
         {
             LPF2_LOG_W("Unknown message: ↓, status: %i", (int)m_status);
             m_parser.printMessage(msg);

@@ -35,10 +35,10 @@ namespace Lpf2
     class Version
     {
     public:
-        int Build = 0;
         int Major = 0;
         int Minor = 0;
         int Bugfix = 0;
+        int Build = 0;
     };
 
     enum class HubType

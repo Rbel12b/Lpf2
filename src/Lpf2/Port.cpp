@@ -35,12 +35,15 @@ namespace Lpf2
         oss << std::dec << "InModes: 0x" << std::hex << std::setw(4) << std::setfill('0') << getInputModes() << "\n";
         oss << "OutModes: 0x" << std::hex << std::setw(4) << std::setfill('0') << getOutputModes() << "\n";
         oss << "Caps: 0x" << std::hex << std::setw(2) << std::setfill('0') << static_cast<unsigned int>(getCapabilities()) << "\n";
-        oss << std::dec << "Combos:\n";
+        oss << "Combos:";
         for (uint8_t i = 0; i < getModeComboCount(); i++)
         {
             oss << "\t0x" << std::hex << std::setw(4) << std::setfill('0') << getModeCombo(i);
         }
-        oss << "\n";
+        auto fw = getFwVersion();
+        oss << std::dec << "\n" << "FW Version: " << fw.Major << "." << fw.Minor << "." << fw.Bugfix << "." << fw.Build << "\n";
+        auto hw = getHwVersion();
+        oss << "HW Version: " << hw.Major << "." << hw.Minor << "." << hw.Bugfix << "." << hw.Build << "\n";
         for (size_t i = 0; i < getModes().size(); i++)
         {
             auto &mode = getModes()[i];
@@ -67,9 +70,8 @@ namespace Lpf2
                 << " (null: " << out.nullSupport() << ", mapping 2.0: " << out.mapping2() << ", m_abs: " << out.m_abs()
                 << ", m_rel: " << out.m_rel() << ", m_dis: " << out.m_dis() << ")\n";
             auto flags = mode.flags;
-            uint64_t val = 0;
-            memcpy(&val, flags.bytes, 6);
-            oss << "\tFlags: 0x" << std::hex << std::setw(12) << std::setfill('0') << val << " (speed: " << flags.speed()
+            oss << std::hex << std::setw(2) << std::setfill('0') << "\tFlags: 0x" << (int)flags.bytes[0] << ", 0x" << (int)flags.bytes[1] << ", 0x" << (int)flags.bytes[2] << ", 0x" << (int)flags.bytes[3] << ", 0x" << (int)flags.bytes[4] << ", 0x" << (int)flags.bytes[5]
+                << " (speed: " << flags.speed()
                 << ", apos: " << flags.apos() << ", power: " << flags.power() << ", motor: " << flags.motor()
                 << ", pin1: " << flags.pin1() << ", pin2: " << flags.pin2() << ", calib: " << flags.calib()
                 << ", power12: " << flags.power12() << ")\n";

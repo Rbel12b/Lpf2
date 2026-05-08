@@ -24,15 +24,10 @@ FORMAT_MAP = {
     "0x03": "DATAF",
 }
 
-def parse_flags(line):
-    # line: "Flags: 0x040500000000 (....)"
-    hexval = line.split()[1]  # 0x040500000000
-    value = int(hexval, 16)
-
-    # Convert to 6 bytes, big-endian
-    bytes_be = value.to_bytes(6, byteorder="big")
-
-    return ", ".join(f"0x{b:02X}" for b in bytes_be)
+def parse_flags(line: str):
+    # line: "Flags: 0x04, 0x05, 0x00, 0x00, 0x00, 0x00 (....)"
+    vals = [int(line.split()[i].removesuffix(','), 16) for i in range(1, 7)]
+    return ", ".join(f"0x{b:02X}" for b in vals)
 
 def parse_float(line):
     return float(line.split(":")[1].strip())
@@ -42,6 +37,16 @@ def parse_int(line):
 
 def parse_str(line):
     return line.split(":", 1)[1].strip()
+
+def parse_combos(line: str):
+    lenght = len(line.split())
+    combos = [int(line.split()[i], 16) for i in range(1, lenght)]
+    return ", ".join(f"0x{c:04X}" for c in combos)
+
+def parse_version(line: str):
+    versionStr = line.split()[2]
+    versionNumbers = versionStr.split('.')
+    return f"{{\n        .Major = {versionNumbers[0]},\n        .Minor = {versionNumbers[1]},\n        .Bugfix = {versionNumbers[2]},\n        .Build = {versionNumbers[3]},\n    }}"
 
 def emit_mode(m):
     fmt = FORMAT_MAP.get(m["format"], "DATA8")
@@ -56,7 +61,7 @@ def emit_mode(m):
             {m['datasets']}, {fmt}, {m['figures']}, {m['decimals']},
             {{}},
             0x00,
-            Lpf2Mode::Flags{{{{ {m['flags']} }}}}
+            Mode::Flags{{{{ {m['flags']} }}}}
         }}"""
 
 def main(path):
@@ -85,6 +90,12 @@ def main(path):
             current_device["outModes"] = parse_int(line)
         elif line.startswith("Caps:"):
             current_device["caps"] = parse_int(line)
+        elif line.startswith("Combos:"):
+            current_device["combos"] = parse_combos(line)
+        elif line.startswith("FW Version:"):
+            current_device["fwVersion"] = parse_version(line)
+        elif line.startswith("HW Version:"):
+            current_device["hwVersion"] = parse_version(line)
         elif line.startswith("Mode"):
             current_mode = {}
             current_device["modes"].append(current_mode)
@@ -126,13 +137,15 @@ def main(path):
     # ---- EMIT C++ ----
     for dev in devices:
         print(f"// Device 0x{dev['id']:02X}")
-        print(f"const Lpf2DeviceDescriptor LPF2_DEVICE_0x{dev['id']:02X} =")
+        print(f"const DeviceDescriptor LPF2_DEVICE_0x{dev['id']:02X} =")
         print("{")
-        print(f"    .type = static_cast<Lpf2DeviceType>(0x{dev['id']:02X}),")
-        print(f"    .inModes = 0x{dev['inModes']:04X},")
-        print(f"    .outModes = 0x{dev['outModes']:04X},")
+        print(f"    .type = static_cast<DeviceType>(0x{dev['id']:02X}),")
+        print(f"    .inModesMask = 0x{dev['inModes']:04X},")
+        print(f"    .outModesMask = 0x{dev['outModes']:04X},")
         print(f"    .caps = 0x{dev['caps']:02X},")
-        print(f"    .combos = {{ 0x0000 }},")
+        print(f"    .combos = {"{" + dev['combos'] + "}"},")
+        print(f"    .fwVersion = Version({dev['fwVersion']}),")
+        print(f"    .hwVersion = Version({dev['hwVersion']}),")
         print("    .modes =")
         print("    {")
         for m in dev["modes"]:

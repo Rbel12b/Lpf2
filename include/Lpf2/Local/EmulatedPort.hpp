@@ -78,5 +78,6 @@ namespace Lpf2::Local
         size_t m_start = 0;
         uint8_t m_mode = 0;
         std::vector<uint8_t> m_lastModeData;
+        uint8_t m_nextModeExt = 0;
     };
 }; // namespace Lpf2::Local
