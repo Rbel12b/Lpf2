@@ -365,18 +365,18 @@ namespace Lpf2::DeviceDescriptors
         .inModesMask = 0x001E,
         .outModesMask = 0x001F,
         .caps = 0x0F,
-        .combos = {0x000E, 0x0000},
+        .combos = {0x000E, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000},
         .fwVersion = Version({
             .Major = 0,
             .Minor = 0,
             .Bugfix = 0,
-            .Build = 4096,
+            .Build = 4,
         }),
         .hwVersion = Version({
-            .Major = 0,
+            .Major = 1,
             .Minor = 0,
             .Bugfix = 0,
-            .Build = 4096,
+            .Build = 0,
         }),
         .modes =
         {
@@ -386,11 +386,11 @@ namespace Lpf2::DeviceDescriptors
                 -100.0f, 100.0f,
                 -100.0f, 100.0f,
                 "PCT",
-                0x00, 0x10,
-                1, DATA8, 1, 0,
+                0x00, 0x50,
+                1, DATA8, 4, 0,
                 {},
                 0x00,
-                Mode::Flags{{ 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 }}
+                Mode::Flags{{ 0x30, 0x00, 0x00, 0x00, 0x05, 0x04 }}
             },
             {
                 "SPEED",
@@ -398,11 +398,11 @@ namespace Lpf2::DeviceDescriptors
                 -100.0f, 100.0f,
                 -100.0f, 100.0f,
                 "PCT",
-                0x10, 0x10,
+                0x30, 0x70,
                 1, DATA8, 4, 0,
                 {},
                 0x00,
-                Mode::Flags{{ 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 }}
+                Mode::Flags{{ 0x21, 0x00, 0x00, 0x00, 0x05, 0x04 }}
             },
             {
                 "POS",
@@ -410,11 +410,11 @@ namespace Lpf2::DeviceDescriptors
                 -100.0f, 100.0f,
                 -360.0f, 360.0f,
                 "DEG",
-                0x08, 0x08,
-                1, DATA32, 4, 0,
+                0x28, 0x68,
+                1, DATA32, 11, 0,
                 {},
                 0x00,
-                Mode::Flags{{ 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 }}
+                Mode::Flags{{ 0x00, 0x00, 0x24, 0x00, 0x00, 0x00 }}
             },
             {
                 "APOS",
@@ -422,23 +422,35 @@ namespace Lpf2::DeviceDescriptors
                 -200.0f, 200.0f,
                 -180.0f, 179.0f,
                 "DEG",
-                0x08, 0x08,
+                0x32, 0x72,
                 1, DATA16, 3, 0,
                 {},
                 0x00,
-                Mode::Flags{{ 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 }}
+                Mode::Flags{{ 0x00, 0x22, 0x00, 0x00, 0x00, 0x05 }}
             },
             {
-                "LOAD",
-                0.0f, 127.0f,
+                "CALIB",
+                0.0f, 3600.0f,
                 0.0f, 100.0f,
-                0.0f, 127.0f,
-                "PCT",
-                0x08, 0x08,
-                1, DATA8, 1, 0,
+                0.0f, 3600.0f,
+                "CAL",
+                0x00, 0x00,
+                2, DATA16, 5, 0,
                 {},
                 0x00,
-                Mode::Flags{{ 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 }}
+                Mode::Flags{{ 0x22, 0x40, 0x00, 0x00, 0x05, 0x04 }}
+            },
+            {
+                "STATS",
+                0.0f, 65535.0f,
+                0.0f, 100.0f,
+                0.0f, 65535.0f,
+                "MIN",
+                0x00, 0x00,
+                14, DATA16, 5, 0,
+                {},
+                0x00,
+                Mode::Flags{{ 0x00, 0x00, 0x00, 0x00, 0x05, 0x04 }}
             },
         }
     };
@@ -499,7 +511,7 @@ namespace Lpf2::DeviceDescriptors
         .inModesMask = 0x009F,
         .outModesMask = 0x0060,
         .caps = 0x03,
-        .combos = {},
+        .combos = {0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000},
         .fwVersion = Version({
             .Major = 1,
             .Minor = 0,
@@ -524,7 +536,7 @@ namespace Lpf2::DeviceDescriptors
                 1, DATA16, 5, 1,
                 {},
                 0x00,
-                Mode::Flags{{ 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 }}
+                Mode::Flags{{ 0x40, 0x00, 0x00, 0x00, 0x04, 0x84 }}
             },
             {
                 "DISTS",
@@ -536,7 +548,7 @@ namespace Lpf2::DeviceDescriptors
                 1, DATA16, 4, 1,
                 {},
                 0x00,
-                Mode::Flags{{ 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 }}
+                Mode::Flags{{ 0x40, 0x00, 0x00, 0x00, 0x04, 0x84 }}
             },
             {
                 "SINGL",
@@ -548,7 +560,7 @@ namespace Lpf2::DeviceDescriptors
                 1, DATA16, 5, 1,
                 {},
                 0x00,
-                Mode::Flags{{ 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 }}
+                Mode::Flags{{ 0x40, 0x00, 0x00, 0x00, 0x04, 0x84 }}
             },
             {
                 "LISTN",
@@ -560,7 +572,7 @@ namespace Lpf2::DeviceDescriptors
                 1, DATA8, 1, 0,
                 {},
                 0x00,
-                Mode::Flags{{ 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 }}
+                Mode::Flags{{ 0x40, 0x00, 0x00, 0x00, 0x04, 0x84 }}
             },
             {
                 "TRAW",
@@ -572,7 +584,7 @@ namespace Lpf2::DeviceDescriptors
                 1, DATA32, 5, 0,
                 {},
                 0x00,
-                Mode::Flags{{ 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 }}
+                Mode::Flags{{ 0x00, 0x40, 0x00, 0x00, 0x00, 0x04 }}
             },
             {
                 "LIGHT",
@@ -584,7 +596,7 @@ namespace Lpf2::DeviceDescriptors
                 4, DATA8, 3, 0,
                 {},
                 0x00,
-                Mode::Flags{{ 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 }}
+                Mode::Flags{{ 0x40, 0x20, 0x00, 0x00, 0x04, 0x84 }}
             },
             {
                 "PING",
@@ -596,7 +608,7 @@ namespace Lpf2::DeviceDescriptors
                 1, DATA8, 1, 0,
                 {},
                 0x00,
-                Mode::Flags{{ 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 }}
+                Mode::Flags{{ 0x00, 0x40, 0x80, 0x00, 0x00, 0x04 }}
             },
             {
                 "ADRAW",
@@ -608,7 +620,7 @@ namespace Lpf2::DeviceDescriptors
                 1, DATA16, 4, 0,
                 {},
                 0x00,
-                Mode::Flags{{ 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 }}
+                Mode::Flags{{ 0x40, 0x00, 0x00, 0x00, 0x04, 0x84 }}
             },
             {
                 "CALIB",
@@ -620,7 +632,7 @@ namespace Lpf2::DeviceDescriptors
                 7, DATA8, 3, 0,
                 {},
                 0x00,
-                Mode::Flags{{ 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 }}
+                Mode::Flags{{ 0x40, 0x40, 0x00, 0x00, 0x04, 0x84 }}
             },
         }
     };
@@ -632,18 +644,18 @@ namespace Lpf2::DeviceDescriptors
         .inModesMask = 0x001E,
         .outModesMask = 0x001F,
         .caps = 0x0F,
-        .combos = {0x000E, 0x0000},
+        .combos = {0x000E, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000},
         .fwVersion = Version({
             .Major = 0,
             .Minor = 0,
             .Bugfix = 0,
-            .Build = 4096,
+            .Build = 4,
         }),
         .hwVersion = Version({
-            .Major = 0,
+            .Major = 1,
             .Minor = 0,
             .Bugfix = 0,
-            .Build = 4096,
+            .Build = 0,
         }),
         .modes =
         {
@@ -653,11 +665,11 @@ namespace Lpf2::DeviceDescriptors
                 -100.0f, 100.0f,
                 -100.0f, 100.0f,
                 "PCT",
-                0x00, 0x10,
-                1, DATA8, 1, 0,
+                0x00, 0x50,
+                1, DATA8, 4, 0,
                 {},
                 0x00,
-                Mode::Flags{{ 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 }}
+                Mode::Flags{{ 0x30, 0x00, 0x00, 0x00, 0x05, 0x04 }}
             },
             {
                 "SPEED",
@@ -665,11 +677,11 @@ namespace Lpf2::DeviceDescriptors
                 -100.0f, 100.0f,
                 -100.0f, 100.0f,
                 "PCT",
-                0x10, 0x10,
+                0x30, 0x70,
                 1, DATA8, 4, 0,
                 {},
                 0x00,
-                Mode::Flags{{ 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 }}
+                Mode::Flags{{ 0x21, 0x00, 0x00, 0x00, 0x05, 0x04 }}
             },
             {
                 "POS",
@@ -677,11 +689,11 @@ namespace Lpf2::DeviceDescriptors
                 -100.0f, 100.0f,
                 -360.0f, 360.0f,
                 "DEG",
-                0x08, 0x08,
-                1, DATA32, 4, 0,
+                0x28, 0x68,
+                1, DATA32, 11, 0,
                 {},
                 0x00,
-                Mode::Flags{{ 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 }}
+                Mode::Flags{{ 0x00, 0x00, 0x24, 0x00, 0x00, 0x00 }}
             },
             {
                 "APOS",
@@ -689,23 +701,35 @@ namespace Lpf2::DeviceDescriptors
                 -200.0f, 200.0f,
                 -180.0f, 179.0f,
                 "DEG",
-                0x08, 0x08,
+                0x32, 0x72,
                 1, DATA16, 3, 0,
                 {},
                 0x00,
-                Mode::Flags{{ 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 }}
+                Mode::Flags{{ 0x00, 0x22, 0x00, 0x00, 0x00, 0x05 }}
             },
             {
-                "LOAD",
-                0.0f, 127.0f,
+                "CALIB",
+                0.0f, 3600.0f,
                 0.0f, 100.0f,
-                0.0f, 127.0f,
-                "PCT",
-                0x08, 0x08,
-                1, DATA8, 1, 0,
+                0.0f, 3600.0f,
+                "CAL",
+                0x00, 0x00,
+                2, DATA16, 5, 0,
                 {},
                 0x00,
-                Mode::Flags{{ 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 }}
+                Mode::Flags{{ 0x22, 0x40, 0x00, 0x00, 0x05, 0x04 }}
+            },
+            {
+                "STATS",
+                0.0f, 65535.0f,
+                0.0f, 100.0f,
+                0.0f, 65535.0f,
+                "MIN",
+                0x00, 0x00,
+                14, DATA16, 5, 0,
+                {},
+                0x00,
+                Mode::Flags{{ 0x00, 0x00, 0x00, 0x00, 0x05, 0x04 }}
             },
         }
     };
