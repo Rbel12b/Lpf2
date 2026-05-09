@@ -126,5 +126,11 @@ namespace Lpf2::Local
          * @return The voltage value read from the channel.
          */
         virtual float readCh(uint8_t ch) = 0;
+
+        /**
+         * @brief Write a digital value to the specified chanel (pin)
+         * @param ch The channel number to write to. (e.g. 0 for ID1, 1 for ID2, if >1 ID2 is used)
+         */
+        virtual void writeCh(uint8_t ch, bool state) = 0;
     };
 }; // namespace Lpf2::Local

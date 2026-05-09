@@ -42,7 +42,7 @@ namespace Lpf2::Local
 
         void update() override;
 
-        enum class LPF2_STATUS
+        enum class STATUS
         {
             /* Something bad happened. */
             STATUS_ERR,
@@ -111,9 +111,9 @@ namespace Lpf2::Local
         size_t getSpeed() const { return m_baud; }
 
     private:
-        LPF2_STATUS m_status = LPF2_STATUS::STATUS_ERR;
-        LPF2_STATUS m_new_status = LPF2_STATUS::STATUS_ERR;
-        LPF2_STATUS m_lastStatus = LPF2_STATUS::STATUS_ERR;
+        STATUS m_status = STATUS::STATUS_ERR;
+        STATUS m_new_status = STATUS::STATUS_ERR;
+        STATUS m_lastStatus = STATUS::STATUS_ERR;
         uint32_t m_baud = 2400;
         bool m_deviceConnected = false; // do not rely on this, use isDeviceConnected() instead
         bool nextModeExt = false;

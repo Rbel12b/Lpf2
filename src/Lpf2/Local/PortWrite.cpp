@@ -84,8 +84,8 @@ namespace Lpf2::Local
             m_serial->write(checksum);
             m_serial->flush();
         }
-        m_status = LPF2_STATUS::STATUS_ACK_WAIT;
-        m_new_status = LPF2_STATUS::STATUS_SPEED;
+        m_status = STATUS::STATUS_ACK_WAIT;
+        m_new_status = STATUS::STATUS_SPEED;
         m_start = LPF2_GET_TIME();
     }
 

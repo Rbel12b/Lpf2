@@ -43,12 +43,12 @@ namespace Lpf2::Local
             switch (msg.header)
             {
             case BYTE_ACK:
-                if (m_status == LPF2_STATUS::STATUS_ACK_WAIT)
+                if (m_status == STATUS::STATUS_ACK_WAIT)
                 {
                     LPF2_LOG_D("ACK received.");
                     m_status = m_new_status;
                 }
-                else if (m_status == LPF2_STATUS::STATUS_INFO)
+                else if (m_status == STATUS::STATUS_INFO)
                 {
                     LPF2_LOG_D("Info end ACK received.");
                     if (!m_deviceDataReceived)
@@ -56,12 +56,12 @@ namespace Lpf2::Local
                         LPF2_LOG_D("Device data not received, waiting for more info.");
                         break; // we don't know the device yet.
                     }
-                    m_status = LPF2_STATUS::STATUS_ACK_SENDING;
-                    m_new_status = LPF2_STATUS::STATUS_DATA_START;
+                    m_status = STATUS::STATUS_ACK_SENDING;
+                    m_new_status = STATUS::STATUS_DATA_START;
                 }
                 break;
             case BYTE_SYNC:
-                if (m_status == LPF2_STATUS::STATUS_SYNC_WAIT)
+                if (m_status == STATUS::STATUS_SYNC_WAIT)
                 {
                     LPF2_LOG_D("SYNC received.");
                     m_status = m_new_status;
@@ -75,10 +75,10 @@ namespace Lpf2::Local
         }
         case MESSAGE_DATA:
         {
-            if (m_status == LPF2_STATUS::STATUS_DATA_START)
+            if (m_status == STATUS::STATUS_DATA_START)
             {
                 LPF2_LOG_I("Device connected, type: 0x%02X", (int)m_deviceType);
-                m_status = LPF2_STATUS::STATUS_DATA_RECEIVED;
+                m_status = STATUS::STATUS_DATA_RECEIVED;
             }
             m_startRec = LPF2_GET_TIME();
             uint8_t mode = GET_MODE(msg.header);
@@ -128,7 +128,7 @@ namespace Lpf2::Local
         {
             m_deviceType = (DeviceType)msg.data[0];
             m_deviceConnected = true;
-            m_status = LPF2_STATUS::STATUS_INFO;
+            m_status = STATUS::STATUS_INFO;
             nextModeExt = false;
             if (auto desc = DeviceDescRegistry::instance().getDescriptor(m_deviceType))
             {

@@ -44,7 +44,7 @@ namespace Lpf2::Local
             m_serial = serial;
         }
 
-        std::vector<Message> update();
+        std::vector<Message> update(uint64_t timeout = 1000);
         static void printMessage(const Message &msg);
 
         void clearBuf();

@@ -44,8 +44,11 @@ namespace Lpf2::Local
 
         bool isHostConnected();
 
-        enum class LPF2_STATUS
+        enum class STATUS
         {
+            DETECTING_HOST,
+            WAITING_FOR_HOST,
+            HOST_DETECTED,
             SENDING_INFO,
             WAITING_FOR_ACK,
             SENDING_DATA,
@@ -56,11 +59,13 @@ namespace Lpf2::Local
         void sendACK(bool NACK = false);
 
         void parseMessage(const Message &msg);
-
         void sendUpdate();
+        void handleSendingInfo();
 
+        void reset();
+        
     private:
-        LPF2_STATUS m_status = LPF2_STATUS::SENDING_INFO;
+        STATUS m_status = STATUS::SENDING_INFO;
         uint32_t m_baud = 2400;
         Uart *m_serial;
         Writer m_writer;
@@ -79,5 +84,11 @@ namespace Lpf2::Local
         uint8_t m_mode = 0;
         std::vector<uint8_t> m_lastModeData;
         uint8_t m_nextModeExt = 0;
+        enum class HostType
+        {
+            NONE,
+            EV3,
+            LPF2,
+        } m_hostType;
     };
 }; // namespace Lpf2::Local

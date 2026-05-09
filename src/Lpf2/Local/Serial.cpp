@@ -24,7 +24,7 @@
 
 namespace Lpf2::Local
 {
-    std::vector<Message> Parser::update()
+    std::vector<Message> Parser::update(uint64_t timeout)
     {
         std::vector<Message> messages;
         int available = m_serial->available();
@@ -32,6 +32,7 @@ namespace Lpf2::Local
         {
             buffer.resize(buffer.size() + available);
             m_serial->read(buffer.data() + buffer.size() - available, available);
+            LPF2_LOG_D("Received %i bytes, buffer: %s", available, Utils::bytes_to_hexString(buffer).c_str());
         }
         // else
         // {
@@ -72,11 +73,11 @@ namespace Lpf2::Local
 
             if (buffer.size() < message.length + 2)
             {
-                if (LPF2_GET_TIME() - m_lastReceivedTime >= 1000)
+                if (LPF2_GET_TIME() - m_lastReceivedTime >= timeout)
                 {
                     // Probably corrupted message
                     buffer.erase(buffer.begin());
-                    LPF2_LOG_W("Discarding 1 byte, because message may be corrupted");
+                    // LPF2_LOG_W("Discarding 1 byte, because message may be corrupted");
                     continue;
                 }
                 break;
@@ -101,7 +102,7 @@ namespace Lpf2::Local
 
             if (b != getChecksum())
             {
-                LPF2_LOG_W("Checksum mismatch: 0x%02X != 0x%02X", b, getChecksum());
+                // LPF2_LOG_W("Checksum mismatch: 0x%02X != 0x%02X", b, getChecksum());
                 // printMessage(message);
                 buffer.erase(buffer.begin());
                 continue;
