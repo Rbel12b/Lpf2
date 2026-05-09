@@ -151,6 +151,33 @@ public:
         return (raw / 4095.0f) * VREF;
     }
 
+    void discardRxFiFo() override
+    {
+        return; // no implementation in arduino framework
+    }
+
+    void writeCh(uint8_t ch, bool state) override
+    {
+        int pin = -1;
+
+        if (ch == 0)
+        {
+            pin = id1_pin_;
+        }
+        else
+        {
+            pin = id2_pin_;
+        }
+
+        if (pin < 0)
+        {
+            return;
+        }
+
+        pinMode(pin, OUTPUT);
+        digitalWrite(pin, state ? HIGH : LOW);
+    }
+
 private:
     HardwareSerial serial_;
 
