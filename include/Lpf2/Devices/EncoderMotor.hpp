@@ -216,7 +216,7 @@ namespace Lpf2::Devices
 
         const char *name() const
         {
-            return "Technic Color Sensor Factory";
+            return "Encoder Motor Factory";
         }
     };
 
