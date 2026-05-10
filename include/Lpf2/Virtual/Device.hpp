@@ -36,8 +36,6 @@ namespace Lpf2::Virtual
             m_valueChangeCallback = callback;
         }
 
-        virtual void setPower(uint8_t pin1, uint8_t pin2) = 0;
-
         /**
          * @brief set motor power
          * @param pw motor power: LPF2_POWER_FLOAT -> floating, LPF2_POWER_BRAKE -> brake,
@@ -220,13 +218,6 @@ namespace Lpf2::Virtual
                        mode,
                        Lpf2::Utils::bytes_to_hexString(data).c_str());
             return 0;
-        }
-
-        virtual void setPower(uint8_t pin1, uint8_t pin2) override
-        {
-            LPF2_LOG_I("[%02X] power %d %d",
-                       static_cast<uint8_t>(m_desc.type),
-                       pin1, pin2);
         }
 
         virtual int setMode(uint8_t mode) override
