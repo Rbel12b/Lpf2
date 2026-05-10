@@ -148,7 +148,7 @@ namespace Lpf2
         uint8_t getViewCount() const { return m_viewCount; }
         const std::vector<Mode> &getModes() const { return m_modeData; }
         uint8_t getModeComboCount() const { return m_modeCombos.size(); }
-        std::vector<uint16_t> getModeCombos() const { return m_modeCombos; }
+        const std::vector<uint16_t> &getModeCombos() const { return m_modeCombos; }
 
         uint16_t getModeCombo(uint8_t combo) const
         {

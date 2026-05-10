@@ -11,7 +11,7 @@ namespace Lpf2::Local
             detachDevice();
         }
         m_device = &device;
-        m_device->setValueChangeCallback(std::bind(EmulatedPort::deviceValueChangeCallback, this, std::placeholders::_1));
+        m_device->setValueChangeCallback(std::bind(&EmulatedPort::deviceValueChangeCallback, this, std::placeholders::_1));
     }
 
     void EmulatedPort::detachDevice()

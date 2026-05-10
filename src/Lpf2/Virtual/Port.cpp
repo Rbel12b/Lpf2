@@ -122,7 +122,7 @@ namespace Lpf2::Virtual
         m_fwVersion = m_device->getFwVersion();
         m_hwVersion = m_device->getHwVersion();
 
-        m_device->setValueChangeCallback(std::bind(Port::deviceValueChangeCallback, this, std::placeholders::_1));
+        m_device->setValueChangeCallback(std::bind(&Port::deviceValueChangeCallback, this, std::placeholders::_1));
     }
 
     void Port::detachDevice()
