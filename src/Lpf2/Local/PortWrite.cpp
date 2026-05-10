@@ -131,51 +131,20 @@ namespace Lpf2::Local
         {
             return 1;
         }
-
-        size_t size = data.size();
-        uint8_t msg_size = 0;
-
-        if (size == 0)
-        {
-            return 0;
-        }
-        CHECK_LENGHT(size, msg_size, 1)
-        CHECK_LENGHT(size, msg_size, 2)
-        CHECK_LENGHT(size, msg_size, 4)
-        CHECK_LENGHT(size, msg_size, 8)
-        CHECK_LENGHT(size, msg_size, 16)
-        CHECK_LENGHT(size, msg_size, 32)
-        CHECK_LENGHT(size, msg_size, 64)
-        CHECK_LENGHT(size, msg_size, 128)
-        else if (size > 128)
-        {
-            return 1;
-        }
-
-        uint8_t header = MESSAGE_CMD | CMD_EXT_MODE | LENGTH_1;
-        uint8_t checksum = header ^ 0xFF;
-        uint8_t b = (modeNum >= 8) ? 8 : 0;
-
         {
             Utils::MutexLock lock(m_serialMutex);
-            m_serial->write(header);
-            checksum ^= b;
-            m_serial->write(b);
-            m_serial->write(checksum);
-
-            header = MESSAGE_DATA | msg_size | (modeNum & 0x07);
-            checksum = header ^ 0xFF;
-            m_serial->write(header);
-
-            for (uint8_t i = 0; i < size; i++)
+            if (modeNum >= 8)
             {
-                b = data[i];
-                checksum ^= b;
-                m_serial->write(b);
+                Message msg;
+                msg.msg = MESSAGE_CMD;
+                msg.cmd = CMD_EXT_MODE;
+                msg.data.push_back(8);
+                m_writer.write(msg);
             }
-
-            m_serial->write(checksum);
-            m_serial->flush();
+            Message msg;
+            msg.msg = MESSAGE_DATA;
+            msg.cmd = modeNum & 0x07;
+            m_writer.write(msg);
         }
 
         return 0;

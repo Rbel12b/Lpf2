@@ -51,7 +51,7 @@ namespace Lpf2::Local
 
         for (const auto &msg : messages)
         {
-            LPF2_DEBUG_EXPR_D(
+            LPF2_DEBUG_EXPR_V(
                 m_parser.printMessage(msg);
             );
             parseMessage(msg);

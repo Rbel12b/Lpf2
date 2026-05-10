@@ -122,6 +122,7 @@ namespace Lpf2::Local
         Uart *m_serial;
         PWM *m_pwm;
         Parser m_parser;
+        Writer m_writer;
 
 #ifdef LPF2_MUTEX_INVALID
         Lpf2::Utils::Mutex m_serialMutex = LPF2_MUTEX_INVALID;
