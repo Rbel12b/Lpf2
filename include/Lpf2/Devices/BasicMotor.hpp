@@ -40,7 +40,7 @@ namespace Lpf2::Devices
             return true;
         }
 
-        void poll() override
+        void update() override
         {
         }
 

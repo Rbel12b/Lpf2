@@ -1,6 +1,6 @@
 /**
  *  Copyright (C) 2026 - Rbel12b
- * 
+ *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU Affero General Public License as
  *  published by the Free Software Foundation, either version 3 of the
@@ -115,15 +115,15 @@ namespace Lpf2::Virtual
     protected:
         ValueChangeCallback m_valueChangeCallback = nullptr;
     };
-    
+
     class GenericDevice : public Virtual::Device
     {
     public:
         explicit GenericDevice(const DeviceDescriptor &desc)
             : m_desc(desc), m_modes(m_desc.modes) {}
 
-        bool init() override { return true;}
-        void poll() override {}
+        bool init() override { return true; }
+        void update() override {}
         const char *name() const override { return "Lpf2::Virtual::GenericDevice"; }
 
         inline static const DeviceCapabilityId CAP =
@@ -184,12 +184,12 @@ namespace Lpf2::Virtual
             return m_desc.hwVersion;
         }
 
-        void setUserData(void* data)
+        void setUserData(void *data)
         {
             m_userData = data;
         }
 
-        void setModeData(uint8_t modeNum, std::vector<uint8_t> data)
+        void setModeData(uint8_t modeNum, const std::vector<uint8_t> &data)
         {
             if (modeNum < m_modes.size())
             {
@@ -201,7 +201,7 @@ namespace Lpf2::Virtual
             }
         }
 
-        using WriteDataCallback = std::function<int(uint8_t mode, const std::vector<uint8_t> &data, void* userData)>;
+        using WriteDataCallback = std::function<int(uint8_t mode, const std::vector<uint8_t> &data, void *userData)>;
 
         void setWriteDataCallback(WriteDataCallback callback)
         {

@@ -48,7 +48,7 @@ namespace Lpf2
 
             if (m_device)
             {
-                m_device->poll();
+                m_device->update();
             }
         }
 

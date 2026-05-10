@@ -114,7 +114,7 @@ namespace Lpf2::Devices
             return true;
         }
 
-        void poll() override {};
+        void update() override {};
 
         const char *name() const override
         {

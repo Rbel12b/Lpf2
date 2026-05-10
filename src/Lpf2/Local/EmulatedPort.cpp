@@ -44,6 +44,8 @@ namespace Lpf2::Local
         {
             return;
         }
+
+        m_device->update();
         
         auto messages = m_parser.update(100);
 

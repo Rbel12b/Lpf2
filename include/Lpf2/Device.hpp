@@ -31,7 +31,7 @@ namespace Lpf2
         virtual ~Device() = default;
 
         virtual bool init() = 0;
-        virtual void poll() = 0;
+        virtual void update() = 0;
         virtual const char *name() const = 0;
 
         virtual bool hasCapability(DeviceCapabilityId id) const = 0;
