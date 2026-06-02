@@ -147,7 +147,7 @@ namespace Lpf2::Local
         {
             if (msg.length == 1)
             {
-                m_modeCount = m_viewCount = msg.data[1] + 1;
+                m_modeCount = m_viewCount = msg.data[0] + 1;
             }
             else if (msg.length == 2)
             {
@@ -305,7 +305,7 @@ namespace Lpf2::Local
             for (int i = 0; i < num; i++)
             {
                 std::memcpy(&m_modeCombos[i], msg.data.data() + 1 + (i * 2), 2);
-                if (m_comboNum == 0 && m_modeCombos[num] == 0)
+                if (m_comboNum == 0 && m_modeCombos[i] == 0)
                 {
                     m_comboNum = i;
                 }
