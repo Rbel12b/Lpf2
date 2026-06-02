@@ -151,6 +151,7 @@ namespace Lpf2
             payload.push_back((uint8_t)MessageType::HUB_PROPERTIES);
             payload.push_back((uint8_t)GenericErrorType::CMD_NOT_RECOGNIZED);
             writeResponse(MessageType::GENERIC_ERROR_MESSAGES, payload);
+            return;
         }
         auto &prop = m_hubProperty[(uint8_t)propId];
         LPF2_LOG_D("Sent prop update: %s", Hub::getHubPropStr(propId, prop).c_str());
@@ -418,10 +419,10 @@ namespace Lpf2
         {
             payload.push_back(port->getCapabilities());
             payload.push_back(port->getModeCount());
+            payload.push_back(port->getInputModes() & 0xFF);
             payload.push_back(port->getInputModes() >> 8);
-            payload.push_back(port->getInputModes() & 0xF);
+            payload.push_back(port->getOutputModes() & 0xFF);
             payload.push_back(port->getOutputModes() >> 8);
-            payload.push_back(port->getOutputModes() & 0xF);
         }
         break;
 
@@ -429,8 +430,8 @@ namespace Lpf2
         {
             for (uint8_t i = 0; i < port->getModeComboCount() && i < 16; i++)
             {
+                payload.push_back(port->getModeCombo(i) & 0xFF);
                 payload.push_back(port->getModeCombo(i) >> 8);
-                payload.push_back(port->getModeCombo(i) & 0xF);
             }
         }
         break;
@@ -614,7 +615,7 @@ namespace Lpf2
 
         case PortOutputSubCommand::START_SPEED_FOR_DEG_SINGLE:
             payload.resize(8);
-            port->startSpeedForDegrees(payload[0] | payload[1] << 8 | payload[2] << 16 | payload[3] << 24,
+            port->startSpeedForDegrees((uint32_t)payload[0] | (uint32_t)payload[1] << 8 | (uint32_t)payload[2] << 16 | (uint32_t)payload[3] << 24,
                 (int8_t)payload[4], payload[5], (BrakingStyle)payload[6], payload[7]);
             break;
 
