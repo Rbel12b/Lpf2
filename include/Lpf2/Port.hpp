@@ -147,12 +147,12 @@ namespace Lpf2
         uint8_t getModeCount() const { return m_modeData.size(); }
         uint8_t getViewCount() const { return m_viewCount; }
         const std::vector<Mode> &getModes() const { return m_modeData; }
-        uint8_t getModeComboCount() const { return m_modeCombos.size(); }
+        uint8_t getModeComboCount() const { return m_comboNum; }
         const std::vector<uint16_t> &getModeCombos() const { return m_modeCombos; }
 
         uint16_t getModeCombo(uint8_t combo) const
         {
-            if (combo >= m_modeCombos.size() || combo >= 16)
+            if (combo >= m_comboNum || combo >= 16)
                 return 0;
             return m_modeCombos[combo];
         }
@@ -165,7 +165,11 @@ namespace Lpf2
          * @returns mode bitmask
          */
         uint16_t getOutputModes() const { return m_outModesMask; }
-        uint8_t getCapabilities() const { return m_capabilities; }
+        uint8_t getCapabilities() const
+        {
+            // Always reflect combinable bit from actual combo count, regardless of descriptor.
+            return m_comboNum > 0 ? (m_capabilities | 0x04) : m_capabilities;
+        }
 
         Version getFwVersion() const { return m_fwVersion; }
         Version getHwVersion() const { return m_hwVersion; }
@@ -257,8 +261,9 @@ namespace Lpf2
             m_valueChangeCallback = callback;
         }
 
-    protected:
+    public:
         static uint8_t getDataSize(uint8_t format);
+    protected:
         static ModeNum getDefaultMode(DeviceType id);
         static bool deviceIsAbsMotor(DeviceType id);
 

@@ -557,6 +557,8 @@ namespace Lpf2
         std::memcpy(&setup.delta, message.data() + 5, 4);
         setup.notify = message[9];
 
+        LPF2_LOG_D("Single set: port 0x%02X, mode %d, delta %d, notify %d", (uint8_t)portNum, modeNum, setup.delta, setup.notify);
+
         m_portSetupSingle[portNum][modeNum] = setup;
 
         auto combinedIt = m_portSetupCombined.find(portNum);
@@ -599,6 +601,8 @@ namespace Lpf2
             }
             setup.comboIndex = message[5];
             setup.modeDatasetPairs.assign(message.begin() + 6, message.end());
+            std::sort(setup.modeDatasetPairs.begin(), setup.modeDatasetPairs.end(),
+                      [](uint8_t a, uint8_t b) { return (a >> 4) < (b >> 4); });
             LPF2_LOG_D("Combined set combo: port 0x%02X, combo %d", (uint8_t)portNum, setup.comboIndex);
             break;
         }
@@ -694,10 +698,14 @@ namespace Lpf2
         for (uint8_t nibblePair : setup.modeDatasetPairs)
         {
             uint8_t modeNum = (nibblePair >> 4) & 0x0F;
+            uint8_t dataSet = nibblePair & 0x0F;
             if (modeNum >= port->getModeCount())
                 continue;
-            auto &raw = port->getModes()[modeNum].rawData;
-            message.insert(message.end(), raw.begin(), raw.end());
+            const auto &mode = port->getModes()[modeNum];
+            uint8_t dataSize = Port::getDataSize(mode.format);
+            size_t offset = (size_t)dataSet * dataSize;
+            if (offset + dataSize <= mode.rawData.size())
+                message.insert(message.end(), mode.rawData.begin() + offset, mode.rawData.begin() + offset + dataSize);
         }
         writeResponse(MessageType::PORT_VALUE_COMBINEDMODE, message);
     }

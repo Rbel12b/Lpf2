@@ -29,6 +29,7 @@ Lpf2::Hub hub;
 void setup()
 {
     Serial.begin(981200);
+    lpf2_log_init();
     lpf2_set_runtime_log_level(LPF2_LOG_LEVEL_DEBUG);
     Lpf2::DeviceRegistry::registerDefault();
     Lpf2::DeviceDescRegistry::registerDefault();
