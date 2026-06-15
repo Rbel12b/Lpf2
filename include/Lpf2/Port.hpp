@@ -186,6 +186,12 @@ namespace Lpf2
             m_modeCount = m_modeData.size();
             m_viewCount = 0; // TODO: add to desc
             m_modeCombos = desc->combos;
+            m_comboNum = 0;
+            for (auto c : m_modeCombos)
+            {
+                if (c == 0) break;
+                m_comboNum++;
+            }
             m_capabilities = desc->caps;
             m_inModesMask = desc->inModesMask;
             m_outModesMask = desc->outModesMask;

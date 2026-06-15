@@ -214,6 +214,12 @@ namespace Lpf2::Local
             }
             break;
         }
+        case CMD_WRITE:
+        {
+            // Device may echo CMD_WRITE (e.g. combined mode echo); ignore.
+            LPF2_LOG_D("CMD_WRITE from device (ignored)");
+            break;
+        }
         default:
         {
             LPF2_LOG_W("Unknown command: 0x%02X", msg.cmd);
@@ -328,12 +334,14 @@ namespace Lpf2::Local
             {
                 break;
             }
+            m_comboNum = num;
             for (int i = 0; i < num; i++)
             {
                 std::memcpy(&m_modeCombos[i], msg.data.data() + 1 + (i * 2), 2);
-                if (m_comboNum == 0 && m_modeCombos[i] == 0)
+                if (m_modeCombos[i] == 0)
                 {
                     m_comboNum = i;
+                    break;
                 }
             }
             break;
