@@ -174,11 +174,9 @@ namespace Lpf2::Local
             Message echo = msg;
             m_writer.write(echo);
             m_comboPairs.clear();
-            for (size_t i = 2; i < msg.data.size(); i++)
-            {
-                if (msg.data[i] == 0x00) break;
-                m_comboPairs.push_back(msg.data[i]);
-            }
+            uint8_t numPairs = msg.data[0] & 0x0F;
+            for (uint8_t i = 0; i < numPairs && (2 + i) < msg.data.size(); i++)
+                m_comboPairs.push_back(msg.data[2 + i]);
             LPF2_LOG_D("CMD_WRITE: combo %i, %d pairs", (int)comboIdx, (int)m_comboPairs.size());
         }
         else if (msg.msg == MESSAGE_DATA)

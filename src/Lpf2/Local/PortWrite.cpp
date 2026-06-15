@@ -76,14 +76,15 @@ namespace Lpf2::Local
 
         uint16_t bitmask = m_modeCombos[idx];
         // CMD_WRITE activates combined mode. Format confirmed from LEGO Technic hub captures.
-        // Byte 0: 0x23 (observed for 3-pair combos; semantics unconfirmed beyond this case).
+        // Byte 0: 0x20 | num_pairs (bit 5 = combined mode flag, bits 0-3 = pair count).
         // Byte 1: combo index.
         // Bytes 2+: (mode<<4)|dataset nibble pairs in ascending mode order.
         // Writer pads to next power-of-2 automatically.
+        uint8_t numPairs = (uint8_t)__builtin_popcount(bitmask);
         Message msg;
         msg.msg = MESSAGE_CMD;
         msg.cmd = CMD_WRITE;
-        msg.data.push_back(0x23);
+        msg.data.push_back(0x20 | numPairs);
         msg.data.push_back(idx);
         for (int m = 0; m < 16; m++)
         {
