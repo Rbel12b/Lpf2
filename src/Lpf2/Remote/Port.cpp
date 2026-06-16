@@ -50,16 +50,69 @@ namespace Lpf2::Remote
         return m_deviceType != DeviceType::UNKNOWNDEVICE;
     }
 
-    int Port::setMode(uint8_t mode)
+    int Port::setMode(uint8_t mode, float delta)
     {
         if (!m_remote || !isDeviceConnected())
             return 1;
-        uint32_t delta = 1;
-        return m_remote->setPortMode(m_portNum, mode, delta);
+        storeModeDelta(mode, delta);
+        uint32_t bleDelta = (uint32_t)delta;
+        return m_remote->setPortMode(m_portNum, mode, bleDelta);
     }
 
-    int Port::setModeCombo(uint8_t idx)
+    int Port::setModeCombo(uint8_t idx, const std::vector<float>& deltas)
     {
+        if (!m_remote || !isDeviceConnected())
+            return 1;
+        if (idx >= m_modeCombos.size() || m_modeCombos[idx] == 0)
+        {
+            LPF2_LOG_W("Invalid combo index: %i", idx);
+            return 1;
+        }
+
+        storeComboDeltas(idx, deltas);
+
+        uint16_t bitmask = m_modeCombos[idx];
+
+        // Nibble pairs in ascending mode order: high nibble = mode, low nibble = dataset (0)
+        std::vector<uint8_t> nibblePairs;
+        for (int m = 0; m < 16; m++)
+        {
+            if (bitmask & (1u << m))
+                nibblePairs.push_back((uint8_t)((m << 4) | 0x00));
+        }
+
+        // 1. Lock
+        m_remote->writeValue(MessageType::PORT_INPUT_FORMAT_SETUP_COMBINEDMODE,
+            {m_portNum, 0x02});
+
+        // 2. Per-mode single setup — tells the hub the delta for each mode
+        size_t pos = 0;
+        for (int m = 0; m < 16; m++)
+        {
+            if (!(bitmask & (1u << m)))
+                continue;
+            uint32_t bleDelta = (pos < deltas.size()) ? (uint32_t)deltas[pos] : 1u;
+            m_remote->writeValue(MessageType::PORT_INPUT_FORMAT_SETUP_SINGLE,
+                {m_portNum, (uint8_t)m,
+                 (uint8_t)(bleDelta & 0xFF),
+                 (uint8_t)((bleDelta >> 8) & 0xFF),
+                 (uint8_t)((bleDelta >> 16) & 0xFF),
+                 (uint8_t)((bleDelta >> 24) & 0xFF),
+                 0x01}); // notify = true
+            pos++;
+        }
+
+        // 3. Set Mode & Dataset Combination
+        {
+            std::vector<uint8_t> payload = {m_portNum, 0x01, idx};
+            payload.insert(payload.end(), nibblePairs.begin(), nibblePairs.end());
+            m_remote->writeValue(MessageType::PORT_INPUT_FORMAT_SETUP_COMBINEDMODE, payload);
+        }
+
+        // 4. Unlock + MultiUpdate Enabled
+        m_remote->writeValue(MessageType::PORT_INPUT_FORMAT_SETUP_COMBINEDMODE,
+            {m_portNum, 0x03});
+
         return 0;
     }
 

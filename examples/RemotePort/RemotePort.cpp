@@ -87,6 +87,11 @@ void loop()
                 Serial.print("Color idx: ");
                 Serial.println(device->getColorIdx());
             }
+            else if (auto device = static_cast<Lpf2::Devices::EncoderMotorControl *>
+                (portADeviceManager.device()->getCapability(Lpf2::Devices::EncoderMotor::CAP)))
+            {
+                device->startSpeed(50);
+            }
             else if (auto device = static_cast<Lpf2::Devices::BasicMotorControl *>
                 (portADeviceManager.device()->getCapability(Lpf2::Devices::BasicMotor::CAP)))
             {
@@ -94,7 +99,7 @@ void loop()
             }
             else
             {
-                // Device isn't a color sensor or a motor (all motors have BasicMotor::CAP)
+                // Device isn't a color sensor or a motor
             }
             vTaskDelay(100);
         }

@@ -121,17 +121,20 @@ namespace Lpf2
         /**
          * @brief Select the mode of the connected device,
          * has no effect when isDeviceConnected() == false
+         * @param mode mode number
+         * @param delta minimum change threshold for the value-change callback (1 = fire on any int-unit change)
          * @returns 0 if succesful
          */
-        virtual int setMode(uint8_t mode) = 0;
+        virtual int setMode(uint8_t mode, float delta = 1.0f) = 0;
 
         /**
          * @brief Set the mode combination of the connected device,
          * has no effect when isDeviceConnected() == false
          * @param idx the mode combo index (from getModeCombos())
+         * @param deltas per-mode delta thresholds (indexed by position in combo bitmask); empty uses default of 1
          * @returns 0 if succesful
          */
-        virtual int setModeCombo(uint8_t idx) = 0;
+        virtual int setModeCombo(uint8_t idx, const std::vector<float>& deltas = {}) = 0;
 
         virtual bool isDeviceConnected() = 0;
 
@@ -267,6 +270,26 @@ namespace Lpf2
         static ModeNum getDefaultMode(DeviceType id);
         static bool deviceIsAbsMotor(DeviceType id);
 
+        /**
+         * @brief Store the delta threshold for a single mode.
+         * Clears the previous-raw snapshot for that mode so the next update
+         * starts a fresh comparison.
+         */
+        void storeModeDelta(uint8_t modeNum, float delta);
+
+        /**
+         * @brief Store per-mode deltas for a combo.
+         * @param comboIdx combo index (used to resolve bitmask → mode numbers)
+         * @param deltas one entry per set bit in the combo bitmask (ascending mode order)
+         */
+        void storeComboDeltas(uint8_t comboIdx, const std::vector<float>& deltas);
+
+        /**
+         * @brief Call m_valueChangeCallback only when the mode's value changed by >= its stored delta.
+         * Falls through unconditionally when delta == 0.
+         */
+        void fireValueChangeCallback(uint8_t modeNum);
+
         /// Parse a signed 8-bit integer from raw bytes
         static float parseData8(const uint8_t *ptr);
 
@@ -298,6 +321,11 @@ namespace Lpf2
         std::vector<Mode> m_modeData;
 
         ValueChangeCallback m_valueChangeCallback = nullptr;
+
+        /// Per-mode delta thresholds (indexed by mode number). 0 = fire on every update.
+        std::vector<float> m_deltas;
+        /// Per-mode previous raw snapshot used by fireValueChangeCallback for delta comparison.
+        std::vector<std::vector<uint8_t>> m_prevRaw;
     };
 
     class PortDevice : public Lpf2::Device
@@ -361,14 +389,14 @@ namespace Lpf2
             return m_port.writeData(modeNum, data);
         }
 
-        int setMode(uint8_t mode) override
+        int setMode(uint8_t mode, float delta = 1.0f) override
         {
-            return m_port.setMode(mode);
+            return m_port.setMode(mode, delta);
         }
 
-        int setModeCombo(uint8_t idx) override
+        int setModeCombo(uint8_t idx, const std::vector<float>& deltas = {}) override
         {
-            return m_port.setModeCombo(idx);
+            return m_port.setModeCombo(idx, deltas);
         }
 
     protected:

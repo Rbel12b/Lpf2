@@ -22,6 +22,7 @@
 #include "Lpf2/DeviceManager.hpp"
 #include "Lpf2/Devices/ColorSensor.hpp"
 #include "Lpf2/Devices/BasicMotor.hpp"
+#include "Lpf2/Devices/EncoderMotor.hpp"
 
 #include "device.hpp"
 
@@ -82,6 +83,11 @@ void loop()
             Serial.print("Color idx: ");
             Serial.println(device->getColorIdx());
         }
+        else if (auto device = static_cast<Lpf2::Devices::EncoderMotorControl *>
+            (deviceManager.device()->getCapability(Lpf2::Devices::EncoderMotor::CAP)))
+        {
+            device->startSpeed(50);
+        }
         if (auto device = static_cast<Lpf2::Devices::BasicMotorControl *>
             (deviceManager.device()->getCapability(Lpf2::Devices::BasicMotor::CAP)))
         {
@@ -89,7 +95,7 @@ void loop()
         }
         else
         {
-            // Device isn't a color sensor or a motor (all motors have BasicMotor::CAP)
+            // Device isn't a color sensor or a motor
         }
     }
 }

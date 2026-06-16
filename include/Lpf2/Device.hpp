@@ -56,7 +56,7 @@ namespace Lpf2
 
         virtual uint8_t getCapabilities() const = 0;
         virtual int writeData(uint8_t modeNum, const std::vector<uint8_t> &data) = 0;
-        virtual int setMode(uint8_t mode) = 0;
-        virtual int setModeCombo(uint8_t idx) = 0;
+        virtual int setMode(uint8_t mode, float delta = 1.0f) = 0;
+        virtual int setModeCombo(uint8_t idx, const std::vector<float>& deltas = {}) = 0;
     };
 }; // namespace Lpf2

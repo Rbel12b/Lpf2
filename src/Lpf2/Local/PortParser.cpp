@@ -100,8 +100,7 @@ namespace Lpf2::Local
                         m_modeData[m].rawData.resize(readLen);
                     for (int i = 0; i < readLen; i++)
                         m_modeData[m].rawData[i] = msg.data[offset + i];
-                    if (m_valueChangeCallback)
-                        m_valueChangeCallback(m);
+                    fireValueChangeCallback(m);
                     offset += size;
                 }
                 break;
@@ -138,10 +137,7 @@ namespace Lpf2::Local
                 m_modeData[mode].rawData[i] = msg.data[i];
             }
 
-            if (m_valueChangeCallback)
-            {
-                m_valueChangeCallback(mode);
-            }
+            fireValueChangeCallback(mode);
             break;
         }
         default:

@@ -19,7 +19,7 @@
 
 namespace Lpf2::Local
 {
-    int Port::setMode(uint8_t mode)
+    int Port::setMode(uint8_t mode, float delta)
     {
         if (mode >= m_modeCount)
         {
@@ -27,6 +27,7 @@ namespace Lpf2::Local
             return 1;
         }
 
+        storeModeDelta(mode, delta);
         m_activeCombo = -1;
         m_mode = mode;
 
@@ -66,13 +67,14 @@ namespace Lpf2::Local
         return 0;
     }
 
-    int Port::setModeCombo(uint8_t idx)
+    int Port::setModeCombo(uint8_t idx, const std::vector<float>& deltas)
     {
         if (idx >= m_comboNum || m_modeCombos[idx] == 0)
         {
             LPF2_LOG_W("Invalid combo index: %i (max %i)", idx, (int)m_comboNum - 1);
             return 1;
         }
+        storeComboDeltas(idx, deltas);
 
         uint16_t bitmask = m_modeCombos[idx];
         // CMD_WRITE activates combined mode. Format confirmed from LEGO Technic hub captures.

@@ -111,6 +111,7 @@ namespace Lpf2::Devices
         bool init() override
         {
             startPower(0);
+            m_port.setModeCombo(0);
             return true;
         }
 

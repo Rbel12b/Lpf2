@@ -121,6 +121,8 @@ namespace Lpf2
             bool multiUpdateEnabled = false;
             // each byte: high nibble = mode, low nibble = dataset
             std::vector<uint8_t> modeDatasetPairs;
+            // per-pair delta thresholds (same order as modeDatasetPairs)
+            std::vector<float> deltas;
             // per-mode snapshot of rawData used for delta comparisons
             std::unordered_map<uint8_t, std::vector<uint8_t>> lastRawPerMode;
         };

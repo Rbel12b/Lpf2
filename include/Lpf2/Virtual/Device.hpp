@@ -220,7 +220,7 @@ namespace Lpf2::Virtual
             return 0;
         }
 
-        virtual int setMode(uint8_t mode) override
+        virtual int setMode(uint8_t mode, float delta = 1.0f) override
         {
             LPF2_LOG_I("[%02X] set mode %d",
                        static_cast<uint8_t>(m_desc.type),
@@ -228,7 +228,7 @@ namespace Lpf2::Virtual
             return 0;
         }
 
-        virtual int setModeCombo(uint8_t idx) override
+        virtual int setModeCombo(uint8_t idx, const std::vector<float>& deltas = {}) override
         {
             LPF2_LOG_I("[%02X] set mode combo %d",
                        static_cast<uint8_t>(m_desc.type),

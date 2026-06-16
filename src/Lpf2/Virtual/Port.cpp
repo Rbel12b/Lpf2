@@ -36,17 +36,19 @@ namespace Lpf2::Virtual
         return (bool)m_device;
     }
 
-    int Port::setMode(uint8_t mode)
+    int Port::setMode(uint8_t mode, float delta)
     {
         if (!m_device)
             return 1;
+        storeModeDelta(mode, delta);
         return m_device->setMode(mode);
     }
 
-    int Port::setModeCombo(uint8_t idx)
+    int Port::setModeCombo(uint8_t idx, const std::vector<float>& deltas)
     {
         if (!m_device)
             return 1;
+        storeComboDeltas(idx, deltas);
         return m_device->setModeCombo(idx);
     }
 
@@ -139,9 +141,6 @@ namespace Lpf2::Virtual
     void Port::deviceValueChangeCallback(uint8_t modeNum)
     {
         m_modeData = m_device->getModes();
-        if (m_valueChangeCallback)
-        {
-            m_valueChangeCallback(modeNum);
-        }
+        fireValueChangeCallback(modeNum);
     }
 }; // namespace Lpf2::Virtual

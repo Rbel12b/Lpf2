@@ -618,7 +618,16 @@ namespace Lpf2
             setup.locked = false;
             setup.active = true;
             setup.multiUpdateEnabled = true;
-            port->setModeCombo(setup.comboIndex);
+            setup.deltas.clear();
+            for (uint8_t nibblePair : setup.modeDatasetPairs)
+            {
+                uint8_t mn = (nibblePair >> 4) & 0x0F;
+                float d = 1.0f;
+                if (m_portSetupSingle[portNum].count(mn))
+                    d = (float)m_portSetupSingle[portNum][mn].delta;
+                setup.deltas.push_back(d);
+            }
+            port->setModeCombo(setup.comboIndex, setup.deltas);
             break;
 
         case 0x04: // Unlock + MultiUpdate Disabled
@@ -626,12 +635,22 @@ namespace Lpf2
             setup.locked = false;
             setup.active = true;
             setup.multiUpdateEnabled = false;
-            port->setModeCombo(setup.comboIndex);
+            setup.deltas.clear();
+            for (uint8_t nibblePair : setup.modeDatasetPairs)
+            {
+                uint8_t mn = (nibblePair >> 4) & 0x0F;
+                float d = 1.0f;
+                if (m_portSetupSingle[portNum].count(mn))
+                    d = (float)m_portSetupSingle[portNum][mn].delta;
+                setup.deltas.push_back(d);
+            }
+            port->setModeCombo(setup.comboIndex, setup.deltas);
             break;
 
         case 0x06: // Reset
             LPF2_LOG_D("Combined reset: port 0x%02X", (uint8_t)portNum);
             setup.modeDatasetPairs.clear();
+            setup.deltas.clear();
             setup.lastRawPerMode.clear();
             setup.comboIndex = 0;
             setup.locked = false;
@@ -658,17 +677,15 @@ namespace Lpf2
             return;
 
         bool shouldSend = false;
-        for (uint8_t nibblePair : setup.modeDatasetPairs)
+        for (size_t i = 0; i < setup.modeDatasetPairs.size(); i++)
         {
+            uint8_t nibblePair = setup.modeDatasetPairs[i];
             uint8_t modeNum = (nibblePair >> 4) & 0x0F;
             uint8_t dataSet = nibblePair & 0x0F;
             if (modeNum >= port->getModeCount())
                 continue;
 
-            uint32_t delta = 1;
-            if (m_portSetupSingle[setup.portNum].count(modeNum))
-                delta = m_portSetupSingle[setup.portNum][modeNum].delta;
-
+            float delta = (i < setup.deltas.size()) ? setup.deltas[i] : 1.0f;
             auto &lastRaw = setup.lastRawPerMode[modeNum];
             if (std::abs(port->getValue(modeNum, dataSet) - port->getValue(modeNum, lastRaw, dataSet)) >= delta)
             {
