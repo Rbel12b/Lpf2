@@ -964,6 +964,7 @@ namespace Lpf2::DeviceDescriptors
         }
     };
 
+    // Device 0x2E
     const DeviceDescriptor TECHNIC_LARGE_LINEAR_MOTOR =
     {
         .type = DeviceType::TECHNIC_LARGE_LINEAR_MOTOR,

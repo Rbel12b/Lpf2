@@ -81,6 +81,31 @@ namespace Lpf2::Local
                 m_status = STATUS::STATUS_DATA_RECEIVED;
             }
             m_startRec = LPF2_GET_TIME();
+
+            if (m_activeCombo >= 0 && (size_t)m_activeCombo < m_modeCombos.size())
+            {
+                nextModeExt = false;
+                uint16_t bitmask = m_modeCombos[m_activeCombo];
+                size_t offset = 0;
+                for (int m = 0; m < 16 && offset < msg.data.size(); m++)
+                {
+                    if (!(bitmask & (1u << m)))
+                        continue;
+                    if ((size_t)m >= m_modeData.size())
+                        break;
+                    uint8_t size = m_modeData[m].data_sets * getDataSize(m_modeData[m].format);
+                    size_t available = msg.data.size() - offset;
+                    uint8_t readLen = (size <= available) ? size : (uint8_t)available;
+                    if (m_modeData[m].rawData.size() < readLen)
+                        m_modeData[m].rawData.resize(readLen);
+                    for (int i = 0; i < readLen; i++)
+                        m_modeData[m].rawData[i] = msg.data[offset + i];
+                    fireValueChangeCallback(m);
+                    offset += size;
+                }
+                break;
+            }
+
             uint8_t mode = GET_MODE(msg.header);
 
             if (nextModeExt)
@@ -112,10 +137,7 @@ namespace Lpf2::Local
                 m_modeData[mode].rawData[i] = msg.data[i];
             }
 
-            if (m_valueChangeCallback)
-            {
-                m_valueChangeCallback(mode);
-            }
+            fireValueChangeCallback(mode);
             break;
         }
         default:
@@ -186,6 +208,12 @@ namespace Lpf2::Local
             {
                 nextModeExt = true;
             }
+            break;
+        }
+        case CMD_WRITE:
+        {
+            // Device may echo CMD_WRITE (e.g. combined mode echo); ignore.
+            LPF2_LOG_D("CMD_WRITE from device (ignored)");
             break;
         }
         default:
@@ -302,12 +330,14 @@ namespace Lpf2::Local
             {
                 break;
             }
+            m_comboNum = num;
             for (int i = 0; i < num; i++)
             {
                 std::memcpy(&m_modeCombos[i], msg.data.data() + 1 + (i * 2), 2);
-                if (m_comboNum == 0 && m_modeCombos[i] == 0)
+                if (m_modeCombos[i] == 0)
                 {
                     m_comboNum = i;
+                    break;
                 }
             }
             break;

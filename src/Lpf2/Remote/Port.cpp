@@ -50,17 +50,41 @@ namespace Lpf2::Remote
         return m_deviceType != DeviceType::UNKNOWNDEVICE;
     }
 
-    int Port::setMode(uint8_t mode)
+    int Port::setMode(uint8_t mode, float delta)
     {
         if (!m_remote || !isDeviceConnected())
             return 1;
-        uint32_t delta = 1;
-        return m_remote->setPortMode(m_portNum, mode, delta);
+        storeModeDelta(mode, delta);
+        uint32_t bleDelta = (uint32_t)delta;
+        return m_remote->setPortMode(m_portNum, mode, bleDelta);
     }
 
-    int Port::setModeCombo(uint8_t idx)
+    int Port::setModeCombo(uint8_t idx, const std::vector<float>& deltas)
     {
-        return 0;
+        if (!m_remote || !isDeviceConnected())
+            return 1;
+        if (idx >= m_modeCombos.size() || m_modeCombos[idx] == 0)
+        {
+            LPF2_LOG_W("Invalid combo index: %i", idx);
+            return 1;
+        }
+
+        storeComboDeltas(idx, deltas);
+
+        uint16_t bitmask = m_modeCombos[idx];
+
+        std::vector<uint8_t> nibblePairs;
+        for (int m = 0; m < 16; m++)
+        {
+            if (bitmask & (1u << m))
+                nibblePairs.push_back((uint8_t)((m << 4) | 0x00));
+        }
+
+        std::vector<uint32_t> bleDeltasPerMode;
+        for (size_t i = 0; i < nibblePairs.size(); i++)
+            bleDeltasPerMode.push_back((i < deltas.size()) ? (uint32_t)deltas[i] : 1u);
+
+        return m_remote->setPortModeCombo(m_portNum, idx, nibblePairs, bleDeltasPerMode);
     }
 
     void Port::startPower(int8_t pw)

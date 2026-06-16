@@ -113,7 +113,7 @@ namespace Lpf2
             handlePortModeInformationRequestMessage(message);
             break;
         case MessageType::PORT_INPUT_FORMAT_SETUP_COMBINEDMODE:
-            LPF2_LOG_W("PORT_INPUT_FORMAT_SETUP_COMBINEDMODE not implemented yet");
+            handlePortInputFormatSetupCombinedMessage(message);
             break;
         case MessageType::PORT_INPUT_FORMAT_SETUP_SINGLE:
             handlePortInputFormatSetupSingleMessage(message);
@@ -547,7 +547,7 @@ namespace Lpf2
             LPF2_LOG_W("Port input format setup (single) for unattached port %d", portNum);
             return;
         }
-        // Port *port = attachedPorts[portNum];
+        Port *port = m_attachedPorts[portNum];
         uint8_t modeNum = message[(uint8_t)MessageByte::OPERATION];
 
         PortInputSetupSingle setup;
@@ -557,11 +557,181 @@ namespace Lpf2
         std::memcpy(&setup.delta, message.data() + 5, 4);
         setup.notify = message[9];
 
+        LPF2_LOG_D("Single set: port 0x%02X, mode %d, delta %d, notify %d", (uint8_t)portNum, modeNum, setup.delta, setup.notify);
+
         m_portSetupSingle[portNum][modeNum] = setup;
+
+        auto combinedIt = m_portSetupCombined.find(portNum);
+        bool locked = combinedIt != m_portSetupCombined.end() && combinedIt->second.locked;
+        if (!locked)
+            port->setMode(modeNum);
 
         message.erase(message.begin(), message.begin() + 3);
 
         writeResponse(MessageType::PORT_INPUT_FORMAT_SINGLE, message);
+    }
+
+    void HubEmulation::handlePortInputFormatSetupCombinedMessage(std::vector<uint8_t> message)
+    {
+        if (message.size() < 5)
+        {
+            LPF2_LOG_E("Unexpected message length: %i", message.size());
+            return;
+        }
+        PortNum portNum = (PortNum)message[(uint8_t)MessageByte::PORT_ID];
+        if (m_attachedPorts.find(portNum) == m_attachedPorts.end())
+        {
+            LPF2_LOG_W("Port input format setup (combined) for unattached port %d", portNum);
+            return;
+        }
+        Port *port = m_attachedPorts[portNum];
+        uint8_t subCmd = message[(uint8_t)MessageByte::OPERATION];
+
+        auto &setup = m_portSetupCombined[portNum];
+        setup.portNum = portNum;
+
+        switch (subCmd)
+        {
+        case 0x01: // Set Mode & Dataset Combination
+        {
+            if (message.size() < 6)
+            {
+                LPF2_LOG_E("Unexpected message length: %i", message.size());
+                return;
+            }
+            setup.comboIndex = message[5];
+            setup.modeDatasetPairs.assign(message.begin() + 6, message.end());
+            LPF2_LOG_D("Combined set combo: port 0x%02X, combo %d", (uint8_t)portNum, setup.comboIndex);
+            break;
+        }
+        case 0x02: // Lock for Setup
+            LPF2_LOG_D("Combined lock: port 0x%02X", (uint8_t)portNum);
+            setup.locked = true;
+            setup.active = false;
+            setup.multiUpdateEnabled = false;
+            break;
+
+        case 0x03: // Unlock + MultiUpdate Enabled
+            LPF2_LOG_D("Combined unlock + multiupdate: port 0x%02X", (uint8_t)portNum);
+            setup.locked = false;
+            setup.active = true;
+            setup.multiUpdateEnabled = true;
+            setup.deltas.clear();
+            for (uint8_t nibblePair : setup.modeDatasetPairs)
+            {
+                uint8_t mn = (nibblePair >> 4) & 0x0F;
+                float d = 1.0f;
+                if (m_portSetupSingle[portNum].count(mn))
+                    d = (float)m_portSetupSingle[portNum][mn].delta;
+                setup.deltas.push_back(d);
+            }
+            port->setModeCombo(setup.comboIndex, setup.deltas);
+            sendCombinedModeFormat(setup);
+            break;
+
+        case 0x04: // Unlock + MultiUpdate Disabled
+            LPF2_LOG_D("Combined unlock (no multiupdate): port 0x%02X", (uint8_t)portNum);
+            setup.locked = false;
+            setup.active = true;
+            setup.multiUpdateEnabled = false;
+            setup.deltas.clear();
+            for (uint8_t nibblePair : setup.modeDatasetPairs)
+            {
+                uint8_t mn = (nibblePair >> 4) & 0x0F;
+                float d = 1.0f;
+                if (m_portSetupSingle[portNum].count(mn))
+                    d = (float)m_portSetupSingle[portNum][mn].delta;
+                setup.deltas.push_back(d);
+            }
+            port->setModeCombo(setup.comboIndex, setup.deltas);
+            sendCombinedModeFormat(setup);
+            break;
+
+        case 0x06: // Reset
+            LPF2_LOG_D("Combined reset: port 0x%02X", (uint8_t)portNum);
+            setup.modeDatasetPairs.clear();
+            setup.deltas.clear();
+            setup.lastRawPerMode.clear();
+            setup.comboIndex = 0;
+            setup.locked = false;
+            setup.active = false;
+            setup.multiUpdateEnabled = false;
+            break;
+
+        default:
+            LPF2_LOG_E("Unknown combined mode sub-command: 0x%02X", subCmd);
+            return;
+        }
+    }
+
+    void HubEmulation::sendCombinedModeFormat(PortInputSetupCombined &setup)
+    {
+        uint16_t bitmask = (uint16_t)((1u << setup.modeDatasetPairs.size()) - 1);
+        std::vector<uint8_t> response;
+        response.push_back((uint8_t)setup.portNum);
+        response.push_back(setup.multiUpdateEnabled ? 0x80 : 0x00);
+        response.push_back((uint8_t)(bitmask & 0xFF));
+        response.push_back((uint8_t)((bitmask >> 8) & 0xFF));
+        writeResponse(MessageType::PORT_INPUT_FORMAT_COMBINEDMODE, response);
+    }
+
+    void HubEmulation::checkPortModeValueCombined(PortInputSetupCombined &setup, Port *port)
+    {
+        if (!setup.multiUpdateEnabled || setup.modeDatasetPairs.empty())
+            return;
+
+        bool shouldSend = false;
+        for (size_t i = 0; i < setup.modeDatasetPairs.size(); i++)
+        {
+            uint8_t nibblePair = setup.modeDatasetPairs[i];
+            uint8_t modeNum = (nibblePair >> 4) & 0x0F;
+            uint8_t dataSet = nibblePair & 0x0F;
+            if (modeNum >= port->getModeCount())
+                continue;
+
+            float delta = (i < setup.deltas.size()) ? setup.deltas[i] : 1.0f;
+            auto &lastRaw = setup.lastRawPerMode[modeNum];
+            if (std::abs(port->getValue(modeNum, dataSet) - port->getValue(modeNum, lastRaw, dataSet)) >= delta)
+            {
+                shouldSend = true;
+                break;
+            }
+        }
+
+        if (shouldSend)
+        {
+            for (uint8_t nibblePair : setup.modeDatasetPairs)
+            {
+                uint8_t modeNum = (nibblePair >> 4) & 0x0F;
+                if (modeNum >= port->getModeCount())
+                    continue;
+                setup.lastRawPerMode[modeNum] = port->getModes()[modeNum].rawData;
+            }
+            sendPortValueCombined(setup, port);
+            vTaskDelay(1);
+        }
+    }
+
+    void HubEmulation::sendPortValueCombined(PortInputSetupCombined &setup, Port *port)
+    {
+        std::vector<uint8_t> message;
+        message.push_back((uint8_t)setup.portNum);
+        message.push_back(setup.comboIndex);
+        uint8_t bitMask = (uint8_t)((1u << setup.modeDatasetPairs.size()) - 1);
+        message.push_back(bitMask);
+        for (uint8_t nibblePair : setup.modeDatasetPairs)
+        {
+            uint8_t modeNum = (nibblePair >> 4) & 0x0F;
+            uint8_t dataSet = nibblePair & 0x0F;
+            if (modeNum >= port->getModeCount())
+                continue;
+            const auto &mode = port->getModes()[modeNum];
+            uint8_t dataSize = Port::getDataSize(mode.format);
+            size_t offset = (size_t)dataSet * dataSize;
+            if (offset + dataSize <= mode.rawData.size())
+                message.insert(message.end(), mode.rawData.begin() + offset, mode.rawData.begin() + offset + dataSize);
+        }
+        writeResponse(MessageType::PORT_VALUE_COMBINEDMODE, message);
     }
 
     void Lpf2::HubEmulation::handlePortOutputCommandMessage(std::vector<uint8_t> message)
@@ -657,6 +827,8 @@ namespace Lpf2
             else
             {
                 LPF2_LOG_I("Device disconnected from port %d", portNum);
+                m_portSetupSingle[portNum].clear();
+                m_portSetupCombined.erase(portNum);
                 std::vector<uint8_t> payload;
                 payload.push_back((char)portNum);
                 payload.push_back((char)IOEvent::DETACHED_IO);
@@ -665,11 +837,21 @@ namespace Lpf2
             vTaskDelay(1);
         }
 
-        std::for_each(m_portSetupSingle[portNum].begin(), m_portSetupSingle[portNum].end(),
-            [this, port](auto &pair)
-            {
-                checkPortModeValueSingle(pair.second, port);
-            });
+        auto combinedIt = m_portSetupCombined.find(portNum);
+        bool combinedActive = combinedIt != m_portSetupCombined.end() &&
+                              (combinedIt->second.locked || combinedIt->second.active);
+
+        if (!combinedActive)
+        {
+            std::for_each(m_portSetupSingle[portNum].begin(), m_portSetupSingle[portNum].end(),
+                [this, port](auto &pair)
+                {
+                    checkPortModeValueSingle(pair.second, port);
+                });
+        }
+
+        if (combinedIt != m_portSetupCombined.end() && !combinedIt->second.locked)
+            checkPortModeValueCombined(combinedIt->second, port);
     }
 
     void HubEmulation::checkPortModeValueSingle(PortInputSetupSingle &setup, Port *port)

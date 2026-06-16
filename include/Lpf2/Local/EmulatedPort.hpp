@@ -86,6 +86,7 @@ namespace Lpf2::Local
         uint8_t m_mode = 0;
         // std::vector<uint8_t> m_lastModeData;
         uint8_t m_nextModeExt = 0;
+        std::vector<uint8_t> m_comboPairs; // empty = single mode; populated by CMD_WRITE
         enum class HostType
         {
             NONE,

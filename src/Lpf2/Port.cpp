@@ -290,6 +290,58 @@ namespace Lpf2
         writeData(1, {r, g, b});
     }
 
+    void Port::storeModeDelta(uint8_t modeNum, float delta)
+    {
+        if (modeNum >= m_deltas.size())
+            m_deltas.resize(modeNum + 1, 1.0f);
+        m_deltas[modeNum] = delta;
+        if (modeNum < m_prevRaw.size())
+            m_prevRaw[modeNum].clear();
+    }
+
+    void Port::storeComboDeltas(uint8_t comboIdx, const std::vector<float>& deltas)
+    {
+        if (comboIdx >= m_modeCombos.size())
+            return;
+        uint16_t bitmask = m_modeCombos[comboIdx];
+        size_t pos = 0;
+        for (int m = 0; m < 16 && pos < deltas.size(); m++)
+        {
+            if (bitmask & (1u << m))
+                storeModeDelta((uint8_t)m, deltas[pos++]);
+        }
+    }
+
+    void Port::fireValueChangeCallback(uint8_t modeNum)
+    {
+        if (!m_valueChangeCallback)
+            return;
+        if (modeNum < m_modeData.size())
+        {
+            float delta = (modeNum < m_deltas.size()) ? m_deltas[modeNum] : 1.0f;
+            if (delta > 0.0f)
+            {
+                if (m_prevRaw.size() <= modeNum)
+                    m_prevRaw.resize(modeNum + 1);
+                auto& prev = m_prevRaw[modeNum];
+                const auto& curr = m_modeData[modeNum].rawData;
+                bool changed = false;
+                for (uint8_t ds = 0; ds < m_modeData[modeNum].data_sets; ds++)
+                {
+                    if (std::abs(getValue(modeNum, ds) - getValue(modeNum, prev, ds)) >= delta)
+                    {
+                        changed = true;
+                        break;
+                    }
+                }
+                if (!changed)
+                    return;
+                prev = curr;
+            }
+        }
+        m_valueChangeCallback(modeNum);
+    }
+
     void Lpf2::Port::ensureRawDataSize()
     {
         if (m_rawDataSizeEnsured)

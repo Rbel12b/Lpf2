@@ -202,6 +202,16 @@ namespace Lpf2
             handlePortValueSingleMessage(data);
             break;
         }
+        case MessageType::PORT_INPUT_FORMAT_COMBINEDMODE:
+        {
+            handlePortInputFormatCombinedModeMessage(data);
+            break;
+        }
+        case MessageType::PORT_VALUE_COMBINEDMODE:
+        {
+            handlePortValueCombinedModeMessage(data);
+            break;
+        }
         default:
         {
             LPF2_LOG_E("Unimplemented: %i", data[2]);
@@ -358,16 +368,21 @@ namespace Lpf2
         switch (errorType)
         {
         case GenericErrorType::ACK:
-        {
             LPF2_LOG_V("Acknowledged message of type: %i", (int)msgType);
             break;
-        }
+        case GenericErrorType::NACK:
+        case GenericErrorType::BUFFER_OVERFLOW:
+        case GenericErrorType::TIMEOUT:
+        case GenericErrorType::CMD_NOT_RECOGNIZED:
+        case GenericErrorType::INVALID_USE:
+        case GenericErrorType::OVERCURRENT:
+        case GenericErrorType::INTERNAL_ERROR:
+            LPF2_LOG_E("Hub error: errorType: %i, msgType: %i", (int)errorType, (int)msgType);
+            break;
         default:
-            goto unimplemented;
+            LPF2_LOG_E("Unknown error: errorType: %i, msgType: %i", (int)errorType, (int)msgType);
+            break;
         }
-        return;
-    unimplemented:
-        LPF2_LOG_E("Unimplemented: errorType: %i, msgType: %i", (int)errorType, (int)msgType);
         return;
     }
 
@@ -423,6 +438,10 @@ namespace Lpf2
             auto port = _getPort(portNum);
             port->m_deviceType = DeviceType::UNKNOWNDEVICE;
             port->m_modeData.clear();
+            port->m_modeCount = 0;
+            port->m_inModesMask = 0;
+            port->m_outModesMask = 0;
+            port->m_modeCombos.clear();
             break;
         }
         default:
@@ -824,6 +843,20 @@ namespace Lpf2
         m_pendingRequest.valid = true;
     }
 
+    bool Hub::waitPending(uint32_t timeoutMs)
+    {
+        uint64_t deadline = LPF2_GET_TIME() + timeoutMs;
+        while (m_pendingRequest.valid && LPF2_GET_TIME() < deadline)
+            vTaskDelay(1);
+        if (m_pendingRequest.valid)
+        {
+            LPF2_LOG_E("waitPending timed out: msgType: %i", (int)m_pendingRequest.msgType);
+            m_pendingRequest.valid = false;
+            return false;
+        }
+        return true;
+    }
+
     Remote::Port *Hub::_getPort(PortNum portNum)
     {
         if (!m_remotePorts.count(portNum))
@@ -1023,6 +1056,99 @@ namespace Lpf2
         pending(MessageType::PORT_INPUT_FORMAT_SETUP_SINGLE);
         writeValue(MessageType::PORT_INPUT_FORMAT_SETUP_SINGLE, payload);
         return 0;
+    }
+
+    int Hub::setPortModeCombo(PortNum portNum, uint8_t comboIdx, const std::vector<uint8_t> &nibblePairs, const std::vector<uint32_t> &deltasPerMode)
+    {
+        m_portCombinedFormatMap[portNum] = {comboIdx, nibblePairs};
+
+        writeValue(MessageType::PORT_INPUT_FORMAT_SETUP_COMBINEDMODE, {portNum, 0x02});
+
+        vTaskDelay(10);
+
+        for (size_t i = 0; i < nibblePairs.size(); i++)
+        {
+            uint8_t modeNum = (nibblePairs[i] >> 4) & 0x0F;
+            uint32_t bleDelta = (i < deltasPerMode.size()) ? deltasPerMode[i] : 1u;
+            pending(MessageType::PORT_INPUT_FORMAT_SETUP_SINGLE);
+            writeValue(MessageType::PORT_INPUT_FORMAT_SETUP_SINGLE,
+                {portNum, modeNum,
+                 (uint8_t)(bleDelta & 0xFF),
+                 (uint8_t)((bleDelta >> 8) & 0xFF),
+                 (uint8_t)((bleDelta >> 16) & 0xFF),
+                 (uint8_t)((bleDelta >> 24) & 0xFF),
+                 0x01});
+            if (!waitPending()) return -1;
+        }
+
+        std::vector<uint8_t> comboPayload = {portNum, 0x01, comboIdx};
+        comboPayload.insert(comboPayload.end(), nibblePairs.begin(), nibblePairs.end());
+        writeValue(MessageType::PORT_INPUT_FORMAT_SETUP_COMBINEDMODE, comboPayload);
+
+        writeValue(MessageType::PORT_INPUT_FORMAT_SETUP_COMBINEDMODE, {portNum, 0x03});
+
+        vTaskDelay(50);
+
+        return 0;
+    }
+
+    void Hub::handlePortInputFormatCombinedModeMessage(const std::vector<uint8_t> &message)
+    {
+        if (checkLenght(message, 5))
+            return;
+
+        if (m_pendingRequest.msgType == MessageType::PORT_INPUT_FORMAT_SETUP_COMBINEDMODE)
+            m_pendingRequest.valid = false;
+
+        PortNum portNum = (PortNum)message[(uint8_t)MessageByte::PORT_ID];
+        LPF2_LOG_D("Port 0x%02X combined mode format confirmed", (int)portNum);
+    }
+
+    void Hub::handlePortValueCombinedModeMessage(const std::vector<uint8_t> &message)
+    {
+        // Real hub format: portNum, comboIndex, bitMask(1B), values...
+        if (checkLenght(message, 6))
+            return;
+
+        PortNum portNum = (PortNum)message[(uint8_t)MessageByte::PORT_ID];
+
+        if (!m_portCombinedFormatMap.count(portNum))
+            return;
+
+        uint8_t bitMask = message[5];
+        auto &setup = m_portCombinedFormatMap[portNum];
+        auto &port = *_getPort(portNum);
+
+        size_t valueOffset = 6;
+        for (size_t i = 0; i < setup.nibblePairs.size(); i++)
+        {
+            if (!(bitMask & (1u << i)))
+                continue;
+
+            uint8_t modeNum = (setup.nibblePairs[i] >> 4) & 0x0F;
+            if (modeNum >= port.m_modeData.size())
+                break;
+
+            auto &mode = port.m_modeData[modeNum];
+            uint8_t dataSize = Port::getDataSize(mode.format);
+            uint8_t dataSet = setup.nibblePairs[i] & 0x0F;
+            size_t byteOffset = (size_t)dataSet * dataSize;
+            size_t totalSize = (size_t)mode.data_sets * dataSize;
+
+            if (mode.rawData.size() < totalSize)
+                mode.rawData.resize(totalSize, 0);
+
+            if (valueOffset + dataSize > message.size())
+                break;
+
+            std::copy(message.begin() + valueOffset,
+                      message.begin() + valueOffset + dataSize,
+                      mode.rawData.begin() + byteOffset);
+            valueOffset += dataSize;
+
+            if (port.m_valueChangeCallback)
+                port.m_valueChangeCallback(modeNum);
+        }
     }
 
     bool Hub::infoReady()

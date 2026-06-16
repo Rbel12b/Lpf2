@@ -281,8 +281,15 @@ namespace Lpf2::Local
 
         case STATUS::STATUS_DATA_RECEIVED:
             LPF2_LOG_D("Succesfully changed speed to %i baud", m_baud);
-            LPF2_LOG_D("Setting default mode: %i", getDefaultMode(m_deviceType));
-            setMode(getDefaultMode(m_deviceType));
+            if (deviceIsAbsMotor(m_deviceType))
+            {
+                setModeCombo(0);
+            }
+            else
+            {
+                LPF2_LOG_D("Setting default mode: %i", getDefaultMode(m_deviceType));
+                setMode(getDefaultMode(m_deviceType));
+            }
             sendACK(true);
             m_status = STATUS::STATUS_DATA;
             break;
@@ -318,6 +325,7 @@ namespace Lpf2::Local
         m_deviceType = DeviceType::UNKNOWNDEVICE;
         m_deviceDataReceived = false;
         m_modeCount = m_viewCount = 0;
+        m_activeCombo = -1;
         m_comboNum = 0;
         m_modeData.resize(0);
         m_modeCombos.clear();

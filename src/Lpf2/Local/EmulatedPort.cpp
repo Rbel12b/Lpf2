@@ -17,6 +17,7 @@ namespace Lpf2::Local
     void EmulatedPort::detachDevice()
     {
         m_device = nullptr;
+        m_comboPairs.clear();
     }
 
     void EmulatedPort::init()
@@ -150,6 +151,7 @@ namespace Lpf2::Local
             {
                 return;
             }
+            m_comboPairs.clear();
             m_mode = msg.data[0];
             LPF2_LOG_D("Selected mode: %i, msg: %s", m_mode, Utils::bytes_to_hexString(msg.data).c_str());
         }
@@ -157,6 +159,44 @@ namespace Lpf2::Local
         {
             if (msg.data.size() >= 1)
                 m_nextModeExt = msg.data[0];
+        }
+        else if (msg.msg == MESSAGE_CMD && msg.cmd == CMD_WRITE)
+        {
+            // byte 0: 0x20 | numPairs (bit 5 = combined mode flag, low nibble = pair count)
+            // byte 1: combo index
+            // bytes 2+: (mode<<4)|dataset pairs
+            if (msg.data.size() < 2)
+                return;
+            uint8_t subCmd = msg.data[0];
+            if ((subCmd & 0xF0) != 0x20)
+            {
+                LPF2_LOG_W("CMD_WRITE: unsupported subcommand 0x%02X", (int)subCmd);
+                return;
+            }
+            uint8_t numPairs = subCmd & 0x0F;
+            uint8_t comboIdx = msg.data[1];
+
+            Message echo = msg;
+            m_writer.write(echo);
+
+            if (numPairs == 0)
+            {
+                m_comboPairs.clear();
+                LPF2_LOG_D("CMD_WRITE: combined mode reset");
+                return;
+            }
+
+            auto combos = m_device->getModeCombos();
+            if (comboIdx >= combos.size() || combos[comboIdx] == 0)
+            {
+                LPF2_LOG_W("CMD_WRITE: invalid combo index %i", (int)comboIdx);
+                m_comboPairs.clear();
+                return;
+            }
+            m_comboPairs.clear();
+            for (uint8_t i = 0; i < numPairs && (2 + i) < msg.data.size(); i++)
+                m_comboPairs.push_back(msg.data[2 + i]);
+            LPF2_LOG_D("CMD_WRITE: combo %i, %d pairs", (int)comboIdx, (int)m_comboPairs.size());
         }
         else if (msg.msg == MESSAGE_DATA)
         {
@@ -173,6 +213,26 @@ namespace Lpf2::Local
 
     void EmulatedPort::sendUpdate(uint8_t modeNum)
     {
+        if (!m_comboPairs.empty())
+        {
+            // Combined mode: concatenate rawData for each (mode<<4)|dataset pair.
+            // Header uses cmd=0 (mode bank 0), confirmed from captures.
+            Message msg;
+            msg.msg = MESSAGE_DATA;
+            msg.cmd = 0;
+            for (uint8_t pair : m_comboPairs)
+            {
+                uint8_t pairMode = (pair >> 4) & 0x0F;
+                if (m_device->getModes().size() > pairMode)
+                {
+                    const auto &raw = m_device->getModes()[pairMode].rawData;
+                    msg.data.insert(msg.data.end(), raw.begin(), raw.end());
+                }
+            }
+            m_writer.write(msg);
+            return;
+        }
+
         if (modeNum == 0xFF)
         {
             modeNum = m_mode;
@@ -376,6 +436,7 @@ namespace Lpf2::Local
         m_infoState = InfoState::CMD;
         m_hostType = HostType::NONE;
         m_baud = 115200;
+        m_comboPairs.clear();
         changeBaud(m_baud);
         m_serial->discardRxFiFo();
         m_parser.clearBuf();

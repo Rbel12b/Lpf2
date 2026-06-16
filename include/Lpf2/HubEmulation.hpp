@@ -106,11 +106,28 @@ namespace Lpf2
             uint8_t mode;
             uint32_t delta;
             bool notify;
-            
+
             std::vector<uint8_t> lastRaw;
         };
         // map<PortNum, map<ModeNum, Setup>>
         std::unordered_map<PortNum, std::unordered_map<uint8_t, PortInputSetupSingle>> m_portSetupSingle;
+
+        struct PortInputSetupCombined
+        {
+            PortNum portNum;
+            uint8_t comboIndex = 0;
+            bool locked = false;          // true between Lock (0x02) and Unlock (0x03/0x04)
+            bool active = false;          // true after Unlock, suppresses single-mode updates
+            bool multiUpdateEnabled = false;
+            // each byte: high nibble = mode, low nibble = dataset
+            std::vector<uint8_t> modeDatasetPairs;
+            // per-pair delta thresholds (same order as modeDatasetPairs)
+            std::vector<float> deltas;
+            // per-mode snapshot of rawData used for delta comparisons
+            std::unordered_map<uint8_t, std::vector<uint8_t>> lastRawPerMode;
+        };
+        // map<PortNum, active combined setup>
+        std::unordered_map<PortNum, PortInputSetupCombined> m_portSetupCombined;
 
         void sendHubAlertUpdate(HubAlertType alert);
         void resetHubAlerts();
@@ -119,12 +136,16 @@ namespace Lpf2
         void handlePortInformationRequestMessage(std::vector<uint8_t> message);
         void handlePortModeInformationRequestMessage(std::vector<uint8_t> message);
         void handlePortInputFormatSetupSingleMessage(std::vector<uint8_t> message);
+        void handlePortInputFormatSetupCombinedMessage(std::vector<uint8_t> message);
         void handlePortOutputCommandMessage(std::vector<uint8_t> message);
 
         void checkPort(PortNum portNum, Port* port);
         void checkPortModeValueSingle(PortInputSetupSingle &setup, Port* port);
+        void checkPortModeValueCombined(PortInputSetupCombined &setup, Port* port);
 
         void sendPortValueSingle(PortInputSetupSingle &setup, Port* port);
+        void sendPortValueCombined(PortInputSetupCombined &setup, Port* port);
+        void sendCombinedModeFormat(PortInputSetupCombined &setup);
 
         void initBuiltInPorts();
         void initBuiltInDevices();

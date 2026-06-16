@@ -19,7 +19,7 @@
 
 namespace Lpf2::Local
 {
-    int Port::setMode(uint8_t mode)
+    int Port::setMode(uint8_t mode, float delta)
     {
         if (mode >= m_modeCount)
         {
@@ -27,37 +27,80 @@ namespace Lpf2::Local
             return 1;
         }
 
+        storeModeDelta(mode, delta);
+        m_activeCombo = -1;
         m_mode = mode;
-        uint8_t header = MESSAGE_CMD | CMD_SELECT;
-        uint8_t checksum = header ^ 0xFF;
-        checksum ^= (uint8_t)mode;
+
+        uint8_t modeInBank = mode & 0x07;
+        uint8_t selectHeader = MESSAGE_CMD | LENGTH_1 | CMD_SELECT;
 
         {
             Utils::MutexLock lock(m_serialMutex);
-            m_serial->write(header);
-            m_serial->write((uint8_t)mode);
-            m_serial->write(checksum);
+            if (mode >= 8)
+            {
+                uint8_t extHeader = MESSAGE_CMD | LENGTH_1 | CMD_EXT_MODE;
+                m_serial->write(extHeader);
+                m_serial->write((uint8_t)0x08);
+                m_serial->write((uint8_t)(extHeader ^ 0xFF ^ 0x08));
+            }
+            m_serial->write(selectHeader);
+            m_serial->write(modeInBank);
+            m_serial->write((uint8_t)(selectHeader ^ 0xFF ^ modeInBank));
             m_serial->flush();
         }
 
-        if (m_modeData[mode].flags.pin1())
+        if (mode < m_modeData.size())
         {
-            LPF2_LOG_D("Setting pin1 high, pin2 low");
-            m_pwm->out(255, 0);
-        }
-        else if (m_modeData[mode].flags.pin2())
-        {
-            LPF2_LOG_D("Setting pin2 high, pin1 low");
-            m_pwm->out(0, 255);
+            if (m_modeData[mode].flags.pin1())
+            {
+                LPF2_LOG_D("Setting pin1 high, pin2 low");
+                m_pwm->out(255, 0);
+            }
+            else if (m_modeData[mode].flags.pin2())
+            {
+                LPF2_LOG_D("Setting pin2 high, pin1 low");
+                m_pwm->out(0, 255);
+            }
         }
 
-        LPF2_LOG_D("Set mode to %i (%s)", mode, m_modeData[mode].name.c_str());
+        LPF2_LOG_D("Set mode to %i", mode);
         return 0;
     }
 
-    int Port::setModeCombo(uint8_t idx)
+    int Port::setModeCombo(uint8_t idx, const std::vector<float>& deltas)
     {
-        LPF2_LOG_W("Set mode Combo: %i, unimplemented!", idx);
+        if (idx >= m_comboNum || m_modeCombos[idx] == 0)
+        {
+            LPF2_LOG_W("Invalid combo index: %i (max %i)", idx, (int)m_comboNum - 1);
+            return 1;
+        }
+        storeComboDeltas(idx, deltas);
+
+        uint16_t bitmask = m_modeCombos[idx];
+        // CMD_WRITE activates combined mode. Format confirmed from LEGO Technic hub captures.
+        // Byte 0: 0x20 | num_pairs (bit 5 = combined mode flag, bits 0-3 = pair count).
+        // Byte 1: combo index.
+        // Bytes 2+: (mode<<4)|dataset nibble pairs in ascending mode order.
+        // Writer pads to next power-of-2 automatically.
+        uint8_t numPairs = (uint8_t)__builtin_popcount(bitmask);
+        Message msg;
+        msg.msg = MESSAGE_CMD;
+        msg.cmd = CMD_WRITE;
+        msg.data.push_back(0x20 | numPairs);
+        msg.data.push_back(idx);
+        for (int m = 0; m < 16; m++)
+        {
+            if (bitmask & (1u << m))
+                msg.data.push_back((uint8_t)((m << 4) | 0x00));
+        }
+
+        {
+            Utils::MutexLock lock(m_serialMutex);
+            m_writer.write(msg);
+        }
+
+        m_activeCombo = (int8_t)idx;
+        LPF2_LOG_D("Set combo %i (bitmask 0x%04X)", idx, bitmask);
         return 0;
     }
 

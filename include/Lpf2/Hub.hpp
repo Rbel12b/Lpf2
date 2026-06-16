@@ -50,6 +50,8 @@ namespace Lpf2
         void handlePortModeInfoMessage(const std::vector<uint8_t> &message);
         void handlePortInputFormatSingleMessage(const std::vector<uint8_t> &message);
         void handlePortValueSingleMessage(const std::vector<uint8_t> &message);
+        void handlePortInputFormatCombinedModeMessage(const std::vector<uint8_t> &message);
+        void handlePortValueCombinedModeMessage(const std::vector<uint8_t> &message);
 
         void requestInfos();
 
@@ -59,6 +61,7 @@ namespace Lpf2
         bool isPending_warn();
 
         void pending(MessageType msgType);
+        bool waitPending(uint32_t timeoutMs = 500);
 
         Remote::Port *_getPort(PortNum portNum);
 
@@ -92,6 +95,7 @@ namespace Lpf2
 
         Port *getPort(PortNum portNum);
         int setPortMode(PortNum portNum, uint8_t mode, uint32_t delta, bool notify = true);
+        int setPortModeCombo(PortNum portNum, uint8_t comboIdx, const std::vector<uint8_t> &nibblePairs, const std::vector<uint32_t> &deltasPerMode);
 
         /**
          * @brief returns true if all infomation requests were sent, and answered (or timed out).
@@ -156,6 +160,12 @@ namespace Lpf2
         };
 
         std::unordered_map<PortNum, PortInputFormatSingle> m_portInputFormatMap;
+
+        struct PortCombinedFormat {
+            uint8_t comboIndex;
+            std::vector<uint8_t> nibblePairs;
+        };
+        std::unordered_map<PortNum, PortCombinedFormat> m_portCombinedFormatMap;
 
         struct
         {

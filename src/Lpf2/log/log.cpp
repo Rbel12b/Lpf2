@@ -54,7 +54,7 @@ void lpf2_set_runtime_log_level(uint16_t level)
 
 QueueHandle_t logMutex = xSemaphoreCreateMutex();
 
-#ifndef LPF2_USE_ARDUINO_SERIAL
+#if LPF2_USE_ARDUINO_SERIAL == 0
 
 static usb_serial_jtag_driver_config_t usb_jtag_cfg;
 
@@ -103,13 +103,34 @@ extern "C" int lpf2_log_printf(const char *fmt, ...)
 
 esp_err_t lpf2_log_init(void)
 {
+    esp_log_set_vprintf([](const char *fmt, va_list args) -> int {
+        char buf[256];
+        int len = vsnprintf(buf, sizeof(buf), fmt, args);
+        if (len > 0) {
+            int to_write = len < (int)sizeof(buf) ? len : (int)sizeof(buf) - 1;
+            xSemaphoreTake(logMutex, portMAX_DELAY);
+            const uint8_t *p = (const uint8_t *)buf;
+            int remaining = to_write;
+            while (remaining > 0) {
+                int w = Serial.write(p, remaining);
+                p += w;
+                remaining -= w;
+                if (w == 0) taskYIELD();
+            }
+            Serial.flush();
+            xSemaphoreGive(logMutex);
+        }
+        return len;
+    });
     return ESP_OK;
 }
 
 extern "C" int lpf2_log_printf(const char *fmt, ...)
 {
     static char *buffer = nullptr;
-    static size_t bufSize = 0;
+    volatile static size_t bufSize = 0;
+
+    xSemaphoreTake(logMutex, portMAX_DELAY);
 
     va_list args, args_copy;
     va_start(args, fmt);
@@ -119,13 +140,15 @@ extern "C" int lpf2_log_printf(const char *fmt, ...)
 
     if (len < 0) {
         va_end(args_copy);
+        xSemaphoreGive(logMutex);
         return -1;
     }
 
     if ((size_t)(len + 1) > bufSize) {
-        char *newBuf = (char *)realloc(buffer, len + 1);
+        char *newBuf = (char *)realloc((void *)buffer, len + 1);
         if (!newBuf) {
             va_end(args_copy);
+            xSemaphoreGive(logMutex);
             return -1;
         }
         buffer = newBuf;
@@ -135,8 +158,14 @@ extern "C" int lpf2_log_printf(const char *fmt, ...)
     vsnprintf(buffer, bufSize, fmt, args_copy);
     va_end(args_copy);
 
-    xSemaphoreTake(logMutex, portMAX_DELAY);
-    Serial.write(buffer, len);
+    const uint8_t *p = (const uint8_t *)buffer;
+    int remaining = len;
+    while (remaining > 0) {
+        int w = Serial.write(p, remaining);
+        p += w;
+        remaining -= w;
+        if (w == 0) taskYIELD();
+    }
     Serial.flush();
     xSemaphoreGive(logMutex);
 

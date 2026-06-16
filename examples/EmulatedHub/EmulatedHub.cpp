@@ -24,7 +24,7 @@
 
 Lpf2::HubEmulation hub("Technic Hub", Lpf2::HubType::CONTROL_PLUS_HUB);
 
-// #define USE_LOCAL_PORT 1
+#define USE_LOCAL_PORT 1
 
 #ifdef USE_LOCAL_PORT
 #include "../LocalPort/device.hpp"
@@ -36,6 +36,8 @@ Lpf2::Local::Port port(io);
 void setup()
 {
     Serial.begin(981200);
+    lpf2_log_init();
+    lpf2_set_runtime_log_level(LPF2_LOG_LEVEL_DEBUG);
     Lpf2::DeviceRegistry::registerDefault();
     Lpf2::DeviceDescRegistry::registerDefault();
     hub.setUseBuiltInDevices(true);

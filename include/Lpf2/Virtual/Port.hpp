@@ -32,8 +32,8 @@ namespace Lpf2::Virtual
 
         int writeData(uint8_t modeNum, const std::vector<uint8_t> &data) override;
         bool isDeviceConnected() override;
-        int setMode(uint8_t mode) override;
-        int setModeCombo(uint8_t idx) override;
+        int setMode(uint8_t mode, float delta = 1.0f) override;
+        int setModeCombo(uint8_t idx, const std::vector<float>& deltas = {}) override;
         
         void startPower(int8_t pw) override;
         void setAccTime(uint16_t accTime, AccelerationProfile accProfile = 1) override;

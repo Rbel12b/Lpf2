@@ -1,0 +1,54 @@
+TX: [ 17082][I][Serial.cpp:166] printMessage(): Header: 0x52, Length: 4, MsgType: 0x40, Cmd: 0x02, Data: 0x00 0xC2 0x01 0x00 , C: 0x6E
+RX: [  2786][I][Serial.cpp:151] printMessage(): Sys: SYNC
+RX: [  3446][I][Serial.cpp:151] printMessage(): Sys: SYNC
+TX: [  3518][I][Serial.cpp:151] printMessage(): Sys: SYNC
+TX: [  3530][I][Serial.cpp:151] printMessage(): Sys: Unknown (0x01)
+TX: [  3531][I][Serial.cpp:151] printMessage(): Sys: SYNC
+TX: [  3534][I][Serial.cpp:151] printMessage(): Sys: Unknown (0x01)
+TX: [  3539][I][Serial.cpp:151] printMessage(): Sys: SYNC
+TX: [  3543][I][Serial.cpp:151] printMessage(): Sys: SYNC
+TX: [  3547][I][Serial.cpp:151] printMessage(): Sys: SYNC
+RX: [  3947][I][Serial.cpp:151] printMessage(): Sys: SYNC
+RX: [  3948][I][Serial.cpp:151] printMessage(): Sys: SYNC
+RX: [  3949][I][Serial.cpp:166] printMessage(): Header: 0x40, Length: 1, MsgType: 0x40, Cmd: 0x00, Data: 0x25 , C: 0x9A
+RX: [  3950][I][Serial.cpp:166] printMessage(): Header: 0x51, Length: 4, MsgType: 0x40, Cmd: 0x01, Data: 0x07 0x07 0x0A 0x07 , C: 0xA3
+RX: [  3951][I][Serial.cpp:166] printMessage(): Header: 0x52, Length: 4, MsgType: 0x40, Cmd: 0x02, Data: 0x00 0xC2 0x01 0x00 , C: 0x6E
+RX: [  3952][I][Serial.cpp:166] printMessage(): Header: 0x5F, Length: 8, MsgType: 0x40, Cmd: 0x07, Data: 0x00 0x00 0x00 0x10 0x00 0x00 0x00 0x10 , C: 0xA0
+RX: [  3954][I][Serial.cpp:166] printMessage(): Header: 0x9A, Length: 9, MsgType: 0x80, Cmd: 0x02, Data: 0x20 0x43 0x41 0x4C 0x49 0x42 0x00 0x00 0x00 , C: 0x00
+RX: [  3956][I][Serial.cpp:166] printMessage(): Header: 0x9A, Length: 9, MsgType: 0x80, Cmd: 0x02, Data: 0x21 0x00 0x00 0x00 0x00 0x00 0xFF 0x7F 0x47 , C: 0x83
+RX: [  3957][I][Serial.cpp:166] printMessage(): Header: 0x9A, Length: 9, MsgType: 0x80, Cmd: 0x02, Data: 0x22 0x00 0x00 0x00 0x00 0x00 0x00 0xC8 0x42 , C: 0xCD
+RX: [  3959][I][Serial.cpp:166] printMessage(): Header: 0x9A, Length: 9, MsgType: 0x80, Cmd: 0x02, Data: 0x23 0x00 0x00 0x00 0x00 0x00 0xFF 0x7F 0x47 , C: 0x81
+RX: [  3961][I][Serial.cpp:166] printMessage(): Header: 0x92, Length: 5, MsgType: 0x80, Cmd: 0x02, Data: 0x24 0x4E 0x2F 0x41 0x00 , C: 0x69
+RX: [  3962][I][Serial.cpp:166] printMessage(): Header: 0x8A, Length: 3, MsgType: 0x80, Cmd: 0x02, Data: 0x25 0x10 0x00 , C: 0x40
+RX: [  3963][I][Serial.cpp:166] printMessage(): Header: 0x92, Length: 5, MsgType: 0x80, Cmd: 0x02, Data: 0xA0 0x08 0x01 0x05 0x00 , C: 0xC1
+RX: [  3965][I][Serial.cpp:166] printMessage(): Header: 0x98, Length: 9, MsgType: 0x80, Cmd: 0x00, Data: 0x00 0x43 0x4F 0x4C 0x4F 0x52 0x00 0x00 0x00 , C: 0x3A
+RX: [  3967][I][Serial.cpp:166] printMessage(): Header: 0x98, Length: 9, MsgType: 0x80, Cmd: 0x00, Data: 0x01 0x00 0x00 0x00 0x00 0x00 0x00 0x20 0x41 , C: 0x07
+RX: [  3969][I][Serial.cpp:166] printMessage(): Header: 0x98, Length: 9, MsgType: 0x80, Cmd: 0x00, Data: 0x02 0x00 0x00 0x00 0x00 0x00 0x00 0xC8 0x42 , C: 0xEF
+RX: [  3979][I][Serial.cpp:166] printMessage(): Header: 0x98, Length: 9, MsgType: 0x80, Cmd: 0x00, Data: 0x03 0x00 0x00 0x00 0x00 0x00 0x00 0x20 0x41 , C: 0x05
+RX: [  4009][I][Serial.cpp:166] printMessage(): Header: 0x90, Length: 5, MsgType: 0x80, Cmd: 0x00, Data: 0x04 0x49 0x44 0x58 0x00 , C: 0x3E
+RX: [  4030][I][Serial.cpp:166] printMessage(): Header: 0x88, Length: 3, MsgType: 0x80, Cmd: 0x00, Data: 0x05 0xC4 0x00 , C: 0xB6
+RX: [  4059][I][Serial.cpp:166] printMessage(): Header: 0x90, Length: 5, MsgType: 0x80, Cmd: 0x00, Data: 0x80 0x01 0x00 0x03 0x00 , C: 0xED
+RX: [  4075][I][Serial.cpp:151] printMessage(): Sys: ACK
+TX: [  4547][I][Serial.cpp:151] printMessage(): Sys: ACK
+RX: [ 17896][I][Serial.cpp:166] printMessage(): Header: 0xC0, Length: 1, MsgType: 0xC0, Cmd: 0x00, Data: 0x00 , C: 0x3F
+TX: [ 17988][I][Serial.cpp:151] printMessage(): Sys: NACK
+RX: [ 17989][I][Serial.cpp:166] printMessage(): Header: 0x46, Length: 1, MsgType: 0x40, Cmd: 0x06, Data: 0x00 , C: 0xB9
+RX: [ 17990][I][Serial.cpp:166] printMessage(): Header: 0xC0, Length: 1, MsgType: 0xC0, Cmd: 0x00, Data: 0x00 , C: 0x3F
+TX: [ 18086][I][Serial.cpp:151] printMessage(): Sys: NACK
+RX: [ 18087][I][Serial.cpp:166] printMessage(): Header: 0x46, Length: 1, MsgType: 0x40, Cmd: 0x06, Data: 0x00 , C: 0xB9
+RX: [ 18088][I][Serial.cpp:166] printMessage(): Header: 0xC0, Length: 1, MsgType: 0xC0, Cmd: 0x00, Data: 0x00 , C: 0x3F
+TX: [ 18185][I][Serial.cpp:151] printMessage(): Sys: NACK
+RX: [ 18186][I][Serial.cpp:166] printMessage(): Header: 0x46, Length: 1, MsgType: 0x40, Cmd: 0x06, Data: 0x00 , C: 0xB9
+RX: [ 18187][I][Serial.cpp:166] printMessage(): Header: 0xC0, Length: 1, MsgType: 0xC0, Cmd: 0x00, Data: 0x00 , C: 0x3F
+TX: [ 18283][I][Serial.cpp:151] printMessage(): Sys: NACK
+RX: [ 18284][I][Serial.cpp:166] printMessage(): Header: 0x46, Length: 1, MsgType: 0x40, Cmd: 0x06, Data: 0x00 , C: 0xB9
+RX: [ 18285][I][Serial.cpp:166] printMessage(): Header: 0xC0, Length: 1, MsgType: 0xC0, Cmd: 0x00, Data: 0x00 , C: 0x3F
+TX: [ 18382][I][Serial.cpp:151] printMessage(): Sys: NACK
+RX: [ 18383][I][Serial.cpp:166] printMessage(): Header: 0x46, Length: 1, MsgType: 0x40, Cmd: 0x06, Data: 0x00 , C: 0xB9
+RX: [ 18384][I][Serial.cpp:166] printMessage(): Header: 0xC0, Length: 1, MsgType: 0xC0, Cmd: 0x00, Data: 0x00 , C: 0x3F
+TX: [ 18480][I][Serial.cpp:151] printMessage(): Sys: NACK
+RX: [ 18481][I][Serial.cpp:166] printMessage(): Header: 0x46, Length: 1, MsgType: 0x40, Cmd: 0x06, Data: 0x00 , C: 0xB9
+RX: [ 18482][I][Serial.cpp:166] printMessage(): Header: 0xC0, Length: 1, MsgType: 0xC0, Cmd: 0x00, Data: 0x00 , C: 0x3F
+TX: [ 18579][I][Serial.cpp:151] printMessage(): Sys: NACK
+RX: [ 18580][I][Serial.cpp:166] printMessage(): Header: 0x46, Length: 1, MsgType: 0x40, Cmd: 0x06, Data: 0x00 , C: 0xB9
+RX: [ 18581][I][Serial.cpp:166] printMessage(): Header: 0xC0, Length: 1, MsgType: 0xC0, Cmd: 0x00, Data: 0x00 , C: 0x3F
