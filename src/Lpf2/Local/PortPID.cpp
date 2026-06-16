@@ -167,6 +167,8 @@ namespace Lpf2::Local
 
     void Port::startSpeed(int8_t speed, uint8_t maxPower, uint8_t useProfile)
     {
+        if (m_pidMode == PidMode::SPEED && m_pidSpeed == speed && m_pidMaxPower == maxPower && m_pidEndTime == 0)
+            return;
         m_pidSpeed = speed;
         m_pidMaxPower = maxPower;
         m_pidTarget = m_currentRelPos;
@@ -180,11 +182,17 @@ namespace Lpf2::Local
 
     void Port::startSpeedForTime(uint16_t time, int8_t speed, uint8_t maxPower, BrakingStyle endState, uint8_t useProfile)
     {
+        uint64_t newEndTime = LPF2_GET_TIME() + time;
+        if (m_pidMode == PidMode::SPEED && m_pidSpeed == speed && m_pidMaxPower == maxPower && m_pidEndState == endState)
+        {
+            m_pidEndTime = newEndTime;
+            return;
+        }
         m_pidSpeed = speed;
         m_pidMaxPower = maxPower;
         m_pidTarget = m_currentRelPos;
         m_pidTargetFrac = 0.0f;
-        m_pidEndTime = LPF2_GET_TIME() + time;
+        m_pidEndTime = newEndTime;
         m_pidEndState = endState;
         m_pidIntegral = 0.0f;
         m_pidPrevError = 0.0f;
@@ -195,7 +203,10 @@ namespace Lpf2::Local
     void Port::startSpeedForDegrees(uint32_t degrees, int8_t speed, uint8_t maxPower, BrakingStyle endState, uint8_t useProfile)
     {
         int64_t signedDeg = (int64_t)degrees * (speed >= 0 ? 1 : -1);
-        m_pidTarget = m_currentRelPos + signedDeg * 10;
+        int64_t newTarget = m_currentRelPos + signedDeg * 10;
+        if (m_pidMode == PidMode::POSITION && m_pidTarget == newTarget && m_pidMaxPower == maxPower && m_pidEndState == endState && m_pidEndTime == 0)
+            return;
+        m_pidTarget = newTarget;
         m_pidMaxPower = maxPower;
         m_pidEndState = endState;
         m_pidEndTime = 0;
@@ -208,8 +219,12 @@ namespace Lpf2::Local
 
     void Port::gotoAbsPosition(int32_t absPos, uint8_t speed, uint8_t maxPower, BrakingStyle endState, uint8_t useProfile)
     {
-        m_pidTarget = (int64_t)absPos * 10;
-        m_pidMaxPower = std::min(speed, maxPower);
+        int64_t newTarget = (int64_t)absPos * 10;
+        uint8_t newMaxPower = std::min(speed, maxPower);
+        if (m_pidMode == PidMode::POSITION && m_pidTarget == newTarget && m_pidMaxPower == newMaxPower && m_pidEndState == endState && m_pidEndTime == 0)
+            return;
+        m_pidTarget = newTarget;
+        m_pidMaxPower = newMaxPower;
         m_pidEndState = endState;
         m_pidEndTime = 0;
         m_pidTargetFrac = 0.0f;
