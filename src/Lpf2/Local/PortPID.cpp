@@ -23,10 +23,10 @@
 
 namespace Lpf2::Local
 {
-    // 100% speed = 10 tenths-of-degree per ms ≈ 1000 deg/s ≈ 167 RPM
-    static constexpr float MAX_MOTOR_SPEED = 10.0f;
-    // stop position control when within 1° (10 tenths)
-    static constexpr float POSITION_TOLERANCE = 10.0f;
+    // 100% speed = 1 degree per ms = 1000 deg/s ≈ 167 RPM
+    static constexpr float MAX_MOTOR_SPEED = 1.5f;
+    // stop position control when within 1°
+    static constexpr float POSITION_TOLERANCE = 1.0f;
 
     void Port::updateMotorPID()
     {
@@ -36,20 +36,19 @@ namespace Lpf2::Local
             return;
         }
         // Encoder tracking
-        uint16_t absPos = getAbsPos();
-        int16_t delta = static_cast<int16_t>(absPos) -
-                        static_cast<int16_t>(m_lastAbsPos);
-
-        if (delta > 1800)
-            delta -= 3600;
-        else if (delta < -1800)
-            delta += 3600;
-
+        int32_t pos = getMotorPos();
+        int32_t delta = pos - m_lastMotorPos;
+        if (m_activeCombo < 0)
+        {
+            // CALIB wraps at 360°
+            if (delta > 180) delta -= 360;
+            else if (delta < -180) delta += 360;
+        }
         m_currentRelPos += delta;
-        m_lastAbsPos = absPos;
+        m_lastMotorPos = pos;
 
-        LPF2_LOG_V("AbsPos: %u, RelPos: %lld, Delta: %d",
-                   absPos, m_currentRelPos, delta);
+        LPF2_LOG_V("Pos: %d, RelPos: %lld, Delta: %d",
+                   pos, m_currentRelPos, delta);
 
         if (m_pidMode == PidMode::NONE)
             return;
@@ -89,7 +88,7 @@ namespace Lpf2::Local
         // PID computation (shared by SPEED, POSITION, HOLD)
         float error = (float)(m_pidTarget - m_currentRelPos);
         m_pidIntegral += error * dt;
-        m_pidIntegral = std::max(-10000.0f, std::min(10000.0f, m_pidIntegral));
+        m_pidIntegral = std::max(-1000.0f, std::min(1000.0f, m_pidIntegral));
 
         float derivative = (error - m_pidPrevError) / dt;
         m_pidPrevError = error;
@@ -203,7 +202,7 @@ namespace Lpf2::Local
     void Port::startSpeedForDegrees(uint32_t degrees, int8_t speed, uint8_t maxPower, BrakingStyle endState, uint8_t useProfile)
     {
         int64_t signedDeg = (int64_t)degrees * (speed >= 0 ? 1 : -1);
-        int64_t newTarget = m_currentRelPos + signedDeg * 10;
+        int64_t newTarget = m_currentRelPos + signedDeg;
         if (m_pidMode == PidMode::POSITION && m_pidTarget == newTarget && m_pidMaxPower == maxPower && m_pidEndState == endState && m_pidEndTime == 0)
             return;
         m_pidTarget = newTarget;
@@ -219,7 +218,7 @@ namespace Lpf2::Local
 
     void Port::gotoAbsPosition(int32_t absPos, uint8_t speed, uint8_t maxPower, BrakingStyle endState, uint8_t useProfile)
     {
-        int64_t newTarget = (int64_t)absPos * 10;
+        int64_t newTarget = (int64_t)absPos;
         uint8_t newMaxPower = std::min(speed, maxPower);
         if (m_pidMode == PidMode::POSITION && m_pidTarget == newTarget && m_pidMaxPower == newMaxPower && m_pidEndState == endState && m_pidEndTime == 0)
             return;
@@ -236,7 +235,7 @@ namespace Lpf2::Local
 
     void Port::presetEncoder(int32_t pos)
     {
-        m_currentRelPos = (int64_t)pos * 10;
+        m_currentRelPos = (int64_t)pos;
         m_pidMode = PidMode::NONE;
         setPower(0, 0);
     }

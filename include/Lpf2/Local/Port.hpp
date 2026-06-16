@@ -155,13 +155,15 @@ namespace Lpf2::Local
         bool m_deviceDataReceived = false;
 
     private:
-        uint16_t getAbsPos() const
+        int32_t getMotorPos() const
         {
-            return (uint16_t)(getValue((uint8_t)ModeNum::MOTOR__CALIB, 0) / 1024.0f * 3600.0f);
+            if (m_activeCombo >= 0)
+                return (int32_t)getValue(2, 0); // POS mode (mode 2), whole degrees, accumulates
+            return (int32_t)(getValue((uint8_t)ModeNum::MOTOR__CALIB, 0) / 1024.0f * 360.0f);
         }
 
         int64_t m_currentRelPos = 0;
-        uint16_t m_lastAbsPos = 0;
+        int32_t m_lastMotorPos = 0;
 
         enum class PidMode : uint8_t { NONE, SPEED, POSITION, HOLD };
 
@@ -173,10 +175,10 @@ namespace Lpf2::Local
         BrakingStyle m_pidEndState = BrakingStyle::FLOAT;
         uint64_t m_pidEndTime = 0;
 
-        // PID gains
-        float m_kp = 0.04f;
-        float m_ki = 0.0001f;
-        float m_kd = 0.063f;
+        // PID gains (error in degrees, dt in ms)
+        float m_kp = 0.4f;
+        float m_ki = 0.001f;
+        float m_kd = 0.63f;
 
         float m_pidIntegral = 0.0f;
         float m_pidPrevError = 0.0f;
