@@ -17,6 +17,7 @@ namespace Lpf2::Local
     void EmulatedPort::detachDevice()
     {
         m_device = nullptr;
+        m_comboPairs.clear();
     }
 
     void EmulatedPort::init()
@@ -161,20 +162,38 @@ namespace Lpf2::Local
         }
         else if (msg.msg == MESSAGE_CMD && msg.cmd == CMD_WRITE)
         {
-            // byte 0: 0x23, byte 1: combo index, bytes 2+: (mode<<4)|dataset pairs
-            if (msg.data.size() < 3)
+            // byte 0: 0x20 | numPairs (bit 5 = combined mode flag, low nibble = pair count)
+            // byte 1: combo index
+            // bytes 2+: (mode<<4)|dataset pairs
+            if (msg.data.size() < 2)
                 return;
+            uint8_t subCmd = msg.data[0];
+            if ((subCmd & 0xF0) != 0x20)
+            {
+                LPF2_LOG_W("CMD_WRITE: unsupported subcommand 0x%02X", (int)subCmd);
+                return;
+            }
+            uint8_t numPairs = subCmd & 0x0F;
             uint8_t comboIdx = msg.data[1];
+
+            Message echo = msg;
+            m_writer.write(echo);
+
+            if (numPairs == 0)
+            {
+                m_comboPairs.clear();
+                LPF2_LOG_D("CMD_WRITE: combined mode reset");
+                return;
+            }
+
             auto combos = m_device->getModeCombos();
             if (comboIdx >= combos.size() || combos[comboIdx] == 0)
             {
                 LPF2_LOG_W("CMD_WRITE: invalid combo index %i", (int)comboIdx);
+                m_comboPairs.clear();
                 return;
             }
-            Message echo = msg;
-            m_writer.write(echo);
             m_comboPairs.clear();
-            uint8_t numPairs = msg.data[0] & 0x0F;
             for (uint8_t i = 0; i < numPairs && (2 + i) < msg.data.size(); i++)
                 m_comboPairs.push_back(msg.data[2 + i]);
             LPF2_LOG_D("CMD_WRITE: combo %i, %d pairs", (int)comboIdx, (int)m_comboPairs.size());
