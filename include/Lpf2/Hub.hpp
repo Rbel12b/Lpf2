@@ -61,6 +61,7 @@ namespace Lpf2
         bool isPending_warn();
 
         void pending(MessageType msgType);
+        bool waitPending(uint32_t timeoutMs = 500);
 
         Remote::Port *_getPort(PortNum portNum);
 

@@ -839,6 +839,20 @@ namespace Lpf2
         m_pendingRequest.valid = true;
     }
 
+    bool Hub::waitPending(uint32_t timeoutMs)
+    {
+        uint64_t deadline = LPF2_GET_TIME() + timeoutMs;
+        while (m_pendingRequest.valid && LPF2_GET_TIME() < deadline)
+            vTaskDelay(1);
+        if (m_pendingRequest.valid)
+        {
+            LPF2_LOG_E("waitPending timed out: msgType: %i", (int)m_pendingRequest.msgType);
+            m_pendingRequest.valid = false;
+            return false;
+        }
+        return true;
+    }
+
     Remote::Port *Hub::_getPort(PortNum portNum)
     {
         if (!m_remotePorts.count(portNum))
@@ -1046,10 +1060,13 @@ namespace Lpf2
 
         writeValue(MessageType::PORT_INPUT_FORMAT_SETUP_COMBINEDMODE, {portNum, 0x02});
 
+        vTaskDelay(10);
+
         for (size_t i = 0; i < nibblePairs.size(); i++)
         {
             uint8_t modeNum = (nibblePairs[i] >> 4) & 0x0F;
             uint32_t bleDelta = (i < deltasPerMode.size()) ? deltasPerMode[i] : 1u;
+            pending(MessageType::PORT_INPUT_FORMAT_SETUP_SINGLE);
             writeValue(MessageType::PORT_INPUT_FORMAT_SETUP_SINGLE,
                 {portNum, modeNum,
                  (uint8_t)(bleDelta & 0xFF),
@@ -1057,6 +1074,7 @@ namespace Lpf2
                  (uint8_t)((bleDelta >> 16) & 0xFF),
                  (uint8_t)((bleDelta >> 24) & 0xFF),
                  0x01});
+            if (!waitPending()) return -1;
         }
 
         std::vector<uint8_t> comboPayload = {portNum, 0x01, comboIdx};
@@ -1064,6 +1082,9 @@ namespace Lpf2
         writeValue(MessageType::PORT_INPUT_FORMAT_SETUP_COMBINEDMODE, comboPayload);
 
         writeValue(MessageType::PORT_INPUT_FORMAT_SETUP_COMBINEDMODE, {portNum, 0x03});
+
+        vTaskDelay(50);
+
         return 0;
     }
 
