@@ -626,6 +626,7 @@ namespace Lpf2
                 setup.deltas.push_back(d);
             }
             port->setModeCombo(setup.comboIndex, setup.deltas);
+            sendCombinedModeFormat(setup);
             break;
 
         case 0x04: // Unlock + MultiUpdate Disabled
@@ -643,6 +644,7 @@ namespace Lpf2
                 setup.deltas.push_back(d);
             }
             port->setModeCombo(setup.comboIndex, setup.deltas);
+            sendCombinedModeFormat(setup);
             break;
 
         case 0x06: // Reset
@@ -660,12 +662,16 @@ namespace Lpf2
             LPF2_LOG_E("Unknown combined mode sub-command: 0x%02X", subCmd);
             return;
         }
+    }
 
+    void HubEmulation::sendCombinedModeFormat(PortInputSetupCombined &setup)
+    {
+        uint16_t bitmask = (uint16_t)((1u << setup.modeDatasetPairs.size()) - 1);
         std::vector<uint8_t> response;
-        response.push_back((uint8_t)portNum);
-        response.push_back(setup.multiUpdateEnabled ? 0x01 : 0x00);
-        response.push_back(setup.comboIndex);
-        response.insert(response.end(), setup.modeDatasetPairs.begin(), setup.modeDatasetPairs.end());
+        response.push_back((uint8_t)setup.portNum);
+        response.push_back(setup.multiUpdateEnabled ? 0x80 : 0x00);
+        response.push_back((uint8_t)(bitmask & 0xFF));
+        response.push_back((uint8_t)((bitmask >> 8) & 0xFF));
         writeResponse(MessageType::PORT_INPUT_FORMAT_COMBINEDMODE, response);
     }
 
@@ -722,7 +728,6 @@ namespace Lpf2
             const auto &mode = port->getModes()[modeNum];
             uint8_t dataSize = Port::getDataSize(mode.format);
             size_t offset = (size_t)dataSet * dataSize;
-            LPF2_LOG_D("Sending combined mode value: port 0x%02X, mode %d - %s, dataset %d, offset %zu, dataSize %d, value: %f", (uint8_t)setup.portNum, modeNum, mode.name.c_str(), dataSet, offset, dataSize, port->getValue(modeNum, dataSet));
             if (offset + dataSize <= mode.rawData.size())
                 message.insert(message.end(), mode.rawData.begin() + offset, mode.rawData.begin() + offset + dataSize);
         }

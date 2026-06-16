@@ -24,7 +24,7 @@
 namespace Lpf2::Local
 {
     // 100% speed = 1 degree per ms = 1000 deg/s ≈ 167 RPM
-    static constexpr float MAX_MOTOR_SPEED = 1.5f;
+    static constexpr float MAX_MOTOR_SPEED = 1.f;
     // stop position control when within 1°
     static constexpr float POSITION_TOLERANCE = 1.0f;
 

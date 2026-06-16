@@ -145,6 +145,7 @@ namespace Lpf2
 
         void sendPortValueSingle(PortInputSetupSingle &setup, Port* port);
         void sendPortValueCombined(PortInputSetupCombined &setup, Port* port);
+        void sendCombinedModeFormat(PortInputSetupCombined &setup);
 
         void initBuiltInPorts();
         void initBuiltInDevices();
