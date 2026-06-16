@@ -438,6 +438,10 @@ namespace Lpf2
             auto port = _getPort(portNum);
             port->m_deviceType = DeviceType::UNKNOWNDEVICE;
             port->m_modeData.clear();
+            port->m_modeCount = 0;
+            port->m_inModesMask = 0;
+            port->m_outModesMask = 0;
+            port->m_modeCombos.clear();
             break;
         }
         default:
@@ -1102,8 +1106,8 @@ namespace Lpf2
 
     void Hub::handlePortValueCombinedModeMessage(const std::vector<uint8_t> &message)
     {
-        // Real hub format: portNum, comboIndex, bitPointer(2B LE), values...
-        if (checkLenght(message, 7))
+        // Real hub format: portNum, comboIndex, bitMask(1B), values...
+        if (checkLenght(message, 6))
             return;
 
         PortNum portNum = (PortNum)message[(uint8_t)MessageByte::PORT_ID];
@@ -1111,14 +1115,14 @@ namespace Lpf2
         if (!m_portCombinedFormatMap.count(portNum))
             return;
 
-        uint16_t bitPointer = message[5] | ((uint16_t)message[6] << 8);
+        uint8_t bitMask = message[5];
         auto &setup = m_portCombinedFormatMap[portNum];
         auto &port = *_getPort(portNum);
 
-        size_t valueOffset = 7;
+        size_t valueOffset = 6;
         for (size_t i = 0; i < setup.nibblePairs.size(); i++)
         {
-            if (!(bitPointer & (1u << i)))
+            if (!(bitMask & (1u << i)))
                 continue;
 
             uint8_t modeNum = (setup.nibblePairs[i] >> 4) & 0x0F;

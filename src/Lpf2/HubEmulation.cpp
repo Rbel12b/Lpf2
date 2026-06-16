@@ -601,8 +601,6 @@ namespace Lpf2
             }
             setup.comboIndex = message[5];
             setup.modeDatasetPairs.assign(message.begin() + 6, message.end());
-            std::sort(setup.modeDatasetPairs.begin(), setup.modeDatasetPairs.end(),
-                      [](uint8_t a, uint8_t b) { return (a >> 4) < (b >> 4); });
             LPF2_LOG_D("Combined set combo: port 0x%02X, combo %d", (uint8_t)portNum, setup.comboIndex);
             break;
         }
@@ -712,11 +710,9 @@ namespace Lpf2
     {
         std::vector<uint8_t> message;
         message.push_back((uint8_t)setup.portNum);
-        // LWP3 spec: 2-byte Mode/Dataset bit pointer (LE). Bit N = (N+1)th configured pair is included.
-        // All configured pairs are always sent, so all N bits are set.
-        uint16_t bitPointer = (uint16_t)((1u << setup.modeDatasetPairs.size()) - 1);
-        message.push_back(bitPointer & 0xFF);
-        message.push_back(bitPointer >> 8);
+        message.push_back(setup.comboIndex);
+        uint8_t bitMask = (uint8_t)((1u << setup.modeDatasetPairs.size()) - 1);
+        message.push_back(bitMask);
         for (uint8_t nibblePair : setup.modeDatasetPairs)
         {
             uint8_t modeNum = (nibblePair >> 4) & 0x0F;
@@ -726,6 +722,7 @@ namespace Lpf2
             const auto &mode = port->getModes()[modeNum];
             uint8_t dataSize = Port::getDataSize(mode.format);
             size_t offset = (size_t)dataSet * dataSize;
+            LPF2_LOG_D("Sending combined mode value: port 0x%02X, mode %d - %s, dataset %d, offset %zu, dataSize %d, value: %f", (uint8_t)setup.portNum, modeNum, mode.name.c_str(), dataSet, offset, dataSize, port->getValue(modeNum, dataSet));
             if (offset + dataSize <= mode.rawData.size())
                 message.insert(message.end(), mode.rawData.begin() + offset, mode.rawData.begin() + offset + dataSize);
         }
@@ -825,6 +822,8 @@ namespace Lpf2
             else
             {
                 LPF2_LOG_I("Device disconnected from port %d", portNum);
+                m_portSetupSingle[portNum].clear();
+                m_portSetupCombined.erase(portNum);
                 std::vector<uint8_t> payload;
                 payload.push_back((char)portNum);
                 payload.push_back((char)IOEvent::DETACHED_IO);
