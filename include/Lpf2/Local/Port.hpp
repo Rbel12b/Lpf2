@@ -40,7 +40,7 @@ namespace Lpf2::Local
 #endif
         );
 
-        void update() override;
+        void _update() override;
 
         enum class STATUS
         {

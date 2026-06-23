@@ -28,7 +28,7 @@ namespace Lpf2::Virtual
     public:
         Port() {};
 
-        void update() override;
+        void _update() override;
 
         int writeData(uint8_t modeNum, const std::vector<uint8_t> &data) override;
         bool isDeviceConnected() override;
@@ -48,7 +48,12 @@ namespace Lpf2::Virtual
         void detachDevice();
 
         void deviceValueChangeCallback(uint8_t modeNum);
+
     private:
-        std::unique_ptr<Device> m_device;
+        // Virtual::Device-typed view of the device emulated on this port.
+        // Aliases the base Port::m_device (which holds the Lpf2::Device* for
+        // slot/wrapper purposes); kept separately to expose the Virtual::Device
+        // motor/sensor methods without a downcast.
+        Virtual::Device *m_emulatedDevice = nullptr;
     };
 }; // namespace Lpf2

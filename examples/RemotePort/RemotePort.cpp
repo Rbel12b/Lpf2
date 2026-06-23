@@ -19,7 +19,6 @@
 
 #include "Lpf2/Hub.hpp"
 #include "Lpf2/DeviceDescLib.hpp"
-#include "Lpf2/DeviceManager.hpp"
 #include "Lpf2/Devices/ColorSensor.hpp"
 #include "Lpf2/Devices/BasicMotor.hpp"
 #include "Lpf2/Devices/EncoderMotor.hpp"
@@ -75,22 +74,20 @@ void loop()
         hub.update();
 
         auto &portA = *hub.getPort(Lpf2::PortNum(Lpf2::ControlPlusHubPort::A));
-
-        static Lpf2::DeviceManager portADeviceManager(portA);
-        portADeviceManager.update();
+        portA.update();
 
         static bool firstTime = true;
 
-        if (portADeviceManager.device())
+        if (auto *dev = portA.device())
         {
             if (auto device = static_cast<Lpf2::Devices::TechnicColorSensorControl *>
-                (portADeviceManager.device()->getCapability(Lpf2::Devices::TechnicColorSensor::CAP)))
+                (dev->getCapability(Lpf2::Devices::TechnicColorSensor::CAP)))
             {
                 Serial.print("Color idx: ");
                 Serial.println(device->getColorIdx());
             }
             else if (auto device = static_cast<Lpf2::Devices::EncoderMotorControl *>
-                (portADeviceManager.device()->getCapability(Lpf2::Devices::EncoderMotor::CAP)))
+                (dev->getCapability(Lpf2::Devices::EncoderMotor::CAP)))
             {
                 if (firstTime)
                 {
@@ -99,7 +96,7 @@ void loop()
                 }
             }
             else if (auto device = static_cast<Lpf2::Devices::BasicMotorControl *>
-                (portADeviceManager.device()->getCapability(Lpf2::Devices::BasicMotor::CAP)))
+                (dev->getCapability(Lpf2::Devices::BasicMotor::CAP)))
             {
                 device->startPower(-50);
             }

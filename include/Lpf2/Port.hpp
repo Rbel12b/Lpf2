@@ -21,14 +21,69 @@
 #include "Lpf2/LWPConst.hpp"
 #include "Lpf2/Device.hpp"
 #include "Lpf2/DeviceDesc.hpp"
+#include <memory>
 
 namespace Lpf2
 {
+    /**
+     * @brief Indirect handle to a Port-owned Device.
+     *
+     * Single allocation per Port, shared with any consumer (e.g. MicroPython
+     * binding wrappers). On every device swap, `gen` is incremented so
+     * wrappers that cached the previous generation can detect the change and
+     * refuse to dereference the (now-deleted) old device.
+     */
+    struct DeviceSlot
+    {
+        Device *ptr = nullptr;
+        uint32_t gen = 0;
+    };
+
     class Port
     {
     public:
         virtual ~Port() = default;
-        virtual void update() = 0;
+
+        /**
+         * @brief Poll the port.
+         *
+         * Non-virtual. Calls the subclass-implemented `_update()` (hardware /
+         * transport poll), then `manageDevice()` (factory resolution + child
+         * device update). Callers loop on this; do not call `_update()` or
+         * `manageDevice()` separately.
+         */
+        void update();
+
+        /**
+         * @brief Optional one-shot initialisation hook.
+         * Default no-op; overridden by ports that need setup before first update().
+         */
+        virtual void init() {}
+
+        /**
+         * @brief Run device-factory resolution + child device update.
+         * Detaches old device on disconnect/type change, constructs the new
+         * typed Device via DeviceRegistry, and forwards update() to it.
+         * Called from update(); rarely needs to be called directly.
+         */
+        void manageDevice();
+
+        /**
+         * @brief Current device handle (shared with consumers).
+         * Returns an empty shared_ptr if no device has ever attached;
+         * the slot stays valid across swaps, but its `ptr` becomes null.
+         */
+        std::shared_ptr<DeviceSlot> deviceHandle() const { return m_slot; }
+
+        /**
+         * @brief Current device, attaching one via factory if needed.
+         *
+         * If the port reports a connected device but no Device has been
+         * constructed yet, this runs `manageDevice()` to resolve a factory
+         * and attach the typed wrapper, then returns it. Returns nullptr
+         * when nothing is connected.
+         */
+        Device *device();
 
         virtual int writeData(uint8_t modeNum, const std::vector<uint8_t> &data) = 0;
 
@@ -267,6 +322,13 @@ namespace Lpf2
     public:
         static uint8_t getDataSize(uint8_t format);
     protected:
+        /**
+         * @brief Subclass hook implementing one tick of the underlying
+         * transport (UART poll, remote message pump, etc.). Called from the
+         * non-virtual `update()`.
+         */
+        virtual void _update() = 0;
+
         static ModeNum getDefaultMode(DeviceType id);
         static bool deviceIsAbsMotor(DeviceType id);
 
@@ -321,6 +383,21 @@ namespace Lpf2
         std::vector<Mode> m_modeData;
 
         ValueChangeCallback m_valueChangeCallback = nullptr;
+
+        /**
+         * @brief Replace the current owned device.
+         *
+         * (a) Invalidates the existing slot's pointer (any consumer holding
+         *     a shared_ptr<DeviceSlot> will now read nullptr).
+         * (b) Deletes the previous unique_ptr-owned device.
+         * (c) Adopts @p newDev (can be nullptr) under a fresh slot.
+         *
+         * Called by manageDevice() on connect / disconnect / type change.
+         */
+        void swapDevice(Device *newDev);
+
+        std::unique_ptr<Device> m_device;
+        std::shared_ptr<DeviceSlot> m_slot;
 
         /// Per-mode delta thresholds (indexed by mode number). 0 = fire on every update.
         std::vector<float> m_deltas;

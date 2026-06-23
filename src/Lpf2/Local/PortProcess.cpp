@@ -103,7 +103,7 @@ namespace Lpf2::Local
     }
 #endif
 
-    void Port::update()
+    void Port::_update()
     {
         if (!m_IO.ready())
         {

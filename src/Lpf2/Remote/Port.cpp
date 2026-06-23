@@ -20,7 +20,7 @@
 
 namespace Lpf2::Remote
 {
-    void Port::update()
+    void Port::_update()
     {
         if (m_lastDevType != m_deviceType)
         {
