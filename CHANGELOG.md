@@ -1,6 +1,6 @@
 # Changelog
 
-## 2.3.0
+## 2.3.0 — 2026-06-23
 
 ### Highlights
 
@@ -53,3 +53,170 @@ auto* dev = portA.device();
   change.
 - `Port::manageDevice()` carries the factory-resolution loop that used
   to live in `DeviceManager::attachViaFactory()`.
+
+## 2.2.0 — 2026-06-16
+
+- Combined-mode support across Hub and Port: combo pairs setup,
+  `sendCombinedModeFormat`, `CMD_WRITE` with combined-mode flag and
+  pair count, active combo selection logic.
+- `Hub::combinedMode` setup API and `Hub::waitPending` for handling
+  request timeouts.
+- Logging: explicit `log` init in setup paths; safer serial writes;
+  mutex hardening in `lpf2_log_printf`.
+- Motor: position handling and PID parameters tuned for accuracy;
+  speed/position commands deduplicated to avoid redundant updates.
+- Bit-pointer handling added for mode/dataset pairs when building
+  messages.
+- Arduino serial preprocessor guard corrected.
+
+## 2.1.9 — 2026-06-02
+
+- Fix payload index usage in `PortParser` and `HubEmulation`.
+- Remove leftover `setPower` from `Virtual::Device`.
+
+## 2.1.8 — 2026-05-10
+
+- Remove unused/leftover method from `Virtual::Device`.
+
+## 2.1.7 — 2026-05-10
+
+- Trivial fixes to data writing path (follow-up to 2.1.6).
+
+## 2.1.6 — 2026-05-10
+
+- `Local::Port` now uses the `Writer` class to send data messages.
+
+## 2.1.5 — 2026-05-10
+
+- Fix binding for value-change callback in `EmulatedPort` and `Port`.
+
+## 2.1.4 — 2026-05-10
+
+- Rename `poll` → `update` across device classes.
+
+## 2.1.3 — 2026-05-10
+
+- Add value-change callback functionality to devices.
+
+## 2.1.2 — 2026-05-09
+
+- Fix encoder-motor factory name.
+
+## 2.1.1 — 2026-05-09
+
+- Split README into focused `docs/` files; update architecture docs.
+- Local emulated devices feature merged.
+- Example updated to current API.
+
+## 2.1.0 — 2026-05-09
+
+- New `EmulatedPort` class with host-connection check, message
+  handling, `discardRxFiFo` / `clearBuf` helpers, device version
+  handling.
+- Major device-architecture refactor; motor control enhancements;
+  built-in PID implementation; updated motor control parameters and
+  logging.
+- Descriptor library updated: new fields, corrected values, missing
+  descriptors added, correct flags.
+- More robust UART detection.
+
+## 2.0.13 — 2026-05-06
+
+- Arduino-core compatibility via `LPF2_USE_ARDUINO_SERIAL` flag.
+
+## 2.0.12 — 2026-04-08
+
+- Basic port class exposes its members to `HubEmulation`.
+
+## 2.0.11 — 2026-04-07
+
+- Add default initializers to `Lpf2::Version`.
+
+## 2.0.10 — 2026-04-07
+
+- HubEmulation: add disconnect support; `stop()` deinits NimBLE stack;
+  `end` → `stop` rename; non-blocking message loop; null check and
+  task cleanup in `msgTask`; consistent member naming across
+  `HubEmulation` and `Port`; `m_modes` → `m_modeCount`; built-in
+  devices default off; `update` called in message loop.
+- Spelling fix: `capabilities` (was misspelled in multiple places).
+- Rename functions to more meaningful names.
+- Runtime log-level support.
+- UART interface: add `read` method; improved serial data handling
+  and logging; adjusted message length in port input format handling.
+- Remove `Arduino.h` dependency.
+- Consistent data types; default initializations.
+
+## 2.0.9 — 2026-03-31
+
+- Rename `writeValue` → `writeResponse`; add 10 ms delay to avoid
+  overloading the client.
+- README: PlatformIO registry badge.
+
+## 2.0.8 — 2026-03-29
+
+- Fix output command feedback.
+- Map raw speed 127 to 0.
+- Add missing include.
+- Copyright and licensing notices added to source files.
+- README: note on local port requirements.
+
+## 2.0.7 — 2026-03-07
+
+- Version bump only (release/packaging).
+
+## 2.0.6 — 2026-03-05
+
+- HubEmulation: non-blocking message callback; refactor to use
+  `LPF2_GET_TIME()` for time measurements; consistent device
+  descriptor names; improved logging.
+
+## 2.0.5 — 2026-02-22
+
+- Version bump only (release/packaging).
+
+## 2.0.4 — 2026-02-22
+
+- Fix info phase.
+- `deviceDataReceived` flag added; updated handling in `Port` classes.
+- README clarifications.
+
+## 2.0.3 — 2026-02-21
+
+- Refactor `Port` and `Parser` initialization.
+
+## 2.0.2 — 2026-02-21
+
+- `Local::Port` / `Remote::Port`: Ctrl+C restart feature.
+- `HubEmulation` MAC address handling improvements.
+- Switch metadata from `library.json` to `library.properties` for
+  PlatformIO + Arduino compatibility.
+
+## 2.0.1 — 2026-02-15
+
+- Finish file moves from the library-restructure.
+- Add `CODEOWNERS`.
+- README disclaimers.
+
+## 2.0.0 — 2026-02-15
+
+- **Breaking:** code moved into namespaces (`Lpf2::…`) — public API
+  symbols change, hence the major bump.
+- Library structure reorganised; includes updated.
+
+## 1.0.2 — 2026-02-15
+
+- Description update; metadata-only release.
+
+## 1.0.1 — 2026-02-15
+
+- New `EmulatedHub` example; improved advertisement-data logging.
+- Fix `onDisconnect`; example sets hub LED green after connect.
+- Motor control refactor with new functionality.
+- Header rename `.h` → `.hpp`.
+- Credit fixes; `.gitignore` updated to exclude `Lpf2*.tar.gz`.
+- `library.json` keywords enhanced.
+
+## 1.0.0 — 2026-02-07
+
+- Initial release: first tagged version with examples.
