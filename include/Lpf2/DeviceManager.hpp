@@ -1,6 +1,6 @@
 /**
  *  Copyright (C) 2026 - Rbel12b
- * 
+ *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU Affero General Public License as
  *  published by the Free Software Foundation, either version 3 of the
@@ -18,76 +18,44 @@
 #pragma once
 
 #include "Lpf2/config.hpp"
-#include "Lpf2/DeviceFactory.hpp"
 #include "Lpf2/Port.hpp"
-#include <memory>
 
 namespace Lpf2
 {
-    class DeviceManager
+    /**
+     * @brief Deprecated thin wrapper around Port's built-in device management.
+     *
+     * As of v2.3.0, Port owns its device and exposes init()/update()/device()
+     * directly. This class remains as a compatibility shim — every call
+     * forwards to the wrapped Port. New code should call Port methods
+     * directly.
+     */
+    class [[deprecated("Use Port::init/update/device directly")]] DeviceManager
     {
     public:
         explicit DeviceManager(Port &port)
             : m_port(port) {}
 
-        void init() {}
+        void init() { m_port.init(); }
 
         void update()
         {
             m_port.update();
-            if (!m_port.isDeviceConnected())
-            {
-                m_device.reset(nullptr);
-                return;
-            }
-
-            if (!m_device && m_port.isDeviceConnected())
-            {
-                attachViaFactory();
-            }
-
-            if (m_device)
-            {
-                m_device->update();
-            }
+            m_port.manageDevice();
         }
 
-        Device *device() const
-        {
-            if (getDeviceType() == DeviceType::UNKNOWNDEVICE)
-                return nullptr;
-            return m_device.get();
-        }
+        Device *device() const { return const_cast<Port &>(m_port).device(); }
 
-        DeviceType getDeviceType() const
-        {
-            return m_port.getDeviceType();
-        }
+        DeviceType getDeviceType() const { return m_port.getDeviceType(); }
 
-        const Port &getPort() const
-        {
-            return m_port;
-        }
+        const Port &getPort() const { return m_port; }
+
+#if defined(LPF2_USE_FREERTOS)
+        static void taskEntryPoint(void *pvParameters);
+        void loopTask();
+#endif
 
     private:
-        void attachViaFactory()
-        {
-            auto &reg = DeviceRegistry::instance();
-
-            for (size_t i = 0; i < reg.count(); ++i)
-            {
-                const DeviceFactory *factory = reg.factories()[i];
-
-                if (factory->matches(m_port))
-                {
-                    m_device.reset(factory->create(m_port));
-                    m_device->init();
-                    break;
-                }
-            }
-        }
-
         Port &m_port;
-        std::unique_ptr<Device> m_device;
     };
 }; // namespace Lpf2

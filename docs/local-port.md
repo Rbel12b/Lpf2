@@ -46,26 +46,27 @@ void loop()
 }
 ```
 
-## Using DeviceManager
+## Typed device access
 
-`DeviceManager` wraps a port and automatically constructs the right typed device object:
+Since v2.3.0, the port owns its connected device. Call `portA.device()`
+to get the typed `Device` instance — the right type is constructed
+lazily via the registered factories:
 
 ```cpp
-Lpf2::DeviceManager dm(portA);
+portA.update();
 
-dm.update(); // calls portA.update() + manages device lifecycle
-
-if (dm.device())
+if (auto *dev = portA.device())
 {
     if (auto *motor = static_cast<Lpf2::Devices::BasicMotorControl *>(
-            dm.device()->getCapability(Lpf2::Devices::BasicMotor::CAP)))
+            dev->getCapability(Lpf2::Devices::BasicMotor::CAP)))
     {
         motor->setSpeed(50);
     }
 }
 ```
 
-See [device-manager.md](device-manager.md) for full details.
+See [device-manager.md](device-manager.md) for capability details and
+the device-lifetime model.
 
 ## Port API
 

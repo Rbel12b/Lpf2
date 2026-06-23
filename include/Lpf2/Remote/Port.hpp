@@ -34,7 +34,7 @@ namespace Lpf2::Remote
     public:
         Port(Hub *remote) : m_remote(remote) {};
 
-        void update() override;
+        void _update() override;
 
         int writeData(uint8_t modeNum, const std::vector<uint8_t> &data) override;
         bool isDeviceConnected() override;

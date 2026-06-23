@@ -18,6 +18,7 @@
 #include "Lpf2/Port.hpp"
 #include "Lpf2/LWPConst.hpp"
 #include "Lpf2/DeviceDescLib.hpp"
+#include "Lpf2/DeviceFactory.hpp"
 #include <string>
 #include <cstring>
 #include <sstream>
@@ -364,5 +365,71 @@ void Lpf2::Port::setFromDesc()
     if (desc)
     {
         setFromDesc(desc);
+    }
+}
+
+void Lpf2::Port::update()
+{
+    _update();
+    if (!isDeviceConnected() && m_device)
+    {
+        swapDevice(nullptr);
+    }
+    if (m_device)
+    {
+        m_device->update();
+    }
+}
+
+Lpf2::Device *Lpf2::Port::device()
+{
+    manageDevice();
+    if (getDeviceType() == DeviceType::UNKNOWNDEVICE)
+        return nullptr;
+    return m_slot ? m_slot->ptr : nullptr;
+}
+
+void Lpf2::Port::swapDevice(Device *newDev)
+{
+    if (!m_slot)
+    {
+        m_slot = std::make_shared<DeviceSlot>();
+    }
+    else
+    {
+        m_slot->ptr = nullptr; // invalidate consumers caching the old generation
+    }
+    m_device.reset(newDev);
+    m_slot->ptr = newDev;
+    m_slot->gen++;
+}
+
+void Lpf2::Port::manageDevice()
+{
+    if (!isDeviceConnected())
+    {
+        if (m_device)
+            swapDevice(nullptr);
+        return;
+    }
+    if (m_device)
+    {
+        return;
+    }
+
+    auto &reg = DeviceRegistry::instance();
+    for (size_t i = 0; i < reg.count(); ++i)
+    {
+        const DeviceFactory *factory = reg.factories()[i];
+        if (factory->matches(*this))
+        {
+            Device *created = factory->create(*this);
+            if (created)
+            {
+                created->init();
+                swapDevice(created);
+            }
+            break;
+        }
     }
 }
