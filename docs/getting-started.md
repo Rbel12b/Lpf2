@@ -55,7 +55,7 @@ Call these once before using any port or device:
 // Cache built-in device descriptors — skips slow UART enumeration for known devices
 Lpf2::DeviceDescRegistry::registerDefault();
 
-// Register built-in device factories — required for DeviceManager to construct devices
+// Register built-in device factories — required for Port::device() to construct devices
 Lpf2::DeviceRegistry::registerDefault();
 ```
 

@@ -6,12 +6,12 @@
 include/Lpf2/
 ├── config.hpp                # Compile-time configuration
 ├── LWPConst.hpp              # LWP protocol constants and enums
-├── Port.hpp                  # Base Port interface + PortDevice
+├── Port.hpp                  # Base Port interface + PortDevice + DeviceSlot
 ├── Device.hpp                # Base Device interface
 ├── DeviceDesc.hpp            # Mode/descriptor data structures
 ├── DeviceDescLib.hpp         # Device descriptor library (built-in mode tables)
 ├── DeviceFactory.hpp         # DeviceFactory, DeviceRegistry, Lpf2CapabilityRegistry
-├── DeviceManager.hpp         # DeviceManager (auto device lifecycle)
+├── DeviceManager.hpp         # Deprecated shim — Port now owns device lifecycle directly
 ├── Hub.hpp                   # LEGO Hub BLE control
 ├── HubEmulation.hpp          # LEGO Hub BLE emulation
 ├── Devices/                  # Concrete device implementations

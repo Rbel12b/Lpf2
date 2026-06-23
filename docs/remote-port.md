@@ -53,24 +53,23 @@ if (portA.getDeviceType() == Lpf2::DeviceType::TECHNIC_LARGE_LINEAR_MOTOR)
 }
 ```
 
-## Using DeviceManager with a remote port
+## Typed device access on a remote port
 
 ```cpp
-Lpf2::DeviceManager dm(portA);
+portA.update();
 
-dm.update();
-
-if (dm.device())
+if (auto *dev = portA.device())
 {
     if (auto *sensor = static_cast<Lpf2::Devices::TechnicColorSensorControl *>(
-            dm.device()->getCapability(Lpf2::Devices::TechnicColorSensor::CAP)))
+            dev->getCapability(Lpf2::Devices::TechnicColorSensor::CAP)))
     {
         Serial.println(sensor->getColorIdx());
     }
 }
 ```
 
-See [device-manager.md](device-manager.md) for full capability API.
+See [device-manager.md](device-manager.md) for the capability API and the
+Port-owned device lifetime model.
 
 ## Hub emulation
 

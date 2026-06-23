@@ -19,7 +19,6 @@
 
 #include "Lpf2/Local/Port.hpp"
 #include "Lpf2/DeviceDescLib.hpp"
-#include "Lpf2/DeviceManager.hpp"
 #include "Lpf2/Devices/ColorSensor.hpp"
 #include "Lpf2/Devices/BasicMotor.hpp"
 #include "Lpf2/Devices/EncoderMotor.hpp"
@@ -30,7 +29,6 @@
 
 Esp32IO portA_IO(1); // Use UART1
 Lpf2::Local::Port portA(portA_IO);
-Lpf2::DeviceManager deviceManager(portA);
 
 // Port pwm pins
 #define PORT_A_PWM_1 21
@@ -73,20 +71,20 @@ void loop()
         }
     }
 
-    deviceManager.update();
+    portA.update();
 
     static bool firstTime = true;
 
-    if (deviceManager.device())
+    if (auto *dev = portA.device())
     {
         if (auto device = static_cast<Lpf2::Devices::TechnicColorSensorControl *>
-            (deviceManager.device()->getCapability(Lpf2::Devices::TechnicColorSensor::CAP)))
+            (dev->getCapability(Lpf2::Devices::TechnicColorSensor::CAP)))
         {
             Serial.print("Color idx: ");
             Serial.println(device->getColorIdx());
         }
         else if (auto device = static_cast<Lpf2::Devices::EncoderMotorControl *>
-            (deviceManager.device()->getCapability(Lpf2::Devices::EncoderMotor::CAP)))
+            (dev->getCapability(Lpf2::Devices::EncoderMotor::CAP)))
         {
             if (firstTime)
             {
@@ -95,7 +93,7 @@ void loop()
             }
         }
         if (auto device = static_cast<Lpf2::Devices::BasicMotorControl *>
-            (deviceManager.device()->getCapability(Lpf2::Devices::BasicMotor::CAP)))
+            (dev->getCapability(Lpf2::Devices::BasicMotor::CAP)))
         {
             device->startPower(-50);
         }
