@@ -101,6 +101,16 @@ namespace Lpf2::Local
 
         m_activeCombo = (int8_t)idx;
         LPF2_LOG_D("Set combo %i (bitmask 0x%04X)", idx, bitmask);
+
+        // set m_mode to the first mode in the combo for internal state tracking
+        for (int m = 0; m < 16; m++)
+        {
+            if (bitmask & (1u << m))
+            {
+                m_mode = (uint8_t)m;
+                break;
+            }
+        }
         return 0;
     }
 
@@ -160,7 +170,7 @@ namespace Lpf2::Local
             return 1;
         }
         LPF2_LOG_D("writeData: mode %i, data size %i", modeNum, (int)data.size());
-        if (deviceIsAbsMotor(m_deviceType) && modeNum == 0 && data.size())
+        if (deviceIsMotor(m_deviceType) && modeNum == 0 && data.size())
         {
             LPF2_LOG_D("startPower: %i", (int8_t)data[0]);
             int8_t speed = data[0];
@@ -198,7 +208,7 @@ namespace Lpf2::Local
 
     void Port::setPower(uint8_t pin1, uint8_t pin2)
     {
-        if ((m_dumb || (m_modeData.size() > m_mode && m_modeData[m_mode].flags.power12())) && m_pwm)
+        if ((m_dumb || deviceIsMotor(m_deviceType) || (m_modeData.size() > m_mode && m_modeData[m_mode].flags.power12())) && m_pwm)
         {
             m_pwm->out(pin1, pin2);
         }

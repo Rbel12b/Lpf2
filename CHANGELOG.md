@@ -1,8 +1,61 @@
 # Changelog
 
-## 2.3.0 — 2026-06-23
+## 2.4.0 — 2026-06-26
 
-### Highlights
+- Motor PID for local encoder motors rewritten as pct-domain control
+  with per-motor tuning. Replaces the single shared `kp/ki/kd` set with
+  a `MotorSettings` table in `lib/Lpf2/src/Lpf2/Local/PortPID.cpp`,
+  one entry per `DeviceType`.
+- SPEED mode uses the motor's self-reported speed (mode 1, `% of rated`)
+  as feedback, eliminating the rated-max-speed scaling mismatch that
+  caused oscillation around setpoint.
+- POSITION/HOLD share a trapezoidal-decel ramp + pct-domain PD with
+  stiction-kick + kinetic-floor friction compensation, so the motor
+  clears static friction cleanly without integrator wind-up.
+- `startSpeed(0)` now routes to `BrakingStyle::HOLD` instead of running
+  an active 0-target speed loop.
+- New top-level `Lpf2::Battery` API
+  (`lib/Lpf2/include/Lpf2/Battery.hpp`) — single source of truth for
+  battery voltage. Defaults to 9000 mV. Supports manual updates via
+  `setCurrentVoltage()` or an optional ESP-IDF ADC reader with
+  voltage-divider config (`setupAdcDivider` + periodic
+  `readBatteryVoltage()`). Percent mapping pluggable; default is linear
+  with V_min cutoff.
+- `PortPID` applies an over-voltage cap derived from
+  `Battery::getCurrentVoltage()` so the motor never sees above its
+  nameplate `max_voltage_mv` on an over-spec supply.
+
+### New files
+
+- `lib/Lpf2/include/Lpf2/Battery.hpp`,
+  `lib/Lpf2/src/Lpf2/Battery.cpp` — battery API + ADC reader.
+- `lib/Lpf2/docs/motor-tuning.md` — per-motor calibration procedure,
+  field reference, and battery-integration guide.
+
+### Migration
+
+Battery integration is optional; existing code keeps working with the
+default 9000 mV. To enable live tracking:
+
+```cpp
+#include "Lpf2/Battery.hpp"
+
+// Manual updates from your own ADC code:
+Lpf2::Battery::setCurrentVoltage(read_mv());
+
+// Or use the built-in ADC + divider reader:
+Lpf2::Battery::AdcConfig cfg{
+    .adc_channel    = ADC_CHANNEL_0,
+    .adc_unit       = 1,
+    .r_top_ohms     = 10000.0f,
+    .r_bottom_ohms  = 4700.0f,
+};
+Lpf2::Battery::setupAdcDivider(cfg);
+// then periodically:
+Lpf2::Battery::readBatteryVoltage();
+```
+
+## 2.3.0 — 2026-06-23
 
 - `Port` now owns and manages its attached `Device` directly. Call
   `port.init()` once, then `port.update()` in your loop, then
@@ -27,8 +80,6 @@ existing callers may rely on:
   could dangle after `update()`. It now returns the slot-managed
   pointer — callers that stored the old raw pointer across an
   `update()` should re-fetch via `port.device()`.
-
-### Migration
 
 ```cpp
 // before

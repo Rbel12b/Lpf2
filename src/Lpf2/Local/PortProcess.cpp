@@ -281,7 +281,7 @@ namespace Lpf2::Local
 
         case STATUS::STATUS_DATA_RECEIVED:
             LPF2_LOG_D("Succesfully changed speed to %i baud", m_baud);
-            if (deviceIsAbsMotor(m_deviceType))
+            if (deviceIsMotor(m_deviceType))
             {
                 setModeCombo(0);
             }

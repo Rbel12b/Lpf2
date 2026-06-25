@@ -248,7 +248,7 @@ namespace Lpf2
 
     ModeNum Port::getDefaultMode(DeviceType id)
     {
-        if (deviceIsAbsMotor(id))
+        if (deviceIsMotor(id))
         {
             return ModeNum::MOTOR__CALIB;
         }
@@ -262,7 +262,7 @@ namespace Lpf2
         }
     }
 
-    bool Port::deviceIsAbsMotor(DeviceType id)
+    bool Port::deviceIsMotor(DeviceType id)
     {
         switch (id)
         {

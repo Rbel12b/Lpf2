@@ -330,7 +330,7 @@ namespace Lpf2
         virtual void _update() = 0;
 
         static ModeNum getDefaultMode(DeviceType id);
-        static bool deviceIsAbsMotor(DeviceType id);
+        static bool deviceIsMotor(DeviceType id);
 
         /**
          * @brief Store the delta threshold for a single mode.

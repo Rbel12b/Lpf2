@@ -27,6 +27,42 @@
 
 namespace Lpf2::Local
 {
+    // All per-motor-type tuning constants. Definitions in PortPID.cpp.
+    struct MotorSettings
+    {
+        DeviceType id;
+        int32_t rated_max_speed;   // deg/s (informational)
+        int32_t max_voltage_mv;    // motor's nominal max drive voltage
+
+        // SPEED-mode pct-domain PID.
+        float speed_ksp;           // power_pct per pct_err
+        float speed_ksi;           // power_pct per (pct_err·s)
+        float speed_int_clamp;     // pct·s
+        float speed_deadband_pct;
+
+        // POSITION/HOLD pct-domain PID (fine sub-mode).
+        float pos_kp;              // power_pct per deg
+        float pos_ki;              // power_pct per (deg·s)
+        float pos_kd;              // power_pct per (deg/s) — true derivative on pos err
+        float pos_int_clamp;
+        float pos_deadband_deg;
+        double pos_decel_mdps2;    // trapezoidal decel cap
+        float pos_handoff_deg;     // |remaining| under which fine sub-mode engages
+
+        // Friction comp (pct).
+        float breakaway_pct;       // stiction kick
+        float kinetic_floor_pct;   // sustained drive floor
+    };
+
+    // Per-motor tuning singletons. Mutable at runtime; PID loop reads on tick.
+    extern MotorSettings MS_MEDIUM_LINEAR_MOTOR;
+    extern MotorSettings MS_TECHNIC_LARGE_LINEAR_MOTOR;
+    extern MotorSettings MS_TECHNIC_XLARGE_LINEAR_MOTOR;
+    extern MotorSettings MS_TECHNIC_MEDIUM_ANGULAR_MOTOR;
+    extern MotorSettings MS_TECHNIC_LARGE_ANGULAR_MOTOR;
+    extern MotorSettings MS_TECHNIC_MEDIUM_ANGULAR_MOTOR_GREY;
+    extern MotorSettings MS_TECHNIC_LARGE_ANGULAR_MOTOR_GREY;
+
     class Port : public Lpf2::Port
     {
     public:
@@ -168,21 +204,41 @@ namespace Lpf2::Local
         enum class PidMode : uint8_t { NONE, SPEED, POSITION, HOLD };
 
         PidMode m_pidMode = PidMode::NONE;
+        // m_pidTarget in mdeg
         int64_t m_pidTarget = 0;
-        float m_pidTargetFrac = 0.0f;
         int8_t m_pidSpeed = 0;
         uint8_t m_pidMaxPower = 100;
         BrakingStyle m_pidEndState = BrakingStyle::FLOAT;
         uint64_t m_pidEndTime = 0;
 
-        // PID gains (error in degrees, dt in ms)
-        float m_kp = 0.4f;
-        float m_ki = 0.001f;
-        float m_kd = 0.63f;
+        // Per-motor-type settings (resolved on device attach).
+        const MotorSettings *m_settings = nullptr;
 
-        float m_pidIntegral = 0.0f;
-        float m_pidPrevError = 0.0f;
+        // Observer state.
+        int64_t m_obsAngleMdeg = 0;
+        int32_t m_obsSpeedMdegps = 0;
+        int32_t m_lastVoltageMv = 0;
+        bool m_obsInit = false;
+
+        // Speed setpoint (mdeg/s) re-derived each PID tick from m_pidSpeed.
+        int32_t m_pidSpeedSetpointMdegps = 0;
+
+        // Position-mode trajectory: target ramps toward final at ramp speed.
+        int64_t m_pidPositionFinal = 0;     // mdeg
+        int32_t m_pidPositionRampMdegps = 0; // |ramp speed|
+
+        // Previous encoder reading (mdeg) for speed derivation.
+        int64_t m_obsPrevMeasMdeg = 0;
+        bool m_obsPrevValid = false;
+
+        // Integral accumulator (units depend on mode/sub-mode).
+        double m_pidIntegral = 0.0;
         uint64_t m_pidLastMs = 0;
+
+        // POSITION fine sub-mode state.
+        float m_pidPrevPosErrDeg = 0.0f;
+        bool m_pidPrevPosErrValid = false;
+        bool m_pidPosFineActive = false;
 
         void applyPower(int8_t pw);
         void applyEndState(BrakingStyle style);
