@@ -160,7 +160,7 @@ namespace Lpf2::Devices
             0x0000000? -> Acc.- profile
             0x000000?0 -> Decc.- profile
          */
-        void startSpeed(int8_t speed, uint8_t maxPower, uint8_t useProfile = 0) override;
+        void startSpeed(int8_t speed, uint8_t maxPower = 100, uint8_t useProfile = 0) override;
 
         /**
          * @brief start motor with speed for [time] ms
@@ -172,7 +172,7 @@ namespace Lpf2::Devices
             0x0000000? -> Acc.- profile
             0x000000?0 -> Decc.- profile
          */
-        void startSpeedForTime(uint16_t time, int8_t speed, uint8_t maxPower, BrakingStyle endState, uint8_t useProfile = 0) override;
+        void startSpeedForTime(uint16_t time, int8_t speed = 100, uint8_t maxPower = 100, BrakingStyle endState = BrakingStyle::HOLD, uint8_t useProfile = 0) override;
 
         /**
          * @brief start motor with speed for [degrees]°
@@ -184,7 +184,7 @@ namespace Lpf2::Devices
             0x0000000? -> Acc.- profile
             0x000000?0 -> Decc.- profile
          */
-        void startSpeedForDegrees(uint32_t degrees, int8_t speed, uint8_t maxPower, BrakingStyle endState, uint8_t useProfile = 0) override;
+        void startSpeedForDegrees(uint32_t degrees, int8_t speed = 100, uint8_t maxPower = 100, BrakingStyle endState = BrakingStyle::HOLD, uint8_t useProfile = 0) override;
 
         /**
          * @brief got to absolute position (motor)
@@ -196,7 +196,7 @@ namespace Lpf2::Devices
             0x0000000? -> Acc.- profile
             0x000000?0 -> Decc.- profile
          */
-        void gotoAbsPosition(int32_t absPos, uint8_t speed, uint8_t maxPower, BrakingStyle endState, uint8_t useProfile = 0) override;
+        void gotoAbsPosition(int32_t absPos, uint8_t speed = 100, uint8_t maxPower = 100, BrakingStyle endState = BrakingStyle::HOLD, uint8_t useProfile = 0) override;
 
         /**
          * @brief preset encoder, also stops motors

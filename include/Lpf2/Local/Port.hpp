@@ -116,10 +116,10 @@ namespace Lpf2::Local
         void startPower(int8_t pw) override;
         void setAccTime(uint16_t accTime, AccelerationProfile accProfile = 1) override;
         void setDecTime(uint16_t decTime, AccelerationProfile decProfile = 1) override;
-        void startSpeed(int8_t speed, uint8_t maxPower, uint8_t useProfile = 0) override;
-        void startSpeedForTime(uint16_t time, int8_t speed, uint8_t maxPower, BrakingStyle endState, uint8_t useProfile = 0) override;
-        void startSpeedForDegrees(uint32_t degrees, int8_t speed, uint8_t maxPower, BrakingStyle endState, uint8_t useProfile = 0) override;
-        void gotoAbsPosition(int32_t absPos, uint8_t speed, uint8_t maxPower, BrakingStyle endState, uint8_t useProfile = 0) override;
+        void startSpeed(int8_t speed, uint8_t maxPower = 100, uint8_t useProfile = 0) override;
+        void startSpeedForTime(uint16_t time, int8_t speed = 100, uint8_t maxPower = 100, BrakingStyle endState = BrakingStyle::HOLD, uint8_t useProfile = 0) override;
+        void startSpeedForDegrees(uint32_t degrees, int8_t speed = 100, uint8_t maxPower = 100, BrakingStyle endState = BrakingStyle::HOLD, uint8_t useProfile = 0) override;
+        void gotoAbsPosition(int32_t absPos, uint8_t speed = 100, uint8_t maxPower = 100, BrakingStyle endState = BrakingStyle::HOLD, uint8_t useProfile = 0) override;
         void presetEncoder(int32_t pos) override;
 
         void updateMotorPID();
