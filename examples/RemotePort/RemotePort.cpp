@@ -89,11 +89,13 @@ void loop()
             else if (auto device = static_cast<Lpf2::Devices::EncoderMotorControl *>
                 (dev->getCapability(Lpf2::Devices::EncoderMotor::CAP)))
             {
-                if (firstTime)
-                {
-                    device->startSpeed(50);
-                    firstTime = false;
-                }
+                // if (firstTime)
+                // {
+                //     device->startSpeed(50);
+                //     firstTime = false;
+                // }
+                device->gotoAbsPosition(millis() / 100);
+                vTaskDelay(10);
             }
             else if (auto device = static_cast<Lpf2::Devices::BasicMotorControl *>
                 (dev->getCapability(Lpf2::Devices::BasicMotor::CAP)))
