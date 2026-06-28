@@ -1,5 +1,24 @@
 # Changelog
 
+## 2.5.0 — 2026-06-26
+
+Added a new `getSpeed()` and `getAbsPosition()` method to the `EncoderMotorControl` interface, allowing users to retrieve the speed and position measured by the encoder.
+
+## 2.4.3 — 2026-06-26
+
+Fixed LWP commands to use the correct subcommand byte in `Remote::Port`.
+
+## 2.4.2 — 2026-06-26
+
+Added default arguments to the motor control methods in `Port`.
+
+## 2.4.1 — 2026-06-26
+
+Fixed build errors in Battery.cpp when building with the Arduino framework
+by adding an arduino framewrk variant of the implementation.
+
+Also fixed Utils::map() to include the implementation.
+
 ## 2.4.0 — 2026-06-26
 
 - Motor PID for local encoder motors rewritten as pct-domain control
