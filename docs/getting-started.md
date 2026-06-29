@@ -65,6 +65,7 @@ Lpf2::DeviceRegistry::registerDefault();
 | --- | --- |
 | `LocalPort` | Read a sensor / drive a motor over a physical UART port |
 | `RemotePort` | Control a device attached to a LEGO Hub over BLE |
+| `RemotePortRtti` | Control a device attached to a LEGO Hub over BLE (Uses `dynamic_cast` instead of capability interface) |
 | `EmulatedHub` | Emulate a LEGO Hub that another controller connects to |
 
 Open the library in VS Code and select the example's PlatformIO environment to build.

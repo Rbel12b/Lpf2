@@ -71,6 +71,36 @@ if (auto *dev = portA.device())
 See [device-manager.md](device-manager.md) for the capability API and the
 Port-owned device lifetime model.
 
+### Alternative: RTTI / `dynamic_cast`
+
+If your build enables RTTI (`-frtti`), you can skip the capability lookup and
+cast directly to a control interface. See
+[device-manager.md](device-manager.md#alternative-typed-access-via-rtti) for the
+build setup and tradeoffs.
+
+```cpp
+portA.update();
+
+if (auto *dev = portA.device())
+{
+    if (auto *sensor = dynamic_cast<Lpf2::Devices::TechnicColorSensorControl *>(dev))
+    {
+        Serial.println(sensor->getColorIdx());
+    }
+    else if (auto *motor = dynamic_cast<Lpf2::Devices::EncoderMotorControl *>(dev))
+    {
+        motor->startSpeed(50);
+    }
+    else if (auto *motor = dynamic_cast<Lpf2::Devices::BasicMotorControl *>(dev))
+    {
+        motor->setSpeed(50);
+    }
+}
+```
+
+Full example: `examples/RemotePortRtti/`. PlatformIO env
+`esp32_remote_port_rtti` already sets the required build flags.
+
 ## Hub emulation
 
 See `HubEmulation.hpp` and the `EmulatedHub` example. Emulation uses `Virtual::Port` internally.

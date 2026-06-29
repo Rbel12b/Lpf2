@@ -89,6 +89,60 @@ implement that capability.
 `EncoderMotor` also implements `BasicMotorControl` — all motors share that
 capability.
 
+## Alternative: typed access via RTTI
+
+When the build has RTTI enabled, you can replace the capability lookup with a
+`dynamic_cast` to the control interface — every built-in device class inherits
+from its `*Control` interface, so the cast hits directly:
+
+```cpp
+if (auto *dev = port.device())
+{
+    if (auto *motor = dynamic_cast<Lpf2::Devices::BasicMotorControl *>(dev))
+    {
+        motor->setSpeed(50);
+    }
+    else if (auto *sensor = dynamic_cast<Lpf2::Devices::TechnicColorSensorControl *>(dev))
+    {
+        Serial.println(sensor->getColorIdx());
+    }
+}
+```
+
+Build setup (PlatformIO): `-frtti` must apply to C++ only — applying it to C
+sources produces a warning. Use an `extra_scripts` hook that appends to
+`CXXFLAGS`:
+
+```python
+# scripts/add_cxx_flags.py
+Import("env")
+env.Append(CXXFLAGS=["-frtti"])
+```
+
+```ini
+[env:esp32_remote_port_rtti]
+build_unflags =
+    ${env.build_unflags}
+    -fno-rtti
+extra_scripts = pre:scripts/add_cxx_flags.py
+```
+
+See env `esp32_remote_port_rtti` in `platformio.ini` and the
+`examples/RemotePortRtti/` sketch for a complete working configuration.
+
+Tradeoffs vs the capability API:
+
+- **Pros:** at the call site, the cast goes straight to the interface — easier
+  to read than a `getCapability(CAP)` + `static_cast`. The `*Control` interface
+  classes themselves are still required (devices inherit from them, and they
+  are what `dynamic_cast` targets).
+- **Cons:** requires RTTI globally, which enlarges binary size and adds a
+  small runtime cost; capability IDs are compile-time `constexpr` and need no
+  type info.
+
+The two paths coexist — pick whichever fits a given firmware build. Devices
+in the library expose both.
+
 ## Custom device factory
 
 ```cpp

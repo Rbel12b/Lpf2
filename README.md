@@ -22,7 +22,7 @@ Download from the PlatformIO registry: [rbel12b/Lpf2](https://registry.platformi
 | [Local Port (Master)](docs/local-port.md) | Drive a physical LPF2 device over UART |
 | [Emulated Port (Slave)](docs/emulated-port.md) | Present the ESP32 as a custom LPF2 device |
 | [Remote Port](docs/remote-port.md) | Control devices through a LEGO Hub over BLE |
-| [Device Manager & Capabilities](docs/device-manager.md) | Auto device lifecycle, capability interface |
+| [Device Manager & Capabilities](docs/device-manager.md) | Auto device lifecycle, capability interface, RTTI alternative |
 | [Custom Device](docs/custom-device.md) | Add a new typed device + factory |
 | [Logging](docs/logging.md) | Compile-time and runtime log level, output destination |
 
