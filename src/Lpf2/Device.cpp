@@ -21,6 +21,8 @@
 #include "Lpf2/Devices/ColorSensor.hpp"
 #include "Lpf2/Devices/DistanceSensor.hpp"
 #include "Lpf2/Devices/HubLED.hpp"
+#include "Lpf2/Devices/Accelerometer.hpp"
+#include "Lpf2/Devices/Gyroscope.hpp"
 
 namespace Lpf2
 {
@@ -34,5 +36,7 @@ namespace Lpf2
         TechnicColorSensor::registerFactory(DeviceRegistry::instance());
         TechnicDistanceSensor::registerFactory(DeviceRegistry::instance());
         HubLED::registerFactory(DeviceRegistry::instance());
+        HubAccelerometer::registerFactory(DeviceRegistry::instance());
+        HubGyroscope::registerFactory(DeviceRegistry::instance());
     }
 };
