@@ -1,8 +1,26 @@
 # Changelog
 
+## 2.5.3 — 2026-06-26
+
+Fixed the `CMD_EXT_MODE` bug in `Local::PortParser`
+
+## 2.5.2 — 2026-06-26
+
+Fixed the `CMD_EXT_MODE` bug in `Local::EmulatedPort` and
+`Local::PortWriter` where the flag was not being reset after sending the
+extended mode message, causing the next mode to always be treated as
+extended.
+
+## 2.5.1 — 2026-06-26
+
+Fix mode selection: Do not send `CMD_EXT_MODE`, just send the mode number
+as is. The `CMD_EXT_MODE` is only used in data messages.
+
 ## 2.5.0 — 2026-06-26
 
-Added a new `getSpeed()` and `getAbsPosition()` method to the `EncoderMotorControl` interface, allowing users to retrieve the speed and position measured by the encoder.
+Added a new `getSpeed()` and `getAbsPosition()` method to the
+`EncoderMotorControl` interface, allowing users to retrieve the speed and
+position measured by the encoder.
 
 ## 2.4.3 — 2026-06-26
 
