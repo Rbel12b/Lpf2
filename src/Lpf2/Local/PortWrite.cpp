@@ -31,22 +31,13 @@ namespace Lpf2::Local
         m_activeCombo = -1;
         m_mode = mode;
 
-        uint8_t modeInBank = mode & 0x07;
-        uint8_t selectHeader = MESSAGE_CMD | LENGTH_1 | CMD_SELECT;
-
+        Message selectMsg;
+        selectMsg.msg = MESSAGE_CMD;
+        selectMsg.cmd = CMD_SELECT;
+        selectMsg.data.push_back(mode);
         {
             Utils::MutexLock lock(m_serialMutex);
-            if (mode >= 8)
-            {
-                uint8_t extHeader = MESSAGE_CMD | LENGTH_1 | CMD_EXT_MODE;
-                m_serial->write(extHeader);
-                m_serial->write((uint8_t)0x08);
-                m_serial->write((uint8_t)(extHeader ^ 0xFF ^ 0x08));
-            }
-            m_serial->write(selectHeader);
-            m_serial->write(modeInBank);
-            m_serial->write((uint8_t)(selectHeader ^ 0xFF ^ modeInBank));
-            m_serial->flush();
+            m_writer.write(selectMsg);
         }
 
         if (mode < m_modeData.size())
