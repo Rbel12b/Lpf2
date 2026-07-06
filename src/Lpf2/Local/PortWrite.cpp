@@ -178,20 +178,18 @@ namespace Lpf2::Local
 
         {
             Utils::MutexLock lock(m_serialMutex);
-            if (modeNum >= 8)
-            {
-                Message msg;
-                msg.msg = MESSAGE_CMD;
-                msg.cmd = CMD_EXT_MODE;
-                msg.data.push_back(8);
-                m_writer.write(msg);
-            }
 
-            Message msg;
-            msg.msg = MESSAGE_DATA;
-            msg.cmd = modeNum & 0x07;
-            msg.data = data;
-            m_writer.write(msg);
+            Message extModeMsg;
+            extModeMsg.msg = MESSAGE_CMD;
+            extModeMsg.cmd = CMD_EXT_MODE;
+            extModeMsg.data.push_back(modeNum >= 8 ? 8 : 0);
+            m_writer.write(extModeMsg);
+
+            Message dataMsg;
+            dataMsg.msg = MESSAGE_DATA;
+            dataMsg.cmd = modeNum & 0x07;
+            dataMsg.data = data;
+            m_writer.write(dataMsg);
         }
 
         return 0;

@@ -238,24 +238,22 @@ namespace Lpf2::Local
             modeNum = m_mode;
         }
 
-        if (modeNum >= 8)
-        {
-            Message msg;
-            msg.msg = MESSAGE_CMD;
-            msg.cmd = CMD_EXT_MODE;
-            msg.data.push_back(8);
-            m_writer.write(msg);
-        }
+        Message extModeMsg;
+        extModeMsg.msg = MESSAGE_CMD;
+        extModeMsg.cmd = CMD_EXT_MODE;
+        extModeMsg.data.push_back(modeNum >= 8 ? 8 : 0);
+        m_writer.write(extModeMsg);
+
         Mode mode;
         if (m_device->getModes().size() > modeNum)
         {
             mode = m_device->getModes()[modeNum];
         }
-        Message msg;
-        msg.msg = MESSAGE_DATA;
-        msg.cmd = modeNum & 0x07;
-        msg.data.insert(msg.data.end(), mode.rawData.begin(), mode.rawData.end());
-        m_writer.write(msg);
+        Message dataMsg;
+        dataMsg.msg = MESSAGE_DATA;
+        dataMsg.cmd = modeNum & 0x07;
+        dataMsg.data.insert(dataMsg.data.end(), mode.rawData.begin(), mode.rawData.end());
+        m_writer.write(dataMsg);
     }
 
     void EmulatedPort::handleSendingInfo()
