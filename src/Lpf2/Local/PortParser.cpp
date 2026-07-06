@@ -111,7 +111,7 @@ namespace Lpf2::Local
             if (nextModeExt)
             {
                 mode += 8;
-                nextModeExt = false;
+                // nextModeExt = false; // do not reset, it shoud persist until the next CMD_EXT_MODE is received
             }
 
             if (mode >= m_modeCount)
@@ -204,9 +204,17 @@ namespace Lpf2::Local
         }
         case CMD_EXT_MODE:
         {
-            if (msg.data[0])
+            if (msg.data[0] == 8)
             {
                 nextModeExt = true;
+            }
+            else if (msg.data[0] == 0)
+            {
+                nextModeExt = false;
+            }
+            else
+            {
+                LPF2_LOG_W("Unknown CMD_EXT_MODE value: %i", msg.data[0]);
             }
             break;
         }
