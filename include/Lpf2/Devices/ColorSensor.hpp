@@ -28,9 +28,29 @@ namespace Lpf2::Devices
         virtual ~TechnicColorSensorControl() = default;
 
         /**
-         * @brief Get the color idx from the sensor.
+         * @brief Get the color index from the sensor (mode 0 = COLOR).
          */
         virtual ColorIDX getColorIdx() = 0;
+
+        /**
+         * @brief Get reflected light percentage (mode 1 = REFLT, 0-100 PCT).
+         */
+        virtual float getReflectivity() = 0;
+
+        /**
+         * @brief Get raw RGB channels and intensity (mode 5 = RGB I).
+         */
+        virtual void getRGB(uint16_t &r, uint16_t &g, uint16_t &b, uint16_t &i) = 0;
+
+        /**
+         * @brief Get HSV readings (mode 6 = HSV; H 0-360, S 0-100, V 0-360).
+         */
+        virtual void getHSV(uint16_t &h, uint16_t &s, uint16_t &v) = 0;
+
+        /**
+         * @brief Set the on-board light channels (mode 3 = LIGHT; 0-100 PCT each).
+         */
+        virtual void setLight(uint8_t l1, uint8_t l2, uint8_t l3) = 0;
     };
 
     class TechnicColorSensor : public PortDevice, public TechnicColorSensorControl
@@ -40,6 +60,7 @@ namespace Lpf2::Devices
 
         bool init() override
         {
+            m_port.setModeCombo(0);
             return true;
         }
 
@@ -60,7 +81,13 @@ namespace Lpf2::Devices
 
         static void registerFactory(DeviceRegistry &reg);
 
+        inline static const int LIGHT_MODE = 3;
+
         ColorIDX getColorIdx() override;
+        float getReflectivity() override;
+        void getRGB(uint16_t &r, uint16_t &g, uint16_t &b, uint16_t &i) override;
+        void getHSV(uint16_t &h, uint16_t &s, uint16_t &v) override;
+        void setLight(uint8_t l1, uint8_t l2, uint8_t l3) override;
     };
 
     class TechnicColorSensorFactory : public DeviceFactory

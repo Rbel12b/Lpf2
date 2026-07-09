@@ -1,22 +1,37 @@
 # Changelog
 
-## 2.5.3 — 2026-06-26
+## 2.6.0 — 2026-07-09
+
+Added new devices under `Lpf2::Devices` namespace:
+
+- `Lpf2::Devices::HubLed` — a device that controls the hub's LED, allowing users to set the LED color.
+- `Lpf2::Devices::HubAccelerometer` — a device that provides access to the hub's accelerometer, allowing users to read acceleration data.
+- `Lpf2::Devices::HubGyroscope` — a device that provides access to the hub's gyroscope, allowing users to read angular velocity data.
+
+Updated `Lpf2::Devices::TechnicColorSensor` with new methods:
+
+- `getReflectivity()` — get reflected light percentage (mode 1 = REFLT, 0-100 PCT).
+- `getRGB(uint16_t &r, uint16_t &g, uint16_t &b, uint16_t &i)` — get raw RGB channels and intensity (mode 5 = RGB I).
+- `getHSV(uint16_t &h, uint16_t &s, uint16_t &v)` — get HSV readings (mode 6 = HSV; H 0-360, S 0-100, V 0-360).
+- `setLight(uint8_t l1, uint8_t l2, uint8_t l3)` — set the on-board light channels (mode 3 = LIGHT; 0-100 PCT each).
+
+## 2.5.3 — 2026-07-06
 
 Fixed the `CMD_EXT_MODE` bug in `Local::PortParser`
 
-## 2.5.2 — 2026-06-26
+## 2.5.2 — 2026-07-06
 
 Fixed the `CMD_EXT_MODE` bug in `Local::EmulatedPort` and
 `Local::PortWriter` where the flag was not being reset after sending the
 extended mode message, causing the next mode to always be treated as
 extended.
 
-## 2.5.1 — 2026-06-26
+## 2.5.1 — 2026-07-06
 
 Fix mode selection: Do not send `CMD_EXT_MODE`, just send the mode number
 as is. The `CMD_EXT_MODE` is only used in data messages.
 
-## 2.5.0 — 2026-06-26
+## 2.5.0 — 2026-06-28
 
 Added a new `getSpeed()` and `getAbsPosition()` method to the
 `EncoderMotorControl` interface, allowing users to retrieve the speed and
