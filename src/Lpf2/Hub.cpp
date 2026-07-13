@@ -1000,6 +1000,11 @@ namespace Lpf2
         if (!isConnected())
             return;
 
+        for (auto &[_, port] : m_remotePorts)
+        {
+            port->update();
+        }
+
         if (m_pendingRequest.valid && LPF2_GET_TIME() - m_pendingRequest.sentTime >= 200)
         {
             LPF2_LOG_E("Request timed out: msgType: %i", (int)m_pendingRequest.msgType);
