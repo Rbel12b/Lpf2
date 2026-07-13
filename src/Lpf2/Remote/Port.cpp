@@ -63,11 +63,6 @@ namespace Lpf2::Remote
     {
         if (!m_remote || !isDeviceConnected())
             return 1;
-        if (idx >= m_modeCombos.size() || m_modeCombos[idx] == 0)
-        {
-            LPF2_LOG_W("Invalid combo index: %i", idx);
-            return 1;
-        }
 
         storeComboDeltas(idx, deltas);
 

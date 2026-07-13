@@ -29,7 +29,10 @@ namespace Lpf2::Devices
         /**
          * @brief Set the light on the sensor, all values should be in the range 0-100.
          */
-        virtual void setLight(uint8_t l1, uint8_t l2, uint8_t l3, uint8_t l4) = 0;
+        virtual void setLight(uint8_t l1, uint8_t l2, uint8_t l3, uint8_t l4)
+        {
+            return;
+        }
 
         /**
          * @brief Get the distance measured by the sensor in centimeters.
@@ -57,7 +60,7 @@ namespace Lpf2::Devices
             return "Technic Distance Sensor";
         }
 
-        inline static const int LIGHT_MODE = 5;
+        inline static const int MODE_LIGHT = 5;
 
         bool hasCapability(DeviceCapabilityId id) const override;
         void *getCapability(DeviceCapabilityId id) override;

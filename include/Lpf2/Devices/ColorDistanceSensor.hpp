@@ -1,6 +1,6 @@
 /**
  *  Copyright (C) 2026 - Rbel12b
- * 
+ *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU Affero General Public License as
  *  published by the Free Software Foundation, either version 3 of the
@@ -19,118 +19,122 @@
 
 #include "Lpf2/config.hpp"
 #include "Lpf2/DeviceFactory.hpp"
+#include "Lpf2/Devices/ColorSensor.hpp"
+#include "Lpf2/Devices/DistanceSensor.hpp"
 
 namespace Lpf2::Devices
 {
-    class TechnicColorSensorControl
+    class ColorDistanceSensorControl
     {
     public:
-        virtual ~TechnicColorSensorControl() = default;
+        virtual ~ColorDistanceSensorControl() = default;
 
         /**
-         * @brief Get the color index from the sensor (mode 0 = COLOR).
+         * @brief Get the detected colour index (mode 0 = COLOR).
          */
         virtual ColorIDX getColorIdx() = 0;
 
         /**
-         * @brief Get reflected light percentage (mode 1 = REFLT, 0-100 PCT).
+         * @brief Get measured distance in centimetres (mode 1 = DIST).
+         */
+        virtual float getDistance() = 0;
+
+        /**
+         * @brief Get reflected light percentage (mode 3 = REFLT, 0-100 PCT).
          */
         virtual float getReflectivity() = 0;
 
         /**
-         * @brief Get raw RGB channels and intensity (mode 5 = RGB I).
-         */
-        virtual void getRGB(uint16_t &r, uint16_t &g, uint16_t &b) = 0;
-
-        /**
-         * @brief Get HSV readings (mode 6 = HSV; H 0-360, S 0-100, V 0-360).
-         */
-        virtual void getHSV(uint16_t &h, uint16_t &s, uint16_t &v)
-        {
-            return;
-        }
-
-        /**
-         * @brief Get ambient light percentage (mode 2 = AMBI, 0-100 PCT).
+         * @brief Get ambient light percentage (mode 4 = AMBI, 0-100 PCT).
          */
         virtual float getAmbientLight() = 0;
 
         /**
-         * @brief Set the on-board light channels (mode 3 = LIGHT; 0-100 PCT each).
+         * @brief Get raw RGB channels (mode 6 = RGB I).
          */
-        virtual void setLight(uint8_t l1, uint8_t l2, uint8_t l3)
-        {
-            return;
-        }
+        virtual void getRGB(uint16_t &r, uint16_t &g, uint16_t &b) = 0;
+
+        /**
+         * @brief Emit an IR value on the LEGO Power Functions RC channel
+         *        (mode 7 = IR TX).
+         */
+        virtual void setIrTx(uint16_t value) = 0;
+
+        /**
+         * @brief Set the on-board LED colour (mode 5 = LED).
+         */
+        virtual void setLedColor(ColorIDX color) = 0;
 
         /**
          * @brief Switch the sensor to a specific mode.
          *
-         * Modes 0, 1, 5, 6 are configured through a mode combo internally so
-         * multiple values (colour, reflectivity, RGB, HSV) can be read back
-         * without repeated mode switches.
-         *
-         * @param modeNum One of MODE_COLOR, MODE_REFLT, MODE_AMBI, MODE_LIGHT,
-         *                MODE_RGB, MODE_HSV.
+         * @param modeNum One of MODE_COLOR, MODE_DIST, MODE_REFLT, MODE_AMBI,
+         *                MODE_LED, MODE_RGB, MODE_IR.
          * @param delta   Per-mode delta threshold. 0 = report every update.
          */
         virtual int setMode(uint8_t modeNum, float delta = 1.0f) = 0;
     };
 
-    class TechnicColorSensor : public PortDevice, public TechnicColorSensorControl
+    class ColorDistanceSensor :
+        public PortDevice,
+        public ColorDistanceSensorControl,
+        public TechnicColorSensorControl,
+        public TechnicDistanceSensorControl
     {
     public:
-        TechnicColorSensor(Port &port) : PortDevice(port) {}
+        ColorDistanceSensor(Port &port) : PortDevice(port) {}
 
         bool init() override;
         void update() override;
 
         const char *name() const override
         {
-            return "Technic Color Sensor";
+            return "Color Distance Sensor";
         }
 
         bool hasCapability(DeviceCapabilityId id) const override;
         void *getCapability(DeviceCapabilityId id) override;
 
         inline static const DeviceCapabilityId CAP =
-            Lpf2CapabilityRegistry::registerCapability("technic_color_sensor");
+            Lpf2CapabilityRegistry::registerCapability("color_distance_sensor");
 
         static void registerFactory(DeviceRegistry &reg);
 
-        inline static const int MODE_COLOR = 0;
-        inline static const int MODE_REFLT = 1;
-        inline static const int MODE_AMBI = 2;
-        inline static const int MODE_LIGHT = 3;
-        inline static const int MODE_RGB = 5;
-        inline static const int MODE_HSV = 6;
-
         ColorIDX getColorIdx() override;
+        float getDistance() override;
         float getReflectivity() override;
         float getAmbientLight() override;
         void getRGB(uint16_t &r, uint16_t &g, uint16_t &b) override;
-        void getHSV(uint16_t &h, uint16_t &s, uint16_t &v) override;
-        void setLight(uint8_t l1, uint8_t l2, uint8_t l3) override;
+        void setIrTx(uint16_t value) override;
+        void setLedColor(ColorIDX color) override;
         int setMode(uint8_t modeNum, float delta = 1.0f) override;
+
+        inline static const uint8_t MODE_COLOR = 0;
+        inline static const uint8_t MODE_DIST = 1;
+        inline static const uint8_t MODE_REFLT = 3;
+        inline static const uint8_t MODE_AMBI = 4;
+        inline static const uint8_t MODE_LED = 5;
+        inline static const uint8_t MODE_RGB = 6;
+        inline static const uint8_t MODE_IR = 7;
 
     private:
         bool m_comboActive = false;
         uint8_t m_modeActive = 0;
     };
 
-    class TechnicColorSensorFactory : public DeviceFactory
+    class ColorDistanceSensorFactory : public DeviceFactory
     {
     public:
         bool matches(const Port &port) const override;
 
         PortDevice *create(Port &port) const override
         {
-            return new TechnicColorSensor(port);
+            return new ColorDistanceSensor(port);
         }
 
-        const char *name() const
+        const char *name() const override
         {
-            return "Technic Color Sensor Factory";
+            return "Color Distance Sensor Factory";
         }
     };
 }; // namespace Lpf2::Devices

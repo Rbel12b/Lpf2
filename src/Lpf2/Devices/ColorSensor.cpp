@@ -53,29 +53,69 @@ namespace Lpf2::Devices
         return false;
     }
 
+    bool TechnicColorSensor::init()
+    {
+        m_port.setModeCombo(0); //0x0063
+        m_comboActive = true;
+        return true;
+    }
+
+    void TechnicColorSensor::update()
+    {
+    }
+
     ColorIDX TechnicColorSensor::getColorIdx()
     {
-        return ColorIDX((int)m_port.getValue(0, 0));
+        if (!m_comboActive || m_modeActive != MODE_COLOR)
+        {
+            setMode(MODE_COLOR);
+        }
+
+        return ColorIDX((int)m_port.getValue(MODE_COLOR, 0));
     }
 
     float TechnicColorSensor::getReflectivity()
     {
-        return m_port.getValue(1, 0);
+        if (!m_comboActive || m_modeActive != MODE_REFLT)
+        {
+            setMode(MODE_REFLT);
+        }
+
+        return m_port.getValue(MODE_REFLT, 0);
     }
 
-    void TechnicColorSensor::getRGB(uint16_t &r, uint16_t &g, uint16_t &b, uint16_t &i)
+    float TechnicColorSensor::getAmbientLight()
     {
-        r = (uint16_t)m_port.getValue(5, 0);
-        g = (uint16_t)m_port.getValue(5, 1);
-        b = (uint16_t)m_port.getValue(5, 2);
-        i = (uint16_t)m_port.getValue(5, 3);
+        if (m_modeActive != MODE_AMBI)
+        {
+            setMode(MODE_AMBI);
+        }
+
+        return m_port.getValue(MODE_AMBI, 0);
+    }
+
+    void TechnicColorSensor::getRGB(uint16_t &r, uint16_t &g, uint16_t &b)
+    {
+        if (!m_comboActive || m_modeActive != MODE_RGB)
+        {
+            setMode(MODE_RGB);
+        }
+
+        r = (uint16_t)m_port.getValue(MODE_RGB, 0);
+        g = (uint16_t)m_port.getValue(MODE_RGB, 1);
+        b = (uint16_t)m_port.getValue(MODE_RGB, 2);
     }
 
     void TechnicColorSensor::getHSV(uint16_t &h, uint16_t &s, uint16_t &v)
     {
-        h = (uint16_t)m_port.getValue(6, 0);
-        s = (uint16_t)m_port.getValue(6, 1);
-        v = (uint16_t)m_port.getValue(6, 2);
+        if (!m_comboActive || m_modeActive != MODE_HSV)
+        {
+            setMode(MODE_HSV);
+        }
+
+        h = (uint16_t)m_port.getValue(MODE_HSV, 0);
+        s = (uint16_t)m_port.getValue(MODE_HSV, 1);
+        v = (uint16_t)m_port.getValue(MODE_HSV, 2);
     }
 
     void TechnicColorSensor::setLight(uint8_t l1, uint8_t l2, uint8_t l3)
@@ -92,6 +132,21 @@ namespace Lpf2::Devices
         data.push_back(l2);
         data.push_back(l3);
 
-        m_port.writeData(LIGHT_MODE, data);
+        m_port.writeData(MODE_LIGHT, data);
+    }
+
+    int TechnicColorSensor::setMode(uint8_t modeNum, float delta)
+    {
+        if (modeNum == 0 || modeNum == 1 || modeNum == 5 || modeNum == 6)
+        {
+            m_comboActive = true;
+            return m_port.setModeCombo(0, {delta, delta, delta, delta});
+        }
+        else
+        {
+            m_modeActive = modeNum;
+            m_comboActive = false;
+            return m_port.setMode(modeNum, delta);
+        }
     }
 }; // namespace Lpf2::Devices

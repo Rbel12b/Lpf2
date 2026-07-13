@@ -18,6 +18,7 @@
 #include "Lpf2/Device.hpp"
 #include "Lpf2/Devices/EncoderMotor.hpp"
 #include "Lpf2/Devices/BasicMotor.hpp"
+#include "Lpf2/Devices/ColorDistanceSensor.hpp"
 #include "Lpf2/Devices/ColorSensor.hpp"
 #include "Lpf2/Devices/DistanceSensor.hpp"
 #include "Lpf2/Devices/HubLED.hpp"
@@ -32,7 +33,7 @@ namespace Lpf2
         // Order matters
         EncoderMotor::registerFactory(DeviceRegistry::instance()); // EncoderMotor must be before BasicMotor, because we prefer EncoderMotors over BasicMotors
         BasicMotor::registerFactory(DeviceRegistry::instance());
-        // TODO: Add colordistanceSensor here! (above Color and Distance sensors)
+        ColorDistanceSensor::registerFactory(DeviceRegistry::instance());
         TechnicColorSensor::registerFactory(DeviceRegistry::instance());
         TechnicDistanceSensor::registerFactory(DeviceRegistry::instance());
         HubLED::registerFactory(DeviceRegistry::instance());
