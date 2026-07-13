@@ -70,7 +70,7 @@ namespace Lpf2::Devices
         data.push_back(l3);
         data.push_back(l4);
 
-        m_port.writeData(LIGHT_MODE, data);
+        m_port.writeData(MODE_LIGHT, data);
     }
 
     float TechnicDistanceSensor::getDistance()

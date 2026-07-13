@@ -31,13 +31,19 @@ namespace Lpf2::Devices
 
     bool ColorDistanceSensor::hasCapability(DeviceCapabilityId id) const
     {
-        return id == CAP;
+        return id == CAP
+            || id == TechnicColorSensor::CAP
+            || id == TechnicDistanceSensor::CAP;
     }
 
     void *ColorDistanceSensor::getCapability(DeviceCapabilityId id)
     {
         if (id == CAP)
             return static_cast<ColorDistanceSensorControl *>(this);
+        else if (id == TechnicColorSensor::CAP)
+            return static_cast<TechnicColorSensorControl *>(this);
+        else if (id == TechnicDistanceSensor::CAP)
+            return static_cast<TechnicDistanceSensorControl *>(this);
         return nullptr;
     }
 
@@ -53,40 +59,90 @@ namespace Lpf2::Devices
         return false;
     }
 
+    bool ColorDistanceSensor::init()
+    {
+        return m_port.setModeCombo(0) == 0; // 0x004F
+    }
+
+    void ColorDistanceSensor::update()
+    {
+        return;
+    }
+
     ColorIDX ColorDistanceSensor::getColorIdx()
     {
-        return ColorIDX((int)m_port.getValue(0, 0));
+        if (!m_comboActive || m_modeActive != MODE_COLOR)
+        {
+            setMode(MODE_COLOR);
+        }
+
+        return ColorIDX((int)m_port.getValue(MODE_COLOR, 0));
     }
 
     float ColorDistanceSensor::getDistance()
     {
-        return m_port.getValue(1, 0);
+        if (!m_comboActive || m_modeActive != MODE_DIST)
+        {
+            setMode(MODE_DIST);
+        }
+
+        return m_port.getValue(MODE_DIST, 0);
     }
 
-    uint8_t ColorDistanceSensor::getReflectedLight()
+    float ColorDistanceSensor::getReflectivity()
     {
-        return static_cast<uint8_t>(m_port.getValue(3, 0));
+        if (!m_comboActive || m_modeActive != MODE_REFLT)
+        {
+            setMode(MODE_REFLT);
+        }
+
+        return m_port.getValue(MODE_REFLT, 0);
     }
 
-    uint8_t ColorDistanceSensor::getAmbientLight()
+    float ColorDistanceSensor::getAmbientLight()
     {
-        return static_cast<uint8_t>(m_port.getValue(4, 0));
+        if (!m_comboActive || m_modeActive != MODE_AMBI)
+        {
+            setMode(MODE_AMBI);
+        }
+
+        return m_port.getValue(MODE_AMBI, 0);
     }
 
-    void ColorDistanceSensor::getRgb(uint16_t &red, uint16_t &green, uint16_t &blue)
+    void ColorDistanceSensor::getRGB(uint16_t &r, uint16_t &g, uint16_t &b)
     {
-        red = static_cast<uint16_t>(m_port.getValue(6, 0));
-        green = static_cast<uint16_t>(m_port.getValue(6, 1));
-        blue = static_cast<uint16_t>(m_port.getValue(6, 2));
+        if (!m_comboActive || m_modeActive != MODE_RGB)
+        {
+            setMode(MODE_RGB);
+        }
+
+        r = static_cast<uint16_t>(m_port.getValue(MODE_RGB, 0));
+        g = static_cast<uint16_t>(m_port.getValue(MODE_RGB, 1));
+        b = static_cast<uint16_t>(m_port.getValue(MODE_RGB, 2));
     }
 
     void ColorDistanceSensor::setIrTx(uint16_t value)
     {
-        m_port.writeData(7, {static_cast<uint8_t>(value & 0xFF), static_cast<uint8_t>((value >> 8) & 0xFF)});
+        m_port.writeData(MODE_IR, {static_cast<uint8_t>(value & 0xFF), static_cast<uint8_t>((value >> 8) & 0xFF)});
     }
 
     void ColorDistanceSensor::setLedColor(ColorIDX color)
     {
-        m_port.writeData(5, {(uint8_t)color});
+        m_port.writeData(MODE_LED, {(uint8_t)color});
+    }
+
+    int ColorDistanceSensor::setMode(uint8_t modeNum, float delta)
+    {
+        if (modeNum == 0 || modeNum == 1 || modeNum == 2 || modeNum == 3 || modeNum == 6)
+        {
+            m_comboActive = true;
+            m_port.setModeCombo(0, {delta, delta, delta, delta, delta});
+        }
+        else
+        {
+            m_modeActive = modeNum;
+            m_comboActive = false;
+            m_port.setMode(modeNum, delta);
+        }
     }
 }; // namespace Lpf2::Devices

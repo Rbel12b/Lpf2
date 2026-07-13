@@ -461,17 +461,17 @@ namespace Lpf2
             return m_port.getCapabilities();
         }
 
-        int writeData(uint8_t modeNum, const std::vector<uint8_t> &data) override
+        virtual int writeData(uint8_t modeNum, const std::vector<uint8_t> &data) override
         {
             return m_port.writeData(modeNum, data);
         }
 
-        int setMode(uint8_t mode, float delta = 1.0f) override
+        virtual int setMode(uint8_t modeNum, float delta = 1.0f) override
         {
-            return m_port.setMode(mode, delta);
+            return m_port.setMode(modeNum, delta);
         }
 
-        int setModeCombo(uint8_t idx, const std::vector<float>& deltas = {}) override
+        virtual int setModeCombo(uint8_t idx, const std::vector<float>& deltas = {}) override
         {
             return m_port.setModeCombo(idx, deltas);
         }
