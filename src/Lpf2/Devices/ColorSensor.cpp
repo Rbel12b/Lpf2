@@ -140,13 +140,13 @@ namespace Lpf2::Devices
         if (modeNum == 0 || modeNum == 1 || modeNum == 5 || modeNum == 6)
         {
             m_comboActive = true;
-            m_port.setModeCombo(0, {delta, delta, delta, delta});
+            return m_port.setModeCombo(0, {delta, delta, delta, delta});
         }
         else
         {
             m_modeActive = modeNum;
             m_comboActive = false;
-            m_port.setMode(modeNum, delta);
+            return m_port.setMode(modeNum, delta);
         }
     }
 }; // namespace Lpf2::Devices
