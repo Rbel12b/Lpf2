@@ -139,10 +139,10 @@ namespace Lpf2
 
         BLEUUID m_bleHubServiceUuid;
         BLEUUID m_bleHubCharachteristicUuid;
-        BLEAddress *m_bleServerAddress;
+        BLEAddress *m_bleServerAddress = nullptr;
         BLEAddress *m_bleRequestedDeviceAddress = nullptr;
-        BLERemoteCharacteristic *m_bleHubCharacteristic;
-        BLEScan *m_bleScan;
+        BLERemoteCharacteristic *m_bleHubCharacteristic = nullptr;
+        BLEScan *m_bleScan = nullptr;
         NimBLEScanCallbacks *m_bleAdvertiseDeviceCallback = nullptr;
     
         uint32_t m_bleScanDuration = 10;

@@ -403,10 +403,22 @@ namespace Lpf2
             {
                 return;
             }
+            // Some hubs omit DETACHED_IO on device swap; treat a new ATTACHED_IO
+            // for an already-occupied port as an implicit detach + re-attach so
+            // the new device gets its info queried (or descriptor re-applied).
             if (m_attachedPortsDevice.count(portNum) && m_attachedPortsDevice[portNum] != DeviceType::UNKNOWNDEVICE)
             {
-                LPF2_LOG_E("Port 0x%02X has another device attached.", (int)portNum);
-                break;
+                LPF2_LOG_D("Port 0x%02X: implicit detach before re-attach.", (int)portNum);
+                m_attachedPortsDevice[portNum] = DeviceType::UNKNOWNDEVICE;
+                auto prevPort = _getPort(portNum);
+                prevPort->m_deviceType = DeviceType::UNKNOWNDEVICE;
+                prevPort->m_modeData.clear();
+                prevPort->m_modeCount = 0;
+                prevPort->m_inModesMask = 0;
+                prevPort->m_outModesMask = 0;
+                prevPort->m_modeCombos.clear();
+                prevPort->m_comboNum = 0;
+                prevPort->m_capabilities = 0;
             }
             DeviceType devType = (DeviceType)message[5]; // | message[6] << 8;
             std::vector<uint8_t> raw;
@@ -442,6 +454,8 @@ namespace Lpf2
             port->m_inModesMask = 0;
             port->m_outModesMask = 0;
             port->m_modeCombos.clear();
+            port->m_comboNum = 0;
+            port->m_capabilities = 0;
             break;
         }
         default:
@@ -1000,24 +1014,33 @@ namespace Lpf2
             requestInfos();
         }
 
-        std::for_each(m_attachedPortsDevice.begin(), m_attachedPortsDevice.end(), [this](std::pair<PortNum, DeviceType> attachedPort)
-                      {
-        _getPort(attachedPort.first);
-        if (!m_dataRequestState.finishedRequests)
+        // Kick off info-request sequence for a newly-attached port that has no
+        // cached descriptor. Break after first kickoff — the state machine is
+        // single-port-at-a-time; remaining ports get picked up on next update().
+        for (auto &attachedPort : m_attachedPortsDevice)
         {
-            return;
-        }
-
-        if (attachedPort.second != DeviceType::UNKNOWNDEVICE &&
-            !(m_remotePorts[attachedPort.first]->isDeviceConnected()))
-        {
+            Remote::Port *pPort = _getPort(attachedPort.first);
+            if (!m_dataRequestState.finishedRequests)
+            {
+                break;
+            }
+            if (attachedPort.second == DeviceType::UNKNOWNDEVICE)
+            {
+                continue;
+            }
+            if (pPort->isDeviceConnected())
+            {
+                continue;
+            }
             LPF2_LOG_D("Starting requests for: port: 0x%02X, dev: 0x%02X",
-                (int)attachedPort.first, (int)attachedPort.second);
+                       (int)attachedPort.first, (int)attachedPort.second);
             m_dataRequestState.portNum = attachedPort.first;
             m_dataRequestState.state = DataRequestingState::PORT_INFO;
             m_dataRequestState.finishedRequests = false;
             m_dataRequestState.mode = 0;
-        } });
+            m_dataRequestState.info = 0;
+            break;
+        }
     }
 
     /**
@@ -1026,6 +1049,10 @@ namespace Lpf2
      */
     NimBLEAddress Hub::getHubAddress()
     {
+        if (!m_bleServerAddress)
+        {
+            return NimBLEAddress();
+        }
         NimBLEAddress pAddress = *m_bleServerAddress;
         return pAddress;
     }
@@ -1175,6 +1202,11 @@ namespace Lpf2
      */
     bool Hub::connectHub()
     {
+        if (!m_bleServerAddress)
+        {
+            LPF2_LOG_W("connectHub: no hub discovered yet");
+            return false;
+        }
         BLEAddress pAddress = *m_bleServerAddress;
         NimBLEClient *pClient = nullptr;
 
