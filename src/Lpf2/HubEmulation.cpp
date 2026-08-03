@@ -1052,9 +1052,13 @@ namespace Lpf2
     HubEmulation::HubEmulation() {};
 
     HubEmulation::HubEmulation(std::string hubName, HubType hubType)
+        : HubEmulation(hubName, hubType, true) {}
+
+    HubEmulation::HubEmulation(std::string hubName, HubType hubType, bool ownsBleStack)
     {
         setName(hubName);
         m_hubType = hubType;
+        m_ownsBleStack = ownsBleStack;
     }
 
     HubEmulation::~HubEmulation()
@@ -1320,9 +1324,17 @@ namespace Lpf2
         }
         LPF2_LOG_D("Starting BLE");
 
-        NimBLEDevice::init(getName());
-        NimBLEDevice::setOwnAddrType(BLE_OWN_ADDR_PUBLIC);
-        NimBLEDevice::setPower(ESP_PWR_LVL_N0, NimBLETxPowerType::Advertise); // 0dB, Advertisment
+        if (m_ownsBleStack)
+        {
+            NimBLEDevice::init(getName());
+            NimBLEDevice::setOwnAddrType(BLE_OWN_ADDR_PUBLIC);
+            NimBLEDevice::setPower(ESP_PWR_LVL_N0, NimBLETxPowerType::Advertise); // 0dB, Advertisment
+        }
+        else if (!NimBLEDevice::isInitialized())
+        {
+            LPF2_LOG_E("HubEmulation::start: BLE stack not initialized (ownsBleStack=false)");
+            return;
+        }
         reset();
 
         if (!m_bleServer)
@@ -1403,12 +1415,21 @@ namespace Lpf2
             m_advertising = false;
         }
 
-        NimBLEDevice::deinit(true);
-
-        // Reset pointers so start() rebuilds everything
-        m_bleServer = nullptr;
-        m_bleService = nullptr;
-        m_bleChar = nullptr;
-        m_bleAdvertising = nullptr;
+        if (m_ownsBleStack)
+        {
+            NimBLEDevice::deinit(true);
+            // Reset pointers so start() rebuilds everything
+            m_bleServer = nullptr;
+            m_bleService = nullptr;
+            m_bleChar = nullptr;
+            m_bleAdvertising = nullptr;
+        }
+        else if (m_bleServer && m_bleService)
+        {
+            m_bleServer->removeService(m_bleService, true);
+            m_bleService = nullptr;
+            m_bleChar = nullptr;
+            m_bleAdvertising = nullptr;
+        }
     }
 };
