@@ -1335,6 +1335,10 @@ namespace Lpf2
             LPF2_LOG_E("HubEmulation::start: BLE stack not initialized (ownsBleStack=false)");
             return;
         }
+        else
+        {
+            NimBLEDevice::setDeviceName(getName());
+        }
         reset();
 
         if (!m_bleServer)
