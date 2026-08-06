@@ -77,6 +77,7 @@ namespace Lpf2::Local
         );
 
         void _update() override;
+        void _onDisable(bool disabled) override;
 
         enum class STATUS
         {

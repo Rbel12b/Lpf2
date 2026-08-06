@@ -103,6 +103,23 @@ namespace Lpf2::Local
     }
 #endif
 
+    void Port::_onDisable(bool disabled)
+    {
+        if (!m_IO.ready())
+            return;
+        if (m_pwm)
+            m_pwm->off();
+        if (m_serial)
+        {
+            Utils::MutexLock lock(m_serialMutex);
+            m_serial->uartPinsOff();
+        }
+        if (!disabled)
+        {
+            resetDevice();
+        }
+    }
+
     void Port::_update()
     {
         if (!m_IO.ready())

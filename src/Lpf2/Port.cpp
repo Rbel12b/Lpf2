@@ -370,6 +370,8 @@ void Lpf2::Port::setFromDesc()
 
 void Lpf2::Port::update()
 {
+    if (m_disabled)
+        return;
     _update();
     if (!isDeviceConnected() && m_device)
     {

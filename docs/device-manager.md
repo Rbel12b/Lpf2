@@ -33,6 +33,26 @@ the currently attached device. `port.device()` lazily attaches a typed
 device the first time it is called after a connect — subsequent calls
 return the same instance until the device is unplugged or replaced.
 
+## Pausing a port
+
+`port.disable()` makes `update()` a no-op until `port.disable(false)` is
+called. Use this to hand the underlying transport to another task
+(e.g. reprogramming a device over the same UART) without destroying the
+port or its device wrapper:
+
+```cpp
+port.disable();          // update() loops become no-ops
+// ... do other work with the transport ...
+port.disable(false);     // resume polling
+```
+
+`port.isDisabled()` returns the current state.
+
+Subclasses can override the protected `_onDisable(bool disabled)` hook
+to release or reacquire transport resources on the transition (e.g. a
+`Local::Port` deinit-ing its UART while paused). The hook fires only on
+state changes.
+
 ## Device lifetime & invalidation
 
 The port owns the device via `std::unique_ptr<Device>`. Consumers receive

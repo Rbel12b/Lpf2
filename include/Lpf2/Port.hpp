@@ -61,6 +61,30 @@ namespace Lpf2
         virtual void init() {}
 
         /**
+         * @brief Enable/disable the port.
+         *
+         * When disabled, `update()` returns immediately without polling the
+         * transport or forwarding to the attached device. Use this to pause a
+         * port temporarily (e.g. while another task drives the same hardware)
+         * without tearing down the device wrapper. Call `disable(false)` to
+         * resume normal polling.
+         *
+         * @param disable true to disable, false to re-enable
+         */
+        void disable(bool disable = true)
+        {
+            if (m_disabled == disable)
+                return;
+            m_disabled = disable;
+            _onDisable(disable);
+        }
+
+        /**
+         * @brief Query the port's disabled state.
+         */
+        bool isDisabled() const { return m_disabled; }
+
+        /**
          * @brief Run device-factory resolution + child device update.
          * Detaches old device on disconnect/type change, constructs the new
          * typed Device via DeviceRegistry, and forwards update() to it.
@@ -329,6 +353,17 @@ namespace Lpf2
          */
         virtual void _update() = 0;
 
+        /**
+         * @brief Subclass hook fired when the enable/disable state changes.
+         *
+         * Called from `disable()` only on transition. Override to release or
+         * reacquire transport resources (e.g. deinit/init a UART) while the
+         * port is paused. Default: no-op.
+         *
+         * @param disabled new state — true = just disabled, false = just re-enabled
+         */
+        virtual void _onDisable(bool disabled) { (void)disabled; }
+
         static ModeNum getDefaultMode(DeviceType id);
         static bool deviceIsMotor(DeviceType id);
 
@@ -398,6 +433,8 @@ namespace Lpf2
 
         std::unique_ptr<Device> m_device;
         std::shared_ptr<DeviceSlot> m_slot;
+
+        bool m_disabled = false;
 
         /// Per-mode delta thresholds (indexed by mode number). 0 = fire on every update.
         std::vector<float> m_deltas;
