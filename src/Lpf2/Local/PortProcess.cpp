@@ -358,6 +358,26 @@ namespace Lpf2::Local
         m_startRec = m_start;
     }
 
+    void Port::forceDeviceType(DeviceType type)
+    {
+        // Stop UART polling and PWM so the transport is silent while the
+        // caller drives the port manually.
+        disable(true);
+
+        m_deviceType = type;
+        m_dumb = true;
+        m_deviceDataReceived = false;
+        m_modeCount = m_viewCount = 0;
+        m_activeCombo = -1;
+        m_comboNum = 0;
+        m_modeData.clear();
+        m_modeCombos.assign(16, 0);
+        // Load descriptor if the app registered one for this type; harmless
+        // no-op otherwise.
+        setFromDesc();
+        LPF2_LOG_I("Forced device type to 0x%02X", (unsigned)type);
+    }
+
     void Port::enterUartState()
     {
         m_pwm->off();

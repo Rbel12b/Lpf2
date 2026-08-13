@@ -114,6 +114,22 @@ namespace Lpf2::Local
         int setMode(uint8_t mode, float delta = 1.0f) override;
         int setModeCombo(uint8_t idx, const std::vector<float>& deltas = {}) override;
 
+        /**
+         * @brief Disable the port and force it to report a fixed device type.
+         *
+         * Used to drive devices that do not (or cannot) go through the LPF2
+         * handshake — e.g. EV3 motors. The port is left disabled so its
+         * UART/analog polling stays quiet, but the device type is set so
+         * downstream code (`setPower`, `startPower`, etc.) treats it as a
+         * motor and drives the PWM output pins directly.
+         *
+         * If a device descriptor is registered for @p type the port also
+         * populates its mode/combo data via `setFromDesc()`.
+         *
+         * Re-enable normal UART detection by calling `enable()`.
+         */
+        void forceDeviceType(DeviceType type);
+
         void startPower(int8_t pw) override;
         void setAccTime(uint16_t accTime, AccelerationProfile accProfile = 1) override;
         void setDecTime(uint16_t decTime, AccelerationProfile decProfile = 1) override;

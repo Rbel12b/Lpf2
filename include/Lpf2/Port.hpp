@@ -80,6 +80,13 @@ namespace Lpf2
         }
 
         /**
+         * @brief Re-enable a previously disabled port.
+         *
+         * Convenience helper equivalent to `disable(false)`.
+         */
+        void enable() { disable(false); }
+
+        /**
          * @brief Query the port's disabled state.
          */
         bool isDisabled() const { return m_disabled; }

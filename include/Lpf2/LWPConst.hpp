@@ -119,6 +119,12 @@ namespace Lpf2
         MARIO_HUB_PANT_SENSOR = 74,             // https://github.com/bricklife/LEGO-Mario-Reveng
         TECHNIC_MEDIUM_ANGULAR_MOTOR_GREY = 75, // Mindstorms
         TECHNIC_LARGE_ANGULAR_MOTOR_GREY = 76,  // Mindstorms
+        // EV3 motors have no official LPF2 ID (they predate LPF2 and use the
+        // EV3 UART protocol). These values are picked in an unused range so
+        // scripts can force the type via Lpf2::Local::Port::forceDeviceType()
+        // and drive them as raw PWM motors.
+        EV3_MEDIUM_MOTOR = 100,
+        EV3_LARGE_MOTOR = 101,
     };
 
     enum ModeNum
