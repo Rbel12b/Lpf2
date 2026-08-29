@@ -1314,12 +1314,6 @@ namespace Lpf2
         const auto& services = pClient->getServices(true);
         LPF2_LOG_D("discovered %d services", (int)services.size());
 
-        // Robot Inventor / SPIKE hubs (hub type 0x81) don't expose the LWP3 GATT at all.
-        // With `hub.bluetooth.lwp_advertise` on the peer, a user MicroPython program tunnels
-        // LWP3 frames through the SPIKE serial characteristic. Accept that char as an alias.
-        static const BLEUUID SPIKE_SERVICE_UUID("9ef58b69-e191-4daf-89d6-9e115258e626");
-        static const BLEUUID SPIKE_CHAR_UUID   ("9ef58b69-e191-4daf-89d6-9e115258e627");
-        const bool isSpikeHub = (m_hubType == HubType::INVENTOR_HUB);
 
         BLERemoteService *pRemoteService = nullptr;
         m_bleHubCharacteristic = nullptr;
@@ -1330,16 +1324,14 @@ namespace Lpf2
             {
                 LPF2_LOG_D("    chr: %s", chr->getUUID().toString().c_str());
                 const bool matchLwp   = (chr->getUUID() == m_bleHubCharachteristicUuid);
-                const bool matchSpike = (isSpikeHub &&
-                                         svc->getUUID() == SPIKE_SERVICE_UUID &&
-                                         chr->getUUID() == SPIKE_CHAR_UUID);
-                if (matchLwp || matchSpike)
+                if (matchLwp)
                 {
                     pRemoteService = svc;
                     m_bleHubCharacteristic = chr;
                 }
             }
         }
+
         if (m_bleHubCharacteristic == nullptr)
         {
             LPF2_LOG_E("no LWP3 characteristic found on peer");
