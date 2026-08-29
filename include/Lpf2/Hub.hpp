@@ -145,7 +145,7 @@ namespace Lpf2
         BLEScan *m_bleScan = nullptr;
         NimBLEScanCallbacks *m_bleAdvertiseDeviceCallback = nullptr;
     
-        uint32_t m_bleScanDuration = 10;
+        uint32_t m_bleScanDuration = 10000; // 10 seconds
         bool m_connecting = false;
         bool m_connected = false;
 

@@ -118,6 +118,9 @@ namespace Lpf2
                         case MARIO_HUB_ID:
                             _lpf2Hub->m_hubType = HubType::MARIO_HUB;
                             break;
+                        case INVENTOR_HUB_ID:
+                            _lpf2Hub->m_hubType = HubType::INVENTOR_HUB;
+                            break;
                         default:
                             _lpf2Hub->m_hubType = HubType::UNKNOWNHUB;
                             break;
@@ -873,23 +876,23 @@ namespace Lpf2
 
     Remote::Port *Hub::_getPort(PortNum portNum)
     {
-        if (!m_remotePorts.count(portNum))
+        auto it = m_remotePorts.find(portNum);
+        if (it != m_remotePorts.end() && it->second)
         {
-            m_remotePorts[portNum] = nullptr;
-            LPF2_LOG_D("Adding new NULL port.");
+            return it->second;
         }
-        Remote::Port *pPort = m_remotePorts[portNum];
-        if (pPort == nullptr)
+
+        // Build the Port fully BEFORE publishing it into the map — Hub::update() runs on
+        // another task and would deref a half-initialised (or nullptr) entry.
+        Remote::Port *pPort = new Remote::Port(this);
+        if (!pPort)
         {
-            pPort = new Remote::Port(this);
-            if (!pPort)
-            {
-                LPF2_LOG_E("Failed to allocate port.");
-            }
-            LPF2_LOG_D("Initializing port.");
-            pPort->m_portNum = portNum;
-            m_remotePorts[portNum] = pPort;
+            LPF2_LOG_E("Failed to allocate port.");
+            return nullptr;
         }
+        pPort->m_portNum = portNum;
+        LPF2_LOG_D("Initializing port.");
+        m_remotePorts[portNum] = pPort;
         return pPort;
     }
 
@@ -923,6 +926,30 @@ namespace Lpf2
 
     Hub::~Hub()
     {
+        // Stop scan and drop callback pointer before freeing it — NimBLE fires callbacks from
+        // its own task and will crash with InstrFetchProhibited if it invokes a deleted vtable.
+        if (m_bleScan)
+        {
+            m_bleScan->stop();
+            m_bleScan->setScanCallbacks(nullptr, false);
+            m_bleScan = nullptr;
+        }
+
+        // Disconnect and drop the peer client too, for the same reason.
+        if (m_bleServerAddress)
+        {
+            NimBLEClient *pClient = NimBLEDevice::getClientByPeerAddress(*m_bleServerAddress);
+            if (pClient)
+            {
+                pClient->setClientCallbacks(nullptr, false);
+                if (pClient->isConnected())
+                    pClient->disconnect();
+                NimBLEDevice::deleteClient(pClient);
+            }
+            delete m_bleServerAddress;
+            m_bleServerAddress = nullptr;
+        }
+
         std::for_each(m_remotePorts.begin(), m_remotePorts.end(), [](std::pair<PortNum, Port *> pair)
                       { delete pair.second; });
         if (m_bleAdvertiseDeviceCallback)
@@ -1002,7 +1029,8 @@ namespace Lpf2
 
         for (auto &[_, port] : m_remotePorts)
         {
-            port->update();
+            if (port)
+                port->update();
         }
 
         if (m_pendingRequest.valid && LPF2_GET_TIME() - m_pendingRequest.sentTime >= 200)
@@ -1227,12 +1255,17 @@ namespace Lpf2
             pClient = NimBLEDevice::getClientByPeerAddress(pAddress);
             if (pClient)
             {
-                if (!pClient->connect(pAddress, false))
+                if (!pClient->isConnected())
                 {
-                    LPF2_LOG_E("reconnect failed");
-                    return false;
+                    if (!pClient->connect(pAddress, false))
+                    {
+                        LPF2_LOG_E("reconnect failed");
+                        NimBLEDevice::deleteClient(pClient);
+                        m_connecting = false;
+                        return false;
+                    }
+                    LPF2_LOG_D("reconnect client");
                 }
-                LPF2_LOG_D("reconnect client");
             }
             /** We don't already have a client that knows this device,
              *  we will check for a client that is disconnected that we can use.
@@ -1253,40 +1286,77 @@ namespace Lpf2
             }
 
             pClient = NimBLEDevice::createClient();
+            // LEGO hubs need fast connection interval or GATT discovery stalls.
+            // minInterval=12 (15ms), maxInterval=24 (30ms), latency=0, timeout=200 (2s).
+            pClient->setConnectionParams(12, 24, 0, 200);
+            pClient->setConnectTimeout(5 * 1000);
         }
 
         if (!pClient->isConnected())
         {
-            if (!pClient->connect(pAddress))
+            // LEGO hubs drop the link if MTU exchange happens too early — skip it here.
+            if (!pClient->connect(pAddress, /*deleteAttributes=*/true, /*asyncConnect=*/false, /*exchangeMTU=*/false))
             {
                 LPF2_LOG_E("failed to connect");
+                NimBLEDevice::deleteClient(pClient);
+                m_connecting = false;
                 return false;
             }
         }
 
-        LPF2_LOG_D("connected to: %s, RSSI: %d", pClient->getPeerAddress().toString().c_str(), pClient->getRssi());
-        BLERemoteService *pRemoteService = pClient->getService(m_bleHubServiceUuid);
-        if (pRemoteService == nullptr)
-        {
-            LPF2_LOG_E("failed to get ble client");
-            return false;
-        }
+        LPF2_LOG_D("Connected to: %s, RSSI: %d", pClient->getPeerAddress().toString().c_str(), pClient->getRssi());
 
-        m_bleHubCharacteristic = pRemoteService->getCharacteristic(m_bleHubCharachteristicUuid);
+        // Register disconnect callback BEFORE any GATT op so peer drops during discovery get logged.
+        pClient->setClientCallbacks(new HubClientCallback(this), true);
+
+        // Discover ALL services (no UUID filter). Some LEGO hubs reject "Find By Type Value"
+        // (filtered discovery) with 128-bit UUIDs; walking all primaries works instead.
+        const auto& services = pClient->getServices(true);
+        LPF2_LOG_D("discovered %d services", (int)services.size());
+
+        // Robot Inventor / SPIKE hubs (hub type 0x81) don't expose the LWP3 GATT at all.
+        // With `hub.bluetooth.lwp_advertise` on the peer, a user MicroPython program tunnels
+        // LWP3 frames through the SPIKE serial characteristic. Accept that char as an alias.
+        static const BLEUUID SPIKE_SERVICE_UUID("9ef58b69-e191-4daf-89d6-9e115258e626");
+        static const BLEUUID SPIKE_CHAR_UUID   ("9ef58b69-e191-4daf-89d6-9e115258e627");
+        const bool isSpikeHub = (m_hubType == HubType::INVENTOR_HUB);
+
+        BLERemoteService *pRemoteService = nullptr;
+        m_bleHubCharacteristic = nullptr;
+        for (auto *svc : services)
+        {
+            LPF2_LOG_D("  svc: %s", svc->getUUID().toString().c_str());
+            for (auto *chr : svc->getCharacteristics(true))
+            {
+                LPF2_LOG_D("    chr: %s", chr->getUUID().toString().c_str());
+                const bool matchLwp   = (chr->getUUID() == m_bleHubCharachteristicUuid);
+                const bool matchSpike = (isSpikeHub &&
+                                         svc->getUUID() == SPIKE_SERVICE_UUID &&
+                                         chr->getUUID() == SPIKE_CHAR_UUID);
+                if (matchLwp || matchSpike)
+                {
+                    pRemoteService = svc;
+                    m_bleHubCharacteristic = chr;
+                }
+            }
+        }
         if (m_bleHubCharacteristic == nullptr)
         {
-            LPF2_LOG_E("failed to get ble service");
+            LPF2_LOG_E("no LWP3 characteristic found on peer");
+            pClient->disconnect();
+            NimBLEDevice::deleteClient(pClient);
+            m_connecting = false;
             return false;
         }
+        LPF2_LOG_D("Using service %s / char %s",
+                   pRemoteService->getUUID().toString().c_str(),
+                   m_bleHubCharacteristic->getUUID().toString().c_str());
 
         // register notifications (callback function) for the characteristic
         if (m_bleHubCharacteristic->canNotify())
         {
             m_bleHubCharacteristic->subscribe(true, std::bind(&Hub::notifyCallback, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3, std::placeholders::_4), true);
         }
-
-        // add callback instance to get notified if a disconnect event appears
-        pClient->setClientCallbacks(new HubClientCallback(this));
 
         // Set states
         m_connected = true;
@@ -1295,6 +1365,7 @@ namespace Lpf2
         m_dataRequestState.propId = HubPropertyType::ADVERTISING_NAME;
         m_dataRequestState.mode = 0;
         m_dataRequestState.state = DataRequestingState::HUB_ALERTS;
+        LPF2_LOG_D("Connected to hub: %s, chars retrieved.", pClient->getPeerAddress().toString().c_str());
         vTaskDelay(200);
         return true;
     }

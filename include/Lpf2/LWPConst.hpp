@@ -51,6 +51,7 @@ namespace Lpf2
         DUPLO_TRAIN_HUB = 5,
         CONTROL_PLUS_HUB = 6,
         MARIO_HUB = 7,
+        INVENTOR_HUB = 8,
     };
 
     enum BLEManufacturerData
@@ -61,6 +62,7 @@ namespace Lpf2
         POWERED_UP_REMOTE_ID = 66, // 0x42
         MARIO_HUB_ID = 67,         // 0x32
         CONTROL_PLUS_HUB_ID = 128, // 0x80
+        INVENTOR_HUB_ID = 129,     // 0x81
     };
 
     enum class MessageHeader
