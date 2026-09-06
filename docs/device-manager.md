@@ -103,11 +103,16 @@ implement that capability.
 | --- | --- | --- |
 | `BasicMotorControl` | `BasicMotor::CAP` | All motors |
 | `EncoderMotorControl` | `EncoderMotor::CAP` | Technic motors with encoder |
-| `TechnicColorSensorControl` | `TechnicColorSensor::CAP` | Technic color sensor |
+| `TechnicColorSensorControl` | `TechnicColorSensor::CAP` | Technic color sensor; also `ColorDistanceSensor` |
+| `ColorDistanceSensorControl` | `ColorDistanceSensor::CAP` | Color & Distance sensor (type 37) |
 | `DistanceSensorControl` | `DistanceSensor::CAP` | Technic distance sensor |
+| `HubLEDControl` | `HubLED::CAP` | Hub internal LED |
+| `HubAccelerometerControl` | `HubAccelerometer::CAP` | Hub internal accelerometer |
+| `HubGyroscopeControl` | `HubGyroscope::CAP` | Hub internal gyroscope |
 
 `EncoderMotor` also implements `BasicMotorControl` — all motors share that
-capability.
+capability. `ColorDistanceSensor` implements both `ColorDistanceSensorControl`
+and `TechnicColorSensorControl`, so either CAP resolves to it.
 
 ## Alternative: typed access via RTTI
 

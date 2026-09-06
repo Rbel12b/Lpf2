@@ -63,6 +63,28 @@ Colored output is enabled by default (`CONFIG_LPF2_LOG_COLORS=1`). Disable with:
 build_flags = -DCONFIG_LPF2_LOG_COLORS=0
 ```
 
+## Output redirect
+
+`lpf2_log_set_vprintf` replaces the default `vprintf` with any compatible
+function — useful for routing logs through MicroPython's USB CDC path or a
+custom sink:
+
+```cpp
+#include "Lpf2/log/log.h"
+
+// Redirect to a custom sink:
+lpf2_log_set_vprintf([](const char *fmt, va_list args) -> int {
+    // e.g. forward to mp_hal_stdout_tx_strn or a ring buffer
+    return vprintf(fmt, args); // fallback example
+});
+
+// Restore default vprintf:
+lpf2_log_set_vprintf(nullptr);
+```
+
+The function pointer is stored globally; the swap is not thread-safe — call it
+once at init time before any log macro fires.
+
 ## Routing away from UART0
 
 If UART0 is used for LPF2 communication, ESP-IDF core logs will corrupt the LPF2 data stream. Redirect them to USB CDC:

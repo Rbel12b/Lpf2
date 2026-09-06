@@ -1,5 +1,113 @@
 # Changelog
 
+## 2.7.0 — 2026-09-06
+
+### Optional BLE stack ownership in `HubEmulation`
+
+`HubEmulation` now accepts an optional `ownsBleStack` constructor parameter:
+
+```cpp
+HubEmulation(std::string hubName, HubType hubType, bool ownsBleStack = true);
+```
+
+Pass `false` when the NimBLE stack is managed externally (e.g. shared with a
+MicroPython `bluetooth` module). When `ownsBleStack` is `false`, `start()` skips
+NimBLE init and `stop()` skips `nimble_port_stop` / `nimble_port_deinit`, so the
+two users coexist without double-init or early teardown.
+
+The hub device name is now set in the BLE advertisement at init time rather than
+being left to the default.
+
+### Weak BLE chain hooks
+
+Three `extern "C" __attribute__((weak))` hooks let an external BLE module observe
+NimBLE server events without patching `HubEmulation`:
+
+- `lpf2_chain_on_connect(conn_handle, addr_type, addr[6])`
+- `lpf2_chain_on_disconnect(conn_handle, addr_type, addr[6])`
+- `lpf2_chain_on_mtu_change(conn_handle, mtu)`
+
+If absent the linker resolves them as no-ops.
+
+### Port disable API
+
+`Port` now has a pause/resume mechanism that stops `update()` polling without
+destroying the device wrapper:
+
+- `port.disable(bool disable = true)` — pause or resume; fires `_onDisable(bool)` only on transition.
+- `port.isDisabled() const` — query current state.
+- `Port::_onDisable(bool)` — virtual hook for subclasses to release / reacquire transport resources (e.g. UART deinit/init).
+
+### EV3 motor support via `forceDeviceType`
+
+`Local::Port` gains two new methods for devices that skip the LPF2 handshake
+(EV3 motors, bare PWM outputs):
+
+- `port.forceDeviceType(DeviceType type)` — disables UART detection and fixes the
+  reported device type. If a descriptor is registered for `type`, mode/combo data
+  is populated via `setFromDesc()` so motor commands (`setPower`, `startPower`,
+  etc.) work immediately.
+- `port.enable()` — convenience wrapper for `disable(false)`; restores normal UART
+  detection.
+
+New `DeviceType` constants for EV3 motors added to `LWPConst.hpp`.
+
+### BLE characteristic discovery cleanup
+
+SPIKE Prime hub handling removed from the BLE characteristic discovery path.
+Discovery now targets Control+/Technic hub characteristics only.
+
+### Logging output redirect
+
+`lpf2_log_set_vprintf(vprintf_like_fn)` added to `include/Lpf2/log/log.h`.
+Pass a custom `vprintf`-compatible function to redirect log output (e.g. into
+MicroPython's USB CDC path). Pass `nullptr` to restore the default `vprintf`.
+
+---
+
+## 2.6.1 — 2026-07-13
+
+### New device: `Lpf2::Devices::ColorDistanceSensor`
+
+Full driver for the LEGO Color & Distance Sensor (device type 37):
+
+- `getColorIdx()` — detected color as `ColorIDX`.
+- `getDistance()` — proximity reading (0.0–1.0).
+- `getReflectedLight()` — reflected light percentage.
+- `getAmbientLight()` — ambient light percentage.
+- `getRgb(r, g, b)` — raw RGB channels.
+- `setIrTx(value)` — write IR TX pattern.
+- `setLedColor(color)` — set the sensor's built-in LED.
+- `setMode(modeNum, delta)` — switch single mode; returns the mode number set.
+- Mode constants: `MODE_COLOR`, `MODE_DIST`, `MODE_REFLT`, `MODE_AMBI`,
+  `MODE_LED`, `MODE_RGB`, `MODE_IR`.
+
+### Extended `Lpf2::Devices::ColorSensor`
+
+- `getAmbientLight()` — ambient light reading.
+- `getReflectivity()` — reflected light percentage.
+- `getRGB(r, g, b)` — raw RGB channels.
+- `setMode(modeNum, delta)` — single-mode selection.
+
+### `setMode` / `setModeCombo` return values
+
+`setMode()` and `setModeCombo()` on both `ColorDistanceSensor` and `ColorSensor`
+now return the mode number that was applied (`int`), matching the pattern
+established by `TechnicColorSensor`.
+
+### Remote port timing fix
+
+`Hub::writeValue` now forces an immediate flush on remote ports so commands
+reach the connected hub without waiting for the next scheduled update cycle.
+
+### BLE null-pointer safety
+
+`BLEAddress` and `BLERemoteCharacteristic` member pointers in `Hub` are now
+initialised to `nullptr`, preventing potential use-before-init crashes during
+early disconnect handling.
+
+---
+
 ## 2.6.0 — 2026-07-09
 
 Added new devices under `Lpf2::Devices` namespace:
