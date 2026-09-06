@@ -26,6 +26,16 @@
 
 namespace Lpf2
 {
+    // Weak hooks — resolved by an external BLE module (e.g. the MicroPython
+    // `bluetooth` user module) that wants to observe server-level events
+    // sharing the same NimBLE stack. If absent, calls no-op.
+    extern "C" __attribute__((weak)) void lpf2_chain_on_connect(
+        uint16_t conn_handle, uint8_t addr_type, const uint8_t addr[6]);
+    extern "C" __attribute__((weak)) void lpf2_chain_on_disconnect(
+        uint16_t conn_handle, uint8_t addr_type, const uint8_t addr[6]);
+    extern "C" __attribute__((weak)) void lpf2_chain_on_mtu_change(
+        uint16_t conn_handle, uint16_t mtu);
+
     class Lpf2HubServerCallbacks : public NimBLEServerCallbacks
     {
 
@@ -43,6 +53,11 @@ namespace Lpf2
             _lpf2HubEmulation->m_connected = true;
             _lpf2HubEmulation->m_bleConnHandle = connInfo.getConnHandle();
             pServer->updateConnParams(connInfo.getConnHandle(), 24, 48, 0, 60);
+            if (lpf2_chain_on_connect) {
+                lpf2_chain_on_connect(connInfo.getConnHandle(),
+                                      connInfo.getAddress().getType(),
+                                      connInfo.getAddress().getBase()->val);
+            }
         };
 
         void onDisconnect(NimBLEServer *pServer, NimBLEConnInfo &connInfo, int reason) override
@@ -51,6 +66,18 @@ namespace Lpf2
             _lpf2HubEmulation->m_connected = false;
             _lpf2HubEmulation->m_subscribed = false;
             _lpf2HubEmulation->m_bleConnHandle = 0xFFFF;
+            if (lpf2_chain_on_disconnect) {
+                lpf2_chain_on_disconnect(connInfo.getConnHandle(),
+                                         connInfo.getAddress().getType(),
+                                         connInfo.getAddress().getBase()->val);
+            }
+        }
+
+        void onMTUChange(uint16_t MTU, NimBLEConnInfo &connInfo) override
+        {
+            if (lpf2_chain_on_mtu_change) {
+                lpf2_chain_on_mtu_change(connInfo.getConnHandle(), MTU);
+            }
         }
     };
 
@@ -1052,9 +1079,13 @@ namespace Lpf2
     HubEmulation::HubEmulation() {};
 
     HubEmulation::HubEmulation(std::string hubName, HubType hubType)
+        : HubEmulation(hubName, hubType, true) {}
+
+    HubEmulation::HubEmulation(std::string hubName, HubType hubType, bool ownsBleStack)
     {
         setName(hubName);
         m_hubType = hubType;
+        m_ownsBleStack = ownsBleStack;
     }
 
     HubEmulation::~HubEmulation()
@@ -1320,9 +1351,23 @@ namespace Lpf2
         }
         LPF2_LOG_D("Starting BLE");
 
-        NimBLEDevice::init(getName());
-        NimBLEDevice::setOwnAddrType(BLE_OWN_ADDR_PUBLIC);
-        NimBLEDevice::setPower(ESP_PWR_LVL_N0, NimBLETxPowerType::Advertise); // 0dB, Advertisment
+        if (m_ownsBleStack)
+        {
+            NimBLEDevice::init(getName());
+            NimBLEDevice::setOwnAddrType(BLE_OWN_ADDR_PUBLIC);
+            NimBLEDevice::setPower(ESP_PWR_LVL_N0, NimBLETxPowerType::Advertise); // 0dB, Advertisment
+        }
+        else if (!NimBLEDevice::isInitialized())
+        {
+            LPF2_LOG_E("HubEmulation::start: BLE stack not initialized (ownsBleStack=false)");
+            return;
+        }
+        else
+        {
+            NimBLEDevice::setDeviceName(getName());
+            NimBLEDevice::setOwnAddrType(BLE_OWN_ADDR_PUBLIC);
+            NimBLEDevice::setPower(ESP_PWR_LVL_N0, NimBLETxPowerType::Advertise);
+        }
         reset();
 
         if (!m_bleServer)
@@ -1403,12 +1448,21 @@ namespace Lpf2
             m_advertising = false;
         }
 
-        NimBLEDevice::deinit(true);
-
-        // Reset pointers so start() rebuilds everything
-        m_bleServer = nullptr;
-        m_bleService = nullptr;
-        m_bleChar = nullptr;
-        m_bleAdvertising = nullptr;
+        if (m_ownsBleStack)
+        {
+            NimBLEDevice::deinit(true);
+            // Reset pointers so start() rebuilds everything
+            m_bleServer = nullptr;
+            m_bleService = nullptr;
+            m_bleChar = nullptr;
+            m_bleAdvertising = nullptr;
+        }
+        else if (m_bleServer && m_bleService)
+        {
+            m_bleServer->removeService(m_bleService, true);
+            m_bleService = nullptr;
+            m_bleChar = nullptr;
+            m_bleAdvertising = nullptr;
+        }
     }
 };

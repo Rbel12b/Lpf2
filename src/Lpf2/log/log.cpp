@@ -36,6 +36,11 @@ extern "C" const char *lpf2_pathToFileName(const char *path)
 }
 
 static uint16_t lpf2_log_runtime_level = LPF2_LOG_LEVEL_ERROR;
+static lpf2_log_vprintf_t s_log_fn = NULL;
+
+void lpf2_log_set_vprintf(lpf2_log_vprintf_t fn) {
+    s_log_fn = fn;
+}
 
 uint16_t lpf2_get_runtime_log_level()
 {
@@ -72,27 +77,26 @@ esp_err_t lpf2_log_init(void)
 
 extern "C" int lpf2_log_printf(const char *fmt, ...)
 {
+    if (!fmt || strlen(fmt) == 0) {
+        return 0;
+    }
     xSemaphoreTake(logMutex, portMAX_DELAY);
-    
-#if ESP_IDF_VERSION_MAJOR > 4
-    if (!fmt || strlen(fmt) == 0 || !usb_serial_jtag_is_connected())
-    {
-        xSemaphoreGive(logMutex);
-        return 0;
-    }
-#else
-    if (!fmt || strlen(fmt) == 0)
-    {
-        xSemaphoreGive(logMutex);
-        return 0;
-    }
-#endif
     va_list args;
     va_start(args, fmt);
-    char buffer[512];
-    int len = vsnprintf(buffer, sizeof(buffer), fmt, args);
+    int len = 0;
+    if (s_log_fn) {
+        len = s_log_fn(fmt, args);
+    } else {
+#if ESP_IDF_VERSION_MAJOR > 4
+        if (usb_serial_jtag_is_connected())
+#endif
+        {
+            char buffer[512];
+            len = vsnprintf(buffer, sizeof(buffer), fmt, args);
+            usb_serial_jtag_write_bytes((const uint8_t *)buffer, len, 10);
+        }
+    }
     va_end(args);
-    usb_serial_jtag_write_bytes((const uint8_t *)buffer, len, 10);
     xSemaphoreGive(logMutex);
     return len;
 }

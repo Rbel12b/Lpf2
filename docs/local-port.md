@@ -82,3 +82,32 @@ the device-lifetime model.
 | `setModeCombo(idx)` | Select mode combination |
 | `getValue(modeNum, dataSet)` | Read last received value |
 | `getDeviceType()` | Connected device type |
+| `disable(bool)` | Pause/resume `update()` polling without destroying the device |
+| `isDisabled()` | Query disabled state |
+| `forceDeviceType(type)` | Force a fixed device type and disable UART detection (see below) |
+| `enable()` | Re-enable UART detection after `forceDeviceType` |
+
+## EV3 motors and non-LPF2 devices
+
+Devices that do not perform the LPF2 UART handshake (EV3 motors, bare PWM
+outputs) can be driven using `forceDeviceType`:
+
+```cpp
+portA.forceDeviceType(Lpf2::DeviceType::EV3_LARGE_MOTOR);
+```
+
+This does two things:
+
+1. Disables UART polling (`update()` becomes a no-op for the transport layer)
+   so the port doesn't waste time waiting for a handshake that will never arrive.
+2. Sets the reported device type so downstream code (`startPower`, `startSpeed`,
+   etc.) treats the port as a motor and drives PWM directly.
+
+If a descriptor is registered for `type`, the port also populates its mode/combo
+data via `setFromDesc()`, enabling capability-based access.
+
+To restore normal UART detection (e.g. after a device swap):
+
+```cpp
+portA.enable(); // equivalent to portA.disable(false)
+```

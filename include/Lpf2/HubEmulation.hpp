@@ -56,6 +56,7 @@ namespace Lpf2
         bool m_connected = false;
         bool m_subscribed = false;
         bool m_advertising = false;
+        bool m_ownsBleStack = true;
         uint16_t m_bleConnHandle = 0;
         Lpf2HubCharacteristicCallbacks *m_bleCharCallbacks = nullptr;
 
@@ -176,6 +177,7 @@ namespace Lpf2
     public:
         HubEmulation();
         HubEmulation(std::string hubName, HubType hubType);
+        HubEmulation(std::string hubName, HubType hubType, bool ownsBleStack);
         ~HubEmulation();
 
         /**

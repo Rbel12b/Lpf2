@@ -48,6 +48,42 @@ These are what the emulated hub reports in `PortInformation` / `PortModeInformat
 
 This is the device type `HubEmulation::setUseBuiltInDevices(true)` uses for every built-in port on the emulated hub.
 
+## HubEmulation — BLE stack ownership
+
+By default `HubEmulation` owns the NimBLE stack: it calls `nimble_port_init` on
+`start()` and `nimble_port_stop` / `nimble_port_deinit` on `stop()`.
+
+When the stack is managed externally (e.g. by a MicroPython `bluetooth` module
+that already initialised NimBLE), pass `ownsBleStack = false`:
+
+```cpp
+Lpf2::HubEmulation hub("Technic Hub", Lpf2::HubType::CONTROL_PLUS_HUB,
+                        /*ownsBleStack=*/false);
+```
+
+`HubEmulation` will register its GATT service and start advertising, but will
+not init or deinit the NimBLE stack.
+
+### Weak BLE chain hooks
+
+When two components share the NimBLE stack, the external module can observe
+`HubEmulation`'s server-level events by providing weak-linked C functions:
+
+```cpp
+extern "C" void lpf2_chain_on_connect(
+    uint16_t conn_handle, uint8_t addr_type, const uint8_t addr[6]);
+
+extern "C" void lpf2_chain_on_disconnect(
+    uint16_t conn_handle, uint8_t addr_type, const uint8_t addr[6]);
+
+extern "C" void lpf2_chain_on_mtu_change(
+    uint16_t conn_handle, uint16_t mtu);
+```
+
+Provide any subset — missing symbols are resolved as no-ops at link time.
+`HubEmulation` calls them after its own handling, so they run on the NimBLE
+task with the same arguments the NimBLE callback received.
+
 ## Usage — custom port on an emulated hub
 
 ```cpp

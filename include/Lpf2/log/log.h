@@ -213,6 +213,11 @@ void lpf2_set_runtime_log_level(uint16_t level);
 int lpf2_log_printf(const char *fmt, ...);
 esp_err_t lpf2_log_init(void);
 
+// Optional output redirect: if set, lpf2_log_printf calls fn instead of
+// writing directly to USB Serial/JTAG.  Pass NULL to restore default.
+typedef int (*lpf2_log_vprintf_t)(const char *fmt, va_list args);
+void lpf2_log_set_vprintf(lpf2_log_vprintf_t fn);
+
 #ifdef __cplusplus
 }
 #endif

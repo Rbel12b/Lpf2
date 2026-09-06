@@ -17,8 +17,12 @@ include/Lpf2/
 ├── Devices/                  # Concrete device implementations
 │   ├── BasicMotor.hpp
 │   ├── EncoderMotor.hpp
-│   ├── ColorSensor.hpp
-│   └── DistanceSensor.hpp
+│   ├── ColorSensor.hpp        # Technic color sensor
+│   ├── ColorDistanceSensor.hpp # Color & Distance sensor (type 37)
+│   ├── DistanceSensor.hpp
+│   ├── Accelerometer.hpp      # Hub internal accelerometer
+│   ├── Gyroscope.hpp          # Hub internal gyroscope
+│   └── HubLED.hpp             # Hub internal LED
 ├── Local/                    # Physical UART port (master/slave)
 │   ├── Port.hpp              # Local::Port — master (reads a device)
 │   ├── EmulatedPort.hpp      # Local::EmulatedPort — slave (is a device)

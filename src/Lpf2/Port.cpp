@@ -275,6 +275,8 @@ namespace Lpf2
         case DeviceType::MEDIUM_LINEAR_MOTOR:
         case DeviceType::SIMPLE_MEDIUM_LINEAR_MOTOR:
         case DeviceType::TRAIN_MOTOR:
+        case DeviceType::EV3_MEDIUM_MOTOR:
+        case DeviceType::EV3_LARGE_MOTOR:
             return true;
         default:
             return false;
@@ -370,6 +372,8 @@ void Lpf2::Port::setFromDesc()
 
 void Lpf2::Port::update()
 {
+    if (m_disabled)
+        return;
     _update();
     if (!isDeviceConnected() && m_device)
     {
