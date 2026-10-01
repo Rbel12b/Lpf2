@@ -95,4 +95,19 @@ void loop()
 
 - `isHostConnected()` returns `true` only in `SENDING_DATA` state.
 - Calling `detachDevice()` resets the state machine.
-- Baud rate is negotiated automatically (starts at 2400, ramps up per LWP spec).
+- Default baud is **115200** (LPF2 fast path). The port holds TX low and waits
+  indefinitely for `CMD_SPEED`. Call `setSlowEnumeration(true)` before `init()`
+  to use 2400 baud EV3 mode directly without waiting.
+
+## Slow-enumeration mode
+
+For EV3 hosts (or any host that expects 2400 baud from the start), call
+`setSlowEnumeration(true)` before `init()`:
+
+```cpp
+port.setSlowEnumeration(true); // 2400 baud, no CMD_SPEED wait
+port.attachDevice(device);
+port.init();
+```
+
+`isSlowEnumeration()` returns the current setting.

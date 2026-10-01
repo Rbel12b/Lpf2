@@ -23,7 +23,7 @@
 #include "Lpf2/Local/SerialDef.hpp"
 #include "Lpf2/Util/mutex.hpp"
 
-#define MEASUREMENTS 20
+#define MEASUREMENTS 5
 
 namespace Lpf2::Local
 {
@@ -141,6 +141,8 @@ namespace Lpf2::Local
 
         void updateMotorPID();
 
+        IO& getIO() { return m_IO; }
+
     private:
 #if defined(LPF2_USE_FREERTOS)
         static void taskEntryPoint(void *pvParameters);
@@ -201,7 +203,7 @@ namespace Lpf2::Local
         uint8_t measurementNum = 0;
         uint64_t lastMeasurement = 0;
 
-        const int m_detectionThreshold = 5; // Number of consecutive detections required - 1, so 2 means 3 times
+        const int m_detectionThreshold = 1; // 2 consecutive cycles required (counter reaches 1)
         int m_detectionCounter = 0;
         int m_lastDetectedType = -1;
 

@@ -1,5 +1,68 @@
 # Changelog
 
+## 2.8.0 — 2026-10-01
+
+### `Local::Port::getIO()` — expose IO reference
+
+`Local::Port` gains a public accessor:
+
+```cpp
+IO& getIO();
+```
+
+Returns the `IO` object that owns the port's UART and PWM. Needed by
+bindings that borrow the UART for a slave (`EmulatedPort`) after
+disabling the port's own scanning.
+
+### UART protocol fixes
+
+- **Master break-condition detection:** `PortAnalog` now tries UART
+  fast-init first when `ch0 ≥ 3V + ch1 ≈ 0V` (break condition).
+  Falls back to `TRAIN_MOTOR` only after the 300 ms fast-init window
+  expires. Analog cycles reduced to 5 samples (25 ms) for faster
+  response.
+- **Universal 300 ms UART timeout:** `STATUS_SPEED_CHANGE` now falls
+  back to analog scan after 300 ms regardless of how it was entered,
+  not only from the break-condition path.
+- **Correct ACK after speed change:** `STATUS_SPEED` now sends ACK
+  (0x04) instead of NACK (0x02) when confirming the host's speed
+  change.
+- **Early ACK from descriptor registry:** When a matching
+  `DeviceDescriptor` is found in `CMD_TYPE`, the hub skips the full
+  INFO sequence and jumps straight to `STATUS_ACK_SENDING`, cutting
+  enumeration time for known device types to near-zero.
+
+### `EmulatedPort` protocol fixes
+
+- `reset()` now starts in `DETECTING_HOST` (holds TX low) instead of
+  jumping directly to `SENDING_INFO`, so a real LPF2 hub can perform
+  the `CMD_SPEED` handshake.
+- `CMD_SPEED` handler resets all info-sequence counters
+  (`m_infoNum`, `m_infoSubNum`, `m_infoState`) so the device always
+  starts from `CMD_TYPE` after a speed negotiation.
+- Mode info is now sent in descending order (N-1 … 0) as required by
+  the LPF2 spec.
+- `INFO_FORMAT` is now the final per-mode message; `INFO_MODE_COMBOS`
+  follows FORMAT on mode 0 only.
+
+### `EmulatedPort` slow-enumeration helper
+
+- Default detection baud is **115200** (was always the runtime default;
+  the doc note "starts at 2400" was wrong).
+- `WAITING_FOR_HOST` no longer times out — waits indefinitely for
+  `CMD_SPEED`. Use `setSlowEnumeration(true)` for EV3 hosts.
+- New `setSlowEnumeration(bool slow)` — call before `init()` to go
+  directly to 2400 baud EV3 mode without waiting.
+- New `isSlowEnumeration() const`.
+
+### `EmulatedPort`: fix premature `SENDING_DATA` on baud-change ACK
+
+- `parseMessage` no longer transitions to `SENDING_DATA` when a
+  `BYTE_ACK` arrives during `SENDING_INFO`. The master's ACK confirming
+  the `CMD_SPEED` baud negotiation was being mishandled, causing the
+  INFO exchange to abort early and triggering a ~1 s re-enumeration
+  loop when a port expander device was attached.
+
 ## 2.7.0 — 2026-09-06
 
 ### Optional BLE stack ownership in `HubEmulation`

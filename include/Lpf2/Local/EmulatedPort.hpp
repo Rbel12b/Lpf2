@@ -27,7 +27,9 @@
 namespace Lpf2::Local
 {
     /**
-     * @brief Lpf2::Local::EmulatedPort is the "opposite" of Lpf2::Local::Port, meaning its still a phisical port, but instead of being the master, its a slave (This is for creating a custom Lpf2 device).
+     * @brief Lpf2::Local::EmulatedPort is the "opposite" of Lpf2::Local::Port,
+     * meaning its still a phisical port, but instead of being the master, it's
+     * a slave (This is for creating a custom Lpf2 device).
      */
     class EmulatedPort
     {
@@ -44,6 +46,9 @@ namespace Lpf2::Local
 
         bool isHostConnected();
 
+        void setSlowEnumeration(bool slow);
+        bool isSlowEnumeration() const;
+
         enum class STATUS
         {
             DETECTING_HOST,
@@ -51,6 +56,7 @@ namespace Lpf2::Local
             HOST_DETECTED,
             SENDING_INFO,
             WAITING_FOR_ACK,
+            WAITING_FOR_ACK_SEND,
             SENDING_DATA,
         };
 
@@ -93,5 +99,8 @@ namespace Lpf2::Local
             EV3,
             LPF2,
         } m_hostType;
+
+        bool m_slowEnumeration = false;
+        int8_t m_lastExtMode = -1; // -1=unknown, 0=modes<8, 8=modes>=8
     };
 }; // namespace Lpf2::Local

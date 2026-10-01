@@ -161,7 +161,8 @@ namespace Lpf2::Local
             {
                 setFromDesc(desc);
                 m_deviceDataReceived = true;
-                LPF2_LOG_D("Set device details from descriptor lib");
+                m_status = STATUS::STATUS_ACK_SENDING;
+                LPF2_LOG_D("Set device details from descriptor lib, sending ACK early");
             }
             break;
         }
