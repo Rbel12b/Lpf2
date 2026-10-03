@@ -21,6 +21,7 @@
 #include "Lpf2/LWPConst.hpp"
 #include "Lpf2/Device.hpp"
 #include "Lpf2/DeviceDesc.hpp"
+#include "Lpf2/Util/mutex.hpp"
 #include <memory>
 
 namespace Lpf2
@@ -345,10 +346,7 @@ namespace Lpf2
         /**
          * @brief set the calbback that will be called on incoming mode data from the port
          */
-        void setValueChangeCallback(ValueChangeCallback callback)
-        {
-            m_valueChangeCallback = callback;
-        }
+        void setValueChangeCallback(ValueChangeCallback callback);
 
     public:
         static uint8_t getDataSize(uint8_t format);
@@ -425,6 +423,11 @@ namespace Lpf2
         std::vector<Mode> m_modeData;
 
         ValueChangeCallback m_valueChangeCallback = nullptr;
+#if defined(LPF2_USE_FREERTOS)
+        mutable Lpf2::Utils::Mutex m_callbackMutex = LPF2_MUTEX_CREATE();
+#else
+        mutable Lpf2::Utils::Mutex m_callbackMutex;
+#endif
 
         /**
          * @brief Replace the current owned device.

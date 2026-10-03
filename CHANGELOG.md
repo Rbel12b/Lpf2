@@ -1,5 +1,22 @@
 # Changelog
 
+## 2.8.1 — 2026-10-03
+
+### Thread-safe value-change callback (`Port`)
+
+`setValueChangeCallback` and `fireValueChangeCallback` now hold
+`m_callbackMutex` around the callback pointer access, preventing a
+data race when the callback is replaced from one thread while the port
+fires it from another.
+
+- `m_callbackMutex` is a `Lpf2::Utils::Mutex` (FreeRTOS `SemaphoreHandle_t`
+  or no-op on bare-metal); initialised with `LPF2_MUTEX_CREATE()` under
+  `LPF2_USE_FREERTOS`.
+- Null-check moved inside the lock in `fireValueChangeCallback` so the
+  guard and the call are atomic.
+- `setValueChangeCallback` moved out of the header into `Port.cpp` to
+  keep the lock scope out of inline code.
+
 ## 2.8.0 — 2026-10-01
 
 ### `Local::Port::getIO()` — expose IO reference

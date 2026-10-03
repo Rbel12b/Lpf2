@@ -315,10 +315,14 @@ namespace Lpf2
         }
     }
 
+    void Port::setValueChangeCallback(ValueChangeCallback callback)
+    {
+        Lpf2::Utils::MutexLock lock(m_callbackMutex);
+        m_valueChangeCallback = callback;
+    }
+
     void Port::fireValueChangeCallback(uint8_t modeNum)
     {
-        if (!m_valueChangeCallback)
-            return;
         if (modeNum < m_modeData.size())
         {
             float delta = (modeNum < m_deltas.size()) ? m_deltas[modeNum] : 1.0f;
@@ -342,7 +346,12 @@ namespace Lpf2
                 prev = curr;
             }
         }
-        m_valueChangeCallback(modeNum);
+        {
+            Lpf2::Utils::MutexLock lock(m_callbackMutex);
+            if (!m_valueChangeCallback)
+                return;
+            m_valueChangeCallback(modeNum);
+        }
     }
 
     void Lpf2::Port::ensureRawDataSize()
