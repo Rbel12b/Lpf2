@@ -11,6 +11,8 @@ LPF2 (LEGO Power Functions 2 / PoweredUp) communication library for ESP32. Suppo
 
 Download from the PlatformIO registry: [rbel12b/Lpf2](https://registry.platformio.org/libraries/rbel12b/Lpf2)
 
+If you wish to use this library from MicroPython, check out the [Lpf2 MicroPython bindings](https://github.com/Rbel12b/Lpf2-micropython-bindings)
+
 ---
 
 ## Documentation
