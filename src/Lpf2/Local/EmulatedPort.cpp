@@ -61,34 +61,46 @@ namespace Lpf2::Local
         switch (m_status)
         {
         case STATUS::DETECTING_HOST:
-            LPF2_LOG_D("Asserting TX=low");
-            m_status = STATUS::WAITING_FOR_HOST;
             m_serial->uartPinsOn();
-            m_baud = 115200;
-            m_serial->setBaudrate(m_baud);
-            m_serial->writeCh(1, false);
-            LPF2_LOG_D("Asserted TX=low");
+            if (m_slowEnumeration)
+            {
+                m_baud = 2400;
+                m_serial->setBaudrate(m_baud);
+                m_serial->writeCh(0, false);
+                LPF2_LOG_D("Asserted TX=low (slow/EV3, 2400)");
+                m_hostType = HostType::EV3;
+                m_status = STATUS::HOST_DETECTED;
+            }
+            else
+            {
+                m_baud = 115200;
+                m_serial->setBaudrate(m_baud);
+                m_serial->writeCh(0, false);
+                LPF2_LOG_D("Asserted TX=low (fast/LPF2, 115200)");
+                m_status = STATUS::WAITING_FOR_HOST;
+            }
             m_start = LPF2_GET_TIME();
             break;
         case STATUS::WAITING_FOR_HOST:
-            // m_serial->write(0xAA);
-            if (LPF2_GET_TIME() - m_start >= 1000)
-            {
-                m_hostType = HostType::EV3;
-                m_status = STATUS::HOST_DETECTED;
-                m_baud = 2400;
-                m_serial->uartPinsOn();
-                m_serial->setBaudrate(m_baud);
-                LPF2_LOG_D("LPF2 host timed out, failing back to EV3");
-            }
             break;
     
         case STATUS::HOST_DETECTED:
+            // reinit uart because tx pin may be disconnected from writeCh(1, false)
+            m_serial->setUartPinsState(false);
             m_status = STATUS::SENDING_INFO;
             break;
 
         case STATUS::SENDING_INFO:
             handleSendingInfo();
+            break;
+
+        case STATUS::WAITING_FOR_ACK_SEND:
+            if ((LPF2_GET_TIME() - m_start) > 200)
+            {
+                sendACK();
+                m_status = STATUS::WAITING_FOR_ACK;
+                m_start = LPF2_GET_TIME();
+            }
             break;
 
         case STATUS::SENDING_DATA:
@@ -120,10 +132,11 @@ namespace Lpf2::Local
         {
             m_start = LPF2_GET_TIME();
         }
-        if (msg.header == BYTE_ACK && (m_status == STATUS::WAITING_FOR_ACK || m_status == STATUS::SENDING_INFO))
+        if (msg.header == BYTE_ACK && m_status == STATUS::WAITING_FOR_ACK)
         {
             changeBaud(m_baud);
             m_status = STATUS::SENDING_DATA;
+            sendUpdate();
         }
         else if (msg.header == BYTE_NACK && m_status == STATUS::SENDING_DATA)
         {
@@ -143,6 +156,11 @@ namespace Lpf2::Local
             m_serial->flush();
             m_hostType = HostType::LPF2;
             m_status = STATUS::HOST_DETECTED;
+            m_infoNum = 0;
+            m_infoSubNum = 0;
+            m_infoState = InfoState::CMD;
+            m_parser.clearBuf();
+            m_serial->flush();
             LPF2_LOG_D("Detected LPF2 host, with speed: %i", m_baud);
         }
         else if (msg.msg == MESSAGE_CMD && msg.cmd == CMD_SELECT)
@@ -238,11 +256,16 @@ namespace Lpf2::Local
             modeNum = m_mode;
         }
 
-        Message extModeMsg;
-        extModeMsg.msg = MESSAGE_CMD;
-        extModeMsg.cmd = CMD_EXT_MODE;
-        extModeMsg.data.push_back(modeNum >= 8 ? 8 : 0);
-        m_writer.write(extModeMsg);
+        uint8_t extVal = modeNum >= 8 ? 8 : 0;
+        if (extVal != (uint8_t)m_lastExtMode)
+        {
+            Message extModeMsg;
+            extModeMsg.msg = MESSAGE_CMD;
+            extModeMsg.cmd = CMD_EXT_MODE;
+            extModeMsg.data.push_back(extVal);
+            m_writer.write(extModeMsg);
+            m_lastExtMode = (int8_t)extVal;
+        }
 
         Mode mode;
         if (m_device->getModes().size() > modeNum)
@@ -318,12 +341,24 @@ namespace Lpf2::Local
         {
             msg.data.reserve(16);
             msg.msg = MESSAGE_INFO;
-            msg.cmd = (m_infoNum >= 8 ? m_infoNum - 8 : m_infoNum);
-            msg.data.push_back(m_infoNum >= 8 ? INFO_MODE_PLUS_8 : 0);
-            Mode mode = {};
-            if (m_device->getModes().size() > m_infoNum)
+            // Spec requires modes sent highest-to-lowest (N-1 … 0).
+            uint8_t actualMode = m_device->getModeCount() - 1 - m_infoNum;
+            msg.cmd = (actualMode >= 8 ? actualMode - 8 : actualMode);
+            uint8_t infoExtVal = actualMode >= 8 ? 8 : 0;
+            if (infoExtVal != (uint8_t)m_lastExtMode)
             {
-                mode = m_device->getModes()[m_infoNum];
+                Message extMsg;
+                extMsg.msg = MESSAGE_CMD;
+                extMsg.cmd = CMD_EXT_MODE;
+                extMsg.data.push_back(infoExtVal);
+                m_writer.write(extMsg);
+                m_lastExtMode = (int8_t)infoExtVal;
+            }
+            msg.data.push_back(actualMode >= 8 ? INFO_MODE_PLUS_8 : 0);
+            Mode mode = {};
+            if (m_device->getModes().size() > actualMode)
+            {
+                mode = m_device->getModes()[actualMode];
             }
             switch (m_infoSubNum)
             {
@@ -374,8 +409,18 @@ namespace Lpf2::Local
                 break;
 
             case 6:
+                // INFO_FORMAT must be the last per-mode message per spec.
+                msg.data[0] |= INFO_FORMAT;
+                msg.data.push_back(mode.data_sets);
+                msg.data.push_back(mode.format);
+                msg.data.push_back(mode.figures);
+                msg.data.push_back(mode.decimals);
+                break;
+
+            case 7:
             {
-                if (m_infoNum != 0)
+                // INFO_MODE_COMBOS sent once, after FORMAT on the last mode (mode 0).
+                if (actualMode != 0)
                 {
                     okayToWrite = false;
                     break;
@@ -390,22 +435,13 @@ namespace Lpf2::Local
                 break;
             }
 
-            case 7:
-                msg.data[0] |= INFO_FORMAT;
-                msg.data.push_back(mode.data_sets);
-                msg.data.push_back(mode.format);
-                msg.data.push_back(mode.figures);
-                msg.data.push_back(mode.decimals);
-                break;
-
             default:
                 okayToWrite = false;
                 m_infoNum++;
                 m_infoSubNum = 0xFF;
                 if (m_device->getModeCount() <= m_infoNum)
                 {
-                    sendACK();
-                    m_status = STATUS::WAITING_FOR_ACK;
+                    m_status = STATUS::WAITING_FOR_ACK_SEND;
                     m_start = LPF2_GET_TIME();
                 }
                 break;
@@ -427,7 +463,7 @@ namespace Lpf2::Local
 
     void EmulatedPort::reset()
     {
-        m_status = STATUS::SENDING_INFO;
+        m_status = STATUS::DETECTING_HOST;
         m_start = LPF2_GET_TIME();
         m_infoNum = 0;
         m_infoSubNum = 0;
@@ -435,6 +471,7 @@ namespace Lpf2::Local
         m_hostType = HostType::NONE;
         m_baud = 115200;
         m_comboPairs.clear();
+        m_lastExtMode = -1;
         changeBaud(m_baud);
         m_serial->discardRxFiFo();
         m_parser.clearBuf();
@@ -451,4 +488,7 @@ namespace Lpf2::Local
         m_serial->write(NACK ? BYTE_NACK : BYTE_ACK);
         m_serial->flush();
     }
+
+    void EmulatedPort::setSlowEnumeration(bool slow) { m_slowEnumeration = slow; }
+    bool EmulatedPort::isSlowEnumeration() const { return m_slowEnumeration; }
 }; // namespace Lpf2::Local

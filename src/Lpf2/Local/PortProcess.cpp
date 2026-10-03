@@ -199,7 +199,7 @@ namespace Lpf2::Local
 
     uint8_t Port::process(unsigned long now)
     {
-        if (now - m_startRec > 2000)
+        if (now - m_startRec > 1000)
         {
             if (m_deviceConnected)
             {
@@ -210,9 +210,19 @@ namespace Lpf2::Local
             m_startRec = now;
         }
 
+        if (m_status == STATUS::STATUS_SPEED_CHANGE && now - m_startRec > 500)
+        {
+            // No UART response in 500 ms — go back to quick analog check.
+            // m_lastDetectedType + m_detectionCounter persist through resetDevice().
+            LPF2_LOG_D("UART fast-init timed out, falling back to analog check");
+            resetDevice();
+            m_startRec = LPF2_GET_TIME();
+            return 0;
+        }
+
         if (now - m_startRec > 1000 && m_status == STATUS::STATUS_SPEED_CHANGE)
         {
-            // device does not support speed change
+            // device does not support speed change (EV3 fallback)
             m_baud = 2400;
             changeBaud(m_baud);
             LPF2_LOG_W("Speed change not supported, continuing at %i baud", m_baud);
@@ -239,7 +249,7 @@ namespace Lpf2::Local
                 break; // we don't know the device yet.
             }
             changeBaud(m_baud);
-            sendACK(true);
+            sendACK(false);
             LPF2_LOG_D("Succesfully changed speed to %i baud", m_baud);
             if (m_new_status == STATUS::STATUS_SPEED)
             {
@@ -273,7 +283,7 @@ namespace Lpf2::Local
             break;
 
         case STATUS::STATUS_ACK_WAIT:
-            if (now - m_start > 25)
+            if (now - m_start > 50)
             {
                 // if (m_status == STATUS::STATUS_ACK_WAIT && m_new_status == STATUS::STATUS_SPEED)
                 // {

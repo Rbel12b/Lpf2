@@ -81,6 +81,34 @@ namespace Lpf2::Local
                 }
                 return;
             }
+            else if (ch0max >= 3.0f && ch0diff < 0.5f && ch1max < 0.5f && ch1diff < 0.1f)
+            {
+                // Break condition: ch0 steady high + ch1 steady near-zero.
+                // Electrically identical to train motor (ID1=VCC, ID2=GND).
+                // Try UART fast-init first; fall back to train motor on timeout.
+                if (m_lastDetectedType == 4)
+                {
+                    m_detectionCounter++;
+                }
+                else
+                {
+                    m_lastDetectedType = 4;
+                    m_detectionCounter = 0;
+                }
+                if (m_detectionCounter == 0 && !m_dumb)
+                {
+                    enterUartState();
+                    LPF2_LOG_D("Break condition: trying UART fast-init");
+                }
+                else if (m_detectionCounter >= 1)
+                {
+                    m_deviceType = DeviceType::TRAIN_MOTOR;
+                    setFromDesc();
+                    m_dumb = true;
+                    LPF2_LOG_V("Break condition: UART failed, classifying as TRAIN_MOTOR");
+                }
+                return;
+            }
             else if (ch0max >= 3.0f && ch0diff < 0.5f)
             {
                 if (ch1min <= 0.5f && ch1diff < 0.5f)
@@ -149,12 +177,9 @@ namespace Lpf2::Local
             }
             LPF2_LOG_V("Analog: No device detected");
             m_detectionCounter = 0;
-            m_deviceType = DeviceType::UNKNOWNDEVICE;
-            if (m_lastDetectedType != -1)
-            {
-                resetDevice();
-                m_lastDetectedType = -1;
-            }
+            m_lastDetectedType = -1;
+            m_dumb = false;
+            enterUartState();
         }
     }
 }; // namespace Lpf2::Local
