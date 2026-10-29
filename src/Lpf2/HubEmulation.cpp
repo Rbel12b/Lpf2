@@ -1366,7 +1366,6 @@ namespace Lpf2
         {
             NimBLEDevice::setDeviceName(getName());
             NimBLEDevice::setOwnAddrType(BLE_OWN_ADDR_PUBLIC);
-            NimBLEDevice::setPower(ESP_PWR_LVL_N0, NimBLETxPowerType::Advertise);
         }
         reset();
 
